@@ -12,9 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class PointsController {
 
 
-    @GetMapping
-    public String hide(){
-        return "hide";
-    }
 
 }
