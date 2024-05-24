@@ -2,7 +2,7 @@ package com.bowlingpoints.service;
 
 
 import com.bowlingpoints.dto.EventsDTO;
-import com.bowlingpoints.entity.EventEntity;
+import com.bowlingpoints.entity.Event;
 import com.bowlingpoints.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class EventServices {
 
     public List<EventsDTO> getAllEvents(){
 
-        List<EventEntity> eventEntityList =  eventRepository.findAll();
+        List<Event> eventEntityList =  eventRepository.findAll();
 
         List<EventsDTO> eventsDTOList = new ArrayList<>();
 
@@ -32,4 +32,10 @@ public class EventServices {
         );
         return eventsDTOList;
     }
+
+    public List<Event> eventList(){
+
+        return eventRepository.findAll();
+    }
+
 }
