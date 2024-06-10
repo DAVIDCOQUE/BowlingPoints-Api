@@ -4,32 +4,36 @@ package com.bowlingpoints.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 @Entity
-@Table(name = "modalidad")
-public class Modality {
+@Table(name = "rama")
+public class Rama {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_modalidad")
-    private int idModalidad;
-
+    @Column(name = "id_rama")
+    private int idBranch;
 
     @Column(name = "descripcion")
     private String description;
 
     @Column(name = "activo")
-    private String active;
+    private boolean active;
 
     @Column(name = "fecha_creacion")
-    private String created_at;
+    private Date created_at;
 
     @Column(name = "usuario_creacion")
     private String created_by;
 
     @Column(name = "fecha_actualizacion")
-    private String updated_at;
+    private Date updated_at;
 
     @Column(name = "usuario_actualizacion")
     private String updated_by;
+
+
 }

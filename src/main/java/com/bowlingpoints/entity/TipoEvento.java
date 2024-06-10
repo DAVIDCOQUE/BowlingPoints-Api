@@ -5,21 +5,18 @@ import lombok.Data;
 
 import java.util.Date;
 
+
 @Data
 @Entity
-@Table(name = "registro")
-public class Register {
-
+@Table(name = "tipo_evento")
+public class TipoEvento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_registro")
-    private int idRegistro;
+    @Column(name = "tipo_evento")
+    private int idTipoEvento;
 
-    @Column(name = "id_persona")
-    private int idPersona;
-
-    @Column(name = "id_evento")
-    private int idEvento;
+    @Column(name = "descripcion")
+    private String descripcion;
 
     @Column(name = "activo")
     private boolean activo;
@@ -28,11 +25,11 @@ public class Register {
     private Date fechaCreacion;
 
     @Column(name = "usuario_creacion")
-    private String usuarioCreacion;
+    private int usuarioCreacion;
 
     @Column(name = "fecha_actualizacion")
     private Date fechaActualizacion;
 
     @Column(name = "usuario_actualizacion")
-    private String usuarioActualizacion;
+    private int usuarioActualizacion;
 }

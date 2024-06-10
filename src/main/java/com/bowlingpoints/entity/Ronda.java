@@ -5,18 +5,17 @@ import lombok.Data;
 
 import java.util.Date;
 
-
 @Data
 @Entity
-@Table(name = "tipo_evento")
-public class TypeEvent {
+@Table(name = "ronda")
+public class Ronda {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tipo_evento")
-    private int tipoEvento;
+    @Column(name = "id_ronda")
+    private int idRonda;
 
-    @Column(name = "descripcion")
-    private String descripcion;
+    @Column(name = "id_asistencia")
+    private int idAsistencia;
 
     @Column(name = "activo")
     private boolean activo;
@@ -25,11 +24,11 @@ public class TypeEvent {
     private Date fechaCreacion;
 
     @Column(name = "usuario_creacion")
-    private int usuarioCreacion;
+    private String usuarioCreacion;
 
     @Column(name = "fecha_actualizacion")
     private Date fechaActualizacion;
 
     @Column(name = "usuario_actualizacion")
-    private int usuarioActualizacion;
+    private String usuarioActualizacion;
 }

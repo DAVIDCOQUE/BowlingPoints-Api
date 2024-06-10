@@ -1,11 +1,11 @@
 package com.bowlingpoints.repository;
 
-import com.bowlingpoints.entity.BranchEvent;
+import com.bowlingpoints.entity.EventoRama;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface BranchEventRepository extends JpaRepository<BranchEvent,Integer> {
+public interface BranchEventRepository extends JpaRepository<EventoRama,Integer> {
 
-    Optional<BranchEvent> findById(Integer integer);
+    Optional<EventoRama> findById(Integer integer);
 }

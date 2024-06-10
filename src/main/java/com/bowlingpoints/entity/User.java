@@ -18,24 +18,25 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="users", uniqueConstraints = {@UniqueConstraint(columnNames = {"username"})})
+@Table(name="usuario", uniqueConstraints = {@UniqueConstraint(columnNames = {"username"})})
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer user_id;
-    @Column(nullable = false)
+    @Column(name = "id_usuario")
+    private int idUsuario;
+    @Column(name="nickname",nullable = false)
     String username;
-    String email;
+    @Column(name="password",nullable = false)
     String password;
-    Date created_at;
-    Date last_login;
+    @Column(name="activo",nullable = false)
     boolean is_active;
-    @Enumerated(EnumType.STRING)
-    Role role;
+    @ManyToOne
+    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona")
+    private Persona persona;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority((role.name())));
+        return List.of();
     }
 
     @Override

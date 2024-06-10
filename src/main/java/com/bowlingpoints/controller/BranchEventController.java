@@ -2,8 +2,7 @@ package com.bowlingpoints.controller;
 
 
 import com.bowlingpoints.dto.ResponseGenericDTO;
-import com.bowlingpoints.dto.TypeEventsDTO;
-import com.bowlingpoints.entity.BranchEvent;
+import com.bowlingpoints.entity.EventoRama;
 import com.bowlingpoints.service.BranchEventServices;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +21,9 @@ public class BranchEventController {
 
 
     @GetMapping(value="branchEvent")
-    public ResponseGenericDTO<BranchEvent> getAllTypeEvents() {
+    public ResponseGenericDTO<EventoRama> getAllTypeEvents() {
 
-        BranchEvent typeEventsDTO = branchEventServices.findById();
+        EventoRama typeEventsDTO = branchEventServices.findById();
 
         return new ResponseGenericDTO<>(true,"Lista de tipos de eventos entregada con exito",typeEventsDTO);
     }

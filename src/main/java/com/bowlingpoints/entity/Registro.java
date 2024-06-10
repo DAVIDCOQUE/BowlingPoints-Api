@@ -7,15 +7,19 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "ronda")
-public class Round {
+@Table(name = "registro")
+public class Registro {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_ronda")
-    private int idRonda;
+    @Column(name = "id_registro")
+    private int idRegistro;
 
-    @Column(name = "id_asistencia")
-    private int idAsistencia;
+    @Column(name = "id_persona")
+    private int idPersona;
+
+    @Column(name = "id_evento")
+    private int idEvento;
 
     @Column(name = "activo")
     private boolean activo;

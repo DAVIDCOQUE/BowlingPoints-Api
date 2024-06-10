@@ -10,7 +10,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "evento")
-public class Event {
+public class Evento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_evento")
@@ -25,13 +25,17 @@ public class Event {
     @Column(name = "fecha_fin")
     private Date fechaFin;
 
-    @ManyToOne
-    @JoinColumn(name = "id_tipo_evento", referencedColumnName = "tipo_evento")
-    private TypeEvent tipoEvento;
+    @Column(name = "descripcion")
+    private String descripcion;
+
+    @Column(name = "id_tipo_evento",insertable=false, updatable=false)
+    private int idTipoEvento;
 
     @ManyToOne
-    @JoinColumn(name = "id_usuario", referencedColumnName = "user_id")
+    @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario")
     private User usuario;
 
-
+    @ManyToOne
+    @JoinColumn(name = "id_tipo_evento", referencedColumnName = "tipo_evento")
+    private TipoEvento tipoEvento;
 }

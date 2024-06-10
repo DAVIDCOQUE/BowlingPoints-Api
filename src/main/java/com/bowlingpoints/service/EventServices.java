@@ -2,7 +2,8 @@ package com.bowlingpoints.service;
 
 
 import com.bowlingpoints.dto.EventsDTO;
-import com.bowlingpoints.entity.Event;
+import com.bowlingpoints.entity.Evento;
+import com.bowlingpoints.enums.EnumsTypeEvents;
 import com.bowlingpoints.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,24 +19,56 @@ public class EventServices {
 
     public List<EventsDTO> getAllEvents(){
 
-        List<Event> eventEntityList =  eventRepository.findAll();
+        List<Evento> eventEntityList =  eventRepository.findAll();
 
         List<EventsDTO> eventsDTOList = new ArrayList<>();
 
         eventEntityList.forEach(
                 event->{
+
+                    String nameConcat = event.getUsuario().getPersona().getPrimerNombre();
+
                     eventsDTOList.add(EventsDTO.builder().
                             nameEvent(event.getNombreEvento())
-                            .eventOrganizer(null)
+                            .eventOrganizer(event.getUsuario().getPersona().getPrimerNombre()+" "+
+                                    event.getUsuario().getPersona().getPrimerApellido())
                             .descriptionEvent(null).build());
                 }
         );
         return eventsDTOList;
     }
 
-    public List<Event> eventList(){
+    public List<EventsDTO> getEventByType(String tipoEvento){
+
+        Integer tipoEventoId = EnumsTypeEvents.valueOf(tipoEvento).getIdentificador();
+
+        List<Evento> eventoList = eventRepository.findByIdTipoEvento(tipoEventoId);
+
+        List<EventsDTO> eventsDTOList = new ArrayList<>();
+
+        eventoList.forEach(
+                evento->{
+                    String nameConcat = evento.getUsuario().getPersona().getPrimerNombre();
+                    eventsDTOList.add(EventsDTO.builder().nameEvent(evento.getNombreEvento())
+                            .eventOrganizer(nameConcat)
+                            .descriptionEvent(evento.getDescripcion()).build());
+                }
+        );
+
+        return eventsDTOList;
+    }
+
+    public List<Evento> eventList(){
 
         return eventRepository.findAll();
+    }
+
+    public List<EventsDTO> getEventByStatus(){
+
+
+
+
+        return null;
     }
 
 }

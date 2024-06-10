@@ -1,13 +1,13 @@
 package com.bowlingpoints.dto;
 
 import com.bowlingpoints.entity.DetailsRound;
-import com.bowlingpoints.entity.Person;
+import com.bowlingpoints.entity.Persona;
 import lombok.Data;
 
 @Data
 public class PlayerPoints {
 
-    private Person person;
+    private Persona person;
     private DetailsRound rounds;
 
 }

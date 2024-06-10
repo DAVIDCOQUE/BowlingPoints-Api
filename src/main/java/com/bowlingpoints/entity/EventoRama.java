@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "evento_rama")
-public class BranchEvent {
+public class EventoRama {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,11 +16,11 @@ public class BranchEvent {
 
     @ManyToOne
     @JoinColumn(name = "id_evento", referencedColumnName = "id_evento")
-    private Event event;
+    private Evento event;
 
     @ManyToOne
     @JoinColumn(name = "id_rama", referencedColumnName = "id_rama")
-    private Branch branch;
+    private Rama branch;
 
 
 }

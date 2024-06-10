@@ -2,7 +2,7 @@ package com.bowlingpoints.service;
 
 
 import com.bowlingpoints.dto.TypeEventsDTO;
-import com.bowlingpoints.entity.TypeEvent;
+import com.bowlingpoints.entity.TipoEvento;
 import com.bowlingpoints.repository.TypeEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,10 +20,10 @@ public class TypeEventServices {
     public TypeEventsDTO getTypeEvents(){
         TypeEventsDTO typeEventsDTO = new TypeEventsDTO();
         List<String> listOfStrings = new ArrayList<>();
-        List<TypeEvent> typeEventList = typeEventRepository.findAll();
+        List<TipoEvento> typeEventList = typeEventRepository.findAll();
 
-        typeEventList.forEach(typeEvent -> {
-            listOfStrings.add(typeEvent.getDescripcion());
+        typeEventList.forEach(event -> {
+            listOfStrings.add(event.getDescripcion());
                 }
         );
 
