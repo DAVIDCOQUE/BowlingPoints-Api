@@ -7,18 +7,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventDetails {
 
-    private String nameEvent;
-    private String descriptionEvent;
-    private String eventOrganizer;
-    private Rama branches;
-
-
-
+    private DetalleEvento detalleEvento;
+    private List<EventoRamasDTO> eventoRamasDTO;
 
 }

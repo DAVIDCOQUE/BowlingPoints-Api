@@ -31,6 +31,9 @@ public class Evento {
     @Column(name = "id_tipo_evento",insertable=false, updatable=false)
     private int idTipoEvento;
 
+    @Column(name = "estado_evento",insertable=false, updatable=false)
+    private int idEstadoEvento;
+
     @ManyToOne
     @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario")
     private User usuario;
@@ -38,4 +41,8 @@ public class Evento {
     @ManyToOne
     @JoinColumn(name = "id_tipo_evento", referencedColumnName = "tipo_evento")
     private TipoEvento tipoEvento;
+
+    @ManyToOne
+    @JoinColumn(name = "estado_evento", referencedColumnName = "id_tipo_estado_evento")
+    private EstadoEvento estadoEvento;
 }

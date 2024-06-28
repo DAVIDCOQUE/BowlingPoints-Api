@@ -1,8 +1,11 @@
 package com.bowlingpoints.service;
 
 
+import com.bowlingpoints.dto.DetalleEvento;
+import com.bowlingpoints.dto.EventDetails;
 import com.bowlingpoints.dto.EventsDTO;
 import com.bowlingpoints.entity.Evento;
+import com.bowlingpoints.enums.EnumsEstadoEvento;
 import com.bowlingpoints.enums.EnumsTypeEvents;
 import com.bowlingpoints.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,9 @@ public class EventServices {
 
     @Autowired
     EventRepository eventRepository;
+
+    @Autowired
+    BranchEventServices branchEventServices;
 
     public List<EventsDTO> getAllEvents(){
 
@@ -63,12 +69,43 @@ public class EventServices {
         return eventRepository.findAll();
     }
 
-    public List<EventsDTO> getEventByStatus(){
+    public List<EventsDTO> getEventByStatus(String estadoEvento){
 
+        Integer estadoEventoId = EnumsEstadoEvento.valueOf(estadoEvento).getIdentificador();
 
+        List<Evento> eventoList = eventRepository.findByIdEstadoEvento(estadoEventoId);
 
+        List<EventsDTO> eventsDTOList = new ArrayList<>();
 
-        return null;
+        eventoList.forEach(
+                evento -> {
+                    String nameConcat = evento.getUsuario().getPersona().getPrimerNombre();
+                    eventsDTOList.add(EventsDTO.builder().nameEvent(evento.getNombreEvento())
+                            .eventOrganizer(nameConcat)
+                            .descriptionEvent(evento.getDescripcion()).build());
+                }
+        );
+        return eventsDTOList;
+    }
+
+    public EventDetails getEventDetails(int eventId){
+
+        Evento evento = eventRepository.findById(eventId);
+
+        EventDetails eventDetails = new EventDetails();
+
+        eventDetails.setDetalleEvento(
+                DetalleEvento.builder()
+                        .fechaFin(evento.getFechaFin())
+                        .nombreEvento(evento.getNombreEvento())
+                        .organizador("System")
+                        .fechaInicio(evento.getFechaInicio())
+                        .build()
+        );
+        eventDetails.setEventoRamasDTO(
+                branchEventServices.findByIdEvento(eventId)
+        );
+        return eventDetails;
     }
 
 }

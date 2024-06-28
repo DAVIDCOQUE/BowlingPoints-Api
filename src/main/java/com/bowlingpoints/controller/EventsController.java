@@ -53,10 +53,23 @@ public class EventsController {
         return new ResponseGenericDTO<>(true,"Lista de eventos entregada con exito",eventServicesList);
     }
 
-    @PostMapping(value="/findEventDetails/{id}")
-    public ResponseGenericDTO<EventDetails> findEventDetails(@PathVariable Long id){
+    @GetMapping(value="/findEventDetails/{id}")
+    public ResponseGenericDTO<EventDetails> findEventDetails(@PathVariable int id){
 
-        return new ResponseGenericDTO<>(true,"Consulta realizada con exito",null);
+        EventDetails eventDetails = new EventDetails();
+
+        eventDetails = eventServices.getEventDetails(id);
+
+        return new ResponseGenericDTO<>(true,"Consulta realizada con exito",eventDetails);
+
+    }
+
+    @GetMapping(value="/eventByStatus/{statusEvent}")
+    public ResponseGenericDTO<List<EventsDTO>> findEventByStatus(@PathVariable String statusEvent){
+
+        List<EventsDTO> event = eventServices.getEventByStatus(statusEvent);
+
+        return new ResponseGenericDTO<>(true,"Consulta realizada con exito",event);
 
     }
 

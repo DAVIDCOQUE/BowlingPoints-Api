@@ -14,6 +14,9 @@ public class EventoRama {
     @Column(name = "id_evento_rama")
     private int idEventoRama;
 
+    @Column(name = "id_evento", insertable=false, updatable=false)
+    private int idEvento;
+
     @ManyToOne
     @JoinColumn(name = "id_evento", referencedColumnName = "id_evento")
     private Evento event;
