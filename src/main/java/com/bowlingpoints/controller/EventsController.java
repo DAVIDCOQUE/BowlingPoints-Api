@@ -73,4 +73,14 @@ public class EventsController {
 
     }
 
+    @GetMapping(value="/eventByStatus/{statusEvent}/{idTypeEvent}")
+    public ResponseGenericDTO<List<EventDetails>> findEventByIdAndStatus(@PathVariable String statusEvent
+            , @PathVariable String idTypeEvent){
+
+        List<EventDetails> event = eventServices.getEventByStatusAndTypeEvent(statusEvent, idTypeEvent);
+
+        return new ResponseGenericDTO<>(true,"Consulta realizada con exito",event);
+
+    }
+
 }

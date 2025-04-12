@@ -14,9 +14,6 @@ public class Ronda {
     @Column(name = "id_ronda")
     private int idRonda;
 
-    @Column(name = "id_asistencia")
-    private int idAsistencia;
-
     @Column(name = "activo")
     private boolean activo;
 
@@ -31,4 +28,14 @@ public class Ronda {
 
     @Column(name = "usuario_actualizacion")
     private String usuarioActualizacion;
+
+    @Column(name = "id_persona" ,insertable=false, updatable=false)
+    private int idPersona;
+
+    @ManyToOne
+    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona")
+    private Persona persona;
+
+    @Column(name = "id_evento")
+    private int idEvento;
 }

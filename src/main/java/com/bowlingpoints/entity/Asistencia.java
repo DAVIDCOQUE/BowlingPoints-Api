@@ -15,10 +15,7 @@ public class Asistencia {
     @Column(name = "id_evento_hora")
     private int idEventoHora;
 
-    @Column(name = "id_registro")
-    private int idRegistro;
-
-    @Column(name = "id_tipo_estado")
-    private int idTipoEstado;
+    @Column(name = "status")
+    private String status;
 
 }

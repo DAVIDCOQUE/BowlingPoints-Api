@@ -108,4 +108,33 @@ public class EventServices {
         return eventDetails;
     }
 
+    public List<EventDetails> getEventByStatusAndTypeEvent(String status , String typeEvent){
+
+        List<Evento> eventoList = eventRepository.findByIdEstadoEventoAndIdTipoEvento(
+                EnumsEstadoEvento.valueOf(status).getIdentificador(),
+                EnumsTypeEvents.valueOf(typeEvent).getIdentificador()
+        );
+
+        List<EventDetails> eventDetailsList = new ArrayList<>();
+
+        eventoList.forEach(
+                evento -> {
+                    EventDetails eventDetails = new EventDetails();
+                    eventDetails.setDetalleEvento(
+                            DetalleEvento.builder()
+                                    .fechaFin(evento.getFechaFin())
+                                    .nombreEvento(evento.getNombreEvento())
+                                    .organizador("System")
+                                    .fechaInicio(evento.getFechaInicio())
+                                    .build()
+                    );
+                    eventDetails.setEventoRamasDTO(
+                            branchEventServices.findByIdEvento(evento.getIdEvento())
+                    );
+                    eventDetailsList.add(eventDetails);
+                }
+        );
+        return eventDetailsList;
+    }
+
 }

@@ -1,9 +1,12 @@
 package com.bowlingpoints.repository;
 
+import com.bowlingpoints.entity.Asistencia;
 import com.bowlingpoints.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AssistanceRepository extends JpaRepository<User,Integer> {
+import java.util.List;
+
+public interface AssistanceRepository extends JpaRepository<Asistencia,Integer> {
 
 
 }

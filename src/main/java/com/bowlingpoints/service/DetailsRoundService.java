@@ -18,4 +18,8 @@ public class DetailsRoundService {
     public List<DetailsRound> getDetailsRound(){
         return detailsRoundRepository.findAll();
     }
+
+    public List<DetailsRound> getDetailsRoundByRound(Integer rondaId){
+        return detailsRoundRepository.findByIdRonda(rondaId);
+    }
 }
