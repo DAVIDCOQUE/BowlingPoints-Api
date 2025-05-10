@@ -35,7 +35,7 @@ public class Evento {
     private int idEstadoEvento;
 
     @ManyToOne
-    @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User usuario;
 
     @ManyToOne

@@ -2,15 +2,20 @@ package com.bowlingpoints.config;
 
 
 import com.bowlingpoints.config.jwt.JwtAuthenticationFilter;
+import io.jsonwebtoken.Jwt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -22,13 +27,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.
-                csrf(csrf->csrf.disable()).
-                authorizeHttpRequests(
-                        authRequest->
-                                authRequest.requestMatchers("/**").permitAll()
-                                        .anyRequest().authenticated()
-                ).sessionManagement(sessionManager->
+        return http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(
+                authRequest -> authRequest.requestMatchers("/auth/**").permitAll().anyRequest().authenticated()
+        ).sessionManagement(sessionManager ->
                         sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

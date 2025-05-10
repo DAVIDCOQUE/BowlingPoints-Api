@@ -14,29 +14,63 @@ import java.util.Collection;
 import java.util.List;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="usuario", uniqueConstraints = {@UniqueConstraint(columnNames = {"username"})})
+@Builder
+@Table(name="\"user\"")
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usuario")
-    private int idUsuario;
-    @Column(name="nickname",nullable = false)
-    String username;
-    @Column(name="password",nullable = false)
-    String password;
-    @Column(name="activo",nullable = false)
-    boolean is_active;
+    @Column(name = "user_id")
+    private int userId;
+    @Column(name="nickname")
+    private String nickname;
+
+    @Column(name="person_id",insertable=false, updatable=false)
+    private String idPerson;
+    @Column(name="password")
+    private String password;
+    @Column(name="last_login_at")
+    private Integer last_login_at;
+
+    @Column(name="status")
+    private String status;
+
+    @Column(name="attempts_login")
+    private Integer attempts_login;
+
+    @Column(name="created_by")
+    private Integer created_by;
+
+    @Column(name="created_at")
+    private Date created_at;
+
+    @Column(name="updated_at")
+    private Date updated_at;
+
+    @Column(name="updated_by")
+    private Integer updated_by;
+
     @ManyToOne
-    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona")
+    @JoinColumn(name = "person_id", referencedColumnName = "person_id")
     private Persona persona;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
+    }
+
+    @Override
+    public String getPassword() {
+        return "";
+    }
+
+    @Override
+    public String getUsername() {
+        return "";
     }
 
     @Override

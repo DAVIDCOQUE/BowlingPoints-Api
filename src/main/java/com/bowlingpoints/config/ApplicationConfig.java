@@ -1,6 +1,7 @@
 package com.bowlingpoints.config;
 
 
+import com.bowlingpoints.entity.User;
 import com.bowlingpoints.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -38,11 +41,22 @@ public class ApplicationConfig {
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
     @Bean
-    public UserDetailsService userDetailService(){
-        return username -> userRepository.findByUsername(username)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+    public UserDetailsService userDetailService() {
+        return nickName -> {
+            // Recuperamos el usuario desde la base de datos
+            User user = userRepository.findByNickname(nickName)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // Retornamos un User de Spring Security con la contraseña y roles
+            return new org.springframework.security.core.userdetails.User(
+                    user.getNickname(),
+                    user.getPassword(),
+                    List.of()
+            );
+        };
     }
+
+
 
 }

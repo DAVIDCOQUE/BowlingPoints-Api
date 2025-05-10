@@ -1,41 +1,59 @@
 package com.bowlingpoints.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import java.util.Date;
+import lombok.NoArgsConstructor;
+
+import java.sql.Date;
 
 @Data
 @Entity
-@Table(name = "persona", schema = "public")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "person", schema = "public")
 public class Persona {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_persona")
-    private Integer idPersona;
+    @Column(name = "person_id")
+    private Integer idPerson;
 
-    @Column(name = "primer_nombre", nullable = false)
-    private String primerNombre;
+    @Column(name = "first_name")
+    private String firstName;
 
-    @Column(name = "segund_nombre", nullable = false)
-    private String segundoNombre;
+    @Column(name = "second_name")
+    private String secondName;
 
-    @Column(name = "primer_apellido", nullable = false)
-    private String primerApellido;
+    @Column(name = "lastname")
+    private String lastname;
 
-    @Column(name = "segundo_apellido", nullable = false)
-    private String segundoApellido;
+    @Column(name = "second_lastname")
+    private String secondLastname;
 
-    @Column(name = "fecha_nacimiento", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date fechaNacimiento;
+    @Column(name = "gender")
+    private String gender;
 
-    @Column(name = "celular", nullable = false)
-    private String celular;
+    @Column(name = "email")
+    private String email;
 
-    @Column(name = "correo_electronico", nullable = false)
-    private String correoElectronico;
+    @Column(name = "phone")
+    private String phone;
 
-    @Column(name = "activo", nullable = false)
-    private Boolean activo;
+    @Column(name = "status")
+    private Boolean status;
+
+    @Column(name="created_by")
+    Integer created_by;
+
+    @Column(name="created_at")
+    Date created_at;
+
+    @Column(name="updated_at")
+    Date updated_at;
+
+    @Column(name="updated_by")
+    Integer updated_by;
     }

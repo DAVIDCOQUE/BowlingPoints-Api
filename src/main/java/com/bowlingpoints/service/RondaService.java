@@ -41,8 +41,8 @@ public class RondaService {
             RondaDTO rondaDto = RondaDTO.builder()
                     .total(sumTotal)
                     .juegos(integerList)
-                    .nombres(ronda.getPersona().getPrimerNombre() + " " +ronda.getPersona().getSegundoNombre())
-                    .apellidos(ronda.getPersona().getPrimerApellido() + " "+ronda.getPersona().getSegundoApellido())
+                    .nombres(ronda.getPersona().getFirstName() + " " +ronda.getPersona().getSecondName())
+                    .apellidos(ronda.getPersona().getLastname() + " "+ronda.getPersona().getSecondLastname())
                     .promedio((double) sumTotal /integerList.size())
                     .build();
             rondaDTOList.add(rondaDto);
