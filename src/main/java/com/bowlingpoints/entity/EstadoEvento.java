@@ -1,7 +1,7 @@
 package com.bowlingpoints.entity;
 
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.sql.Date;
 

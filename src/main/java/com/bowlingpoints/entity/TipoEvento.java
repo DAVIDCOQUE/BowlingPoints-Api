@@ -1,6 +1,6 @@
 package com.bowlingpoints.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;

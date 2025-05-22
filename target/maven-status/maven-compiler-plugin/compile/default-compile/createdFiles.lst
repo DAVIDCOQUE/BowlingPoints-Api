@@ -14,6 +14,7 @@ com\bowlingpoints\entity\EstadoEvento.class
 com\bowlingpoints\dto\LoginRequest$LoginRequestBuilder.class
 com\bowlingpoints\entity\EventoHora.class
 com\bowlingpoints\service\TypeEventServices.class
+com\bowlingpoints\config\WebConfig.class
 com\bowlingpoints\entity\Role.class
 com\bowlingpoints\controller\EventsController.class
 com\bowlingpoints\entity\Persona$PersonaBuilder.class
@@ -29,6 +30,7 @@ com\bowlingpoints\controller\RondaController.class
 com\bowlingpoints\dto\EventsDTO.class
 com\bowlingpoints\entity\TipoEvento.class
 com\bowlingpoints\service\EventoCategoriaService.class
+com\bowlingpoints\config\WebConfig$1.class
 com\bowlingpoints\dto\RondaDTO.class
 com\bowlingpoints\dto\EventoRamasDTO$EventoRamasDTOBuilder.class
 com\bowlingpoints\repository\BranchEventRepository.class

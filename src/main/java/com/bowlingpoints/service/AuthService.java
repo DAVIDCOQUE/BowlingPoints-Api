@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -29,24 +30,15 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
 
     public AuthResponse login(LoginRequest request) {
-        // Autentica el usuario (Spring internamente usa tu UserDetailsService)
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUserName(),
-                        request.getPassword()
-                )
-        );
-
-        // Extrae el UserDetails desde la autenticación
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        // Genera el token con base en el usuario autenticado
-        String token = jwtService.getToken(userDetails);
-
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword()));
+        UserDetails user=userRepository.findByNickname(request.getUserName()).orElseThrow();
+        String token=jwtService.getToken(user);
         return AuthResponse.builder()
                 .token(token)
                 .build();
+
     }
+
 
 
 
