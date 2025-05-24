@@ -34,11 +34,12 @@ public class JwtService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
         extraClaims.put("roles", roles);
+        extraClaims.put("correo",user.getPersona().getEmail());
 
 
         return Jwts.builder()
                 .setClaims(extraClaims)
-                .setSubject(user.getPersona().getEmail())
+                .setSubject(user.getNickname())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs)) // ← fijarse aquí, antes usabas solo `expirationMs`
                 .signWith(getKey(), SignatureAlgorithm.HS256)
