@@ -32,4 +32,8 @@ public class Tournament {
 
     private Date updatedAt;
 
+    private String causeStatus;
+
+    private String place;
+
 }

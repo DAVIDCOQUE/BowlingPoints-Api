@@ -16,5 +16,7 @@ public class TournamentDTO {
     String place;
     String modality;
     String category;
+    String causeStatus;
+    String status;
 
 }
