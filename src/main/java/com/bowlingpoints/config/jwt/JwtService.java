@@ -3,9 +3,12 @@ package com.bowlingpoints.config.jwt;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.bowlingpoints.entity.User;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +23,24 @@ public class JwtService {
 
     private static final String SECRET_KEY="586E3272357538782F413F4428472B4B6250655368566B597033733676397924";
 
-    public String getToken(UserDetails user) {
+    public String getToken(User user) {
         return getToken(new HashMap<>(), user);
     }
 
-    private String getToken(Map<String,Object> extraClaims, UserDetails user) {
-        return Jwts
-                .builder()
+    private String getToken(Map<String, Object> extraClaims, User user) {
+        long expirationMs = 3600000;
+
+        List<String> roles = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        extraClaims.put("roles", roles);
+
+
+        return Jwts.builder()
                 .setClaims(extraClaims)
-                .setSubject(user.getUsername())
+                .setSubject(user.getPersona().getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+1000*60*24))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs)) // ← fijarse aquí, antes usabas solo `expirationMs`
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

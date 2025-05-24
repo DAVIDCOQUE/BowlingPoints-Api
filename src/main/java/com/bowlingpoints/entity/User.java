@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.persistence.Entity;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,8 +61,21 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+        if (this.nickname != null) {
+            switch (this.nickname) {
+                case "1143993925" -> authorities.add(new SimpleGrantedAuthority("ADMIN"));
+                case "1005890604" -> authorities.add(new SimpleGrantedAuthority("ENTRENADOR"));
+                default -> authorities.add(new SimpleGrantedAuthority("JUGADOR"));
+            }
+        } else {
+            authorities.add(new SimpleGrantedAuthority("JUGADOR")); // Por si el idPerson es null
+        }
+
+        return authorities;
     }
+
 
     @Override
     public String getPassword() {
