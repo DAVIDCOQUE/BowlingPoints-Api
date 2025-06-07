@@ -3,7 +3,6 @@ package com.bowlingpoints.controller;
 
 import com.bowlingpoints.dto.LoginRequest;
 import com.bowlingpoints.dto.AuthResponse;
-import com.bowlingpoints.dto.RegisterRequest;
 import com.bowlingpoints.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +25,4 @@ public class AuthController {
 
         return ResponseEntity.ok(authService.login(request));
     }
-
-    @PostMapping(value="register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest registerRequest){
-
-        return ResponseEntity.ok(authService.register(registerRequest));
-    }
-
 }

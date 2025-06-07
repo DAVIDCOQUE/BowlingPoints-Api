@@ -1,11 +1,9 @@
 package com.bowlingpoints.controller;
 
 
-import com.bowlingpoints.dto.PersonaDTO;
 import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.dto.TournamentDTO;
 import com.bowlingpoints.entity.Tournament;
-import com.bowlingpoints.service.PersonaService;
 import com.bowlingpoints.service.TournamentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
