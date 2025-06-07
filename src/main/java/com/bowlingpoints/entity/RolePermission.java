@@ -4,23 +4,30 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+@Entity
+@Table(name = "role_permission")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "roles")
-public class Role {
+@Builder
+public class RolePermission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
-    private int id;
+    @Column(name = "role_permission_id")
+    private Long rolePermissionId;
 
-    @Column(name = "description", nullable = false, unique = true)
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "permission_id", nullable = false)
+    private Permission permission;
+
+    @Column(nullable = false)
+    private Boolean granted;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -33,9 +40,6 @@ public class Role {
 
     @Column(name = "updated_by")
     private Integer updatedBy;
-
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<UserRole> userRoles;
 
     @PrePersist
     public void prePersist() {

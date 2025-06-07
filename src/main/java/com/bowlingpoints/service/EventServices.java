@@ -32,12 +32,12 @@ public class EventServices {
         eventEntityList.forEach(
                 event->{
 
-                    String nameConcat = event.getUsuario().getPersona().getFirstName();
+                    String nameConcat = event.getUsuario().getPerson().getFirstName();
 
                     eventsDTOList.add(EventsDTO.builder().
                             nameEvent(event.getNombreEvento())
-                            .eventOrganizer(event.getUsuario().getPersona().getFirstName()+" "+
-                                    event.getUsuario().getPersona().getLastname())
+                            .eventOrganizer(event.getUsuario().getPerson().getFirstName()+" "+
+                                    event.getUsuario().getPerson().getLastname())
                             .descriptionEvent(null).build());
                 }
         );
@@ -54,7 +54,7 @@ public class EventServices {
 
         eventoList.forEach(
                 evento->{
-                    String nameConcat = evento.getUsuario().getPersona().getFirstName();
+                    String nameConcat = evento.getUsuario().getPerson().getFirstName();
                     eventsDTOList.add(EventsDTO.builder().nameEvent(evento.getNombreEvento())
                             .eventOrganizer(nameConcat)
                             .descriptionEvent(evento.getDescripcion()).build());
@@ -79,7 +79,7 @@ public class EventServices {
 
         eventoList.forEach(
                 evento -> {
-                    String nameConcat = evento.getUsuario().getPersona().getFirstName();
+                    String nameConcat = evento.getUsuario().getPerson().getFirstName();
                     eventsDTOList.add(EventsDTO.builder().nameEvent(evento.getNombreEvento())
                             .eventOrganizer(nameConcat)
                             .descriptionEvent(evento.getDescripcion()).build());

@@ -4,22 +4,23 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
-@Table(name = "roles")
-public class Role {
+@Table(name = "permissions")
+public class Permission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
-    private int id;
+    @Column(name = "permission_id")
+    private Long permissionId;
 
-    @Column(name = "description", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
+    private String name;
+
     private String description;
 
     @Column(name = "created_at", updatable = false)
@@ -33,9 +34,6 @@ public class Role {
 
     @Column(name = "updated_by")
     private Integer updatedBy;
-
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<UserRole> userRoles;
 
     @PrePersist
     public void prePersist() {

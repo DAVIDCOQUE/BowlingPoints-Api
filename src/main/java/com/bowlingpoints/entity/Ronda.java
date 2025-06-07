@@ -34,7 +34,7 @@ public class Ronda {
 
     @ManyToOne
     @JoinColumn(name = "person_id", referencedColumnName = "person_id")
-    private Persona persona;
+    private Person persona;
 
     @Column(name = "id_evento")
     private int idEvento;

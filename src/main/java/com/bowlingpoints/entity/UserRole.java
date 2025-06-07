@@ -4,38 +4,36 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+@Entity
+@Table(name = "user_role")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "roles")
-public class Role {
+@Builder
+public class UserRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
-    private int id;
+    @Column(name = "user_role_id")
+    private Long userRoleId;
 
-    @Column(name = "description", nullable = false, unique = true)
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    @Column(name = "status", nullable = false)
+    private Boolean status = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
-    private Integer createdBy;
-
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    private Integer updatedBy;
-
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<UserRole> userRoles;
 
     @PrePersist
     public void prePersist() {
@@ -46,5 +44,9 @@ public class Role {
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isGranted() {
+        return Boolean.TRUE.equals(status);
     }
 }

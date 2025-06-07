@@ -34,7 +34,7 @@ public class JwtService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
         extraClaims.put("roles", roles);
-        extraClaims.put("correo",user.getPersona().getEmail());
+        extraClaims.put("correo",user.getPerson().getEmail());
 
 
         return Jwts.builder()

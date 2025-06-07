@@ -1,3 +1,12 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-17",
+            "path": "C:\\Program Files\\Java\\jdk-17",
+            "default": true
+        }
+    ],
+    "java.jdt.ls.vmargs": "-javaagent:${workspaceFolder}\\lombok.jar -Xbootclasspath/a:${workspaceFolder}\\lombok.jar",
+    "java.errors.incompleteClasspath.severity": "ignore"
 }

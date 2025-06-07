@@ -1,12 +1,10 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.PersonaDTO;
-import com.bowlingpoints.entity.Persona;
-import com.bowlingpoints.entity.Ronda;
-import com.bowlingpoints.repository.PersonaRepository;
+import com.bowlingpoints.entity.Person;
+import com.bowlingpoints.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,14 +15,14 @@ public class PersonaService {
 
 
     @Autowired
-    PersonaRepository personaRepository;
+    PersonRepository personRepository;
 
 
     public List<PersonaDTO> getAllPersona(){
 
         List<PersonaDTO> personaDTOList = new ArrayList<>();
 
-        List<Persona> personaList = personaRepository.findAll();
+        List<Person> personaList = personRepository.findAll();
 
         personaList.forEach(persona -> {
             personaDTOList.add(PersonaDTO.builder()
@@ -45,13 +43,13 @@ public class PersonaService {
     }
 
     public boolean updatePersona(Integer id, PersonaDTO dto) {
-        Optional<Persona> optionalPersona = personaRepository.findById(id);
+        Optional<Person> optionalPersona = personRepository.findById(id);
 
         if (optionalPersona.isEmpty()) {
             return false;
         }
 
-        Persona persona = optionalPersona.get();
+        Person persona = optionalPersona.get();
         persona.setFirstName(dto.getFirstName());
         persona.setSecondName(dto.getSecondName());
         persona.setLastname(dto.getLastName());
@@ -60,17 +58,17 @@ public class PersonaService {
         persona.setPhone(dto.getMobile());
         persona.setEmail(dto.getEmail());
 
-        personaRepository.save(persona);
+        personRepository.save(persona);
 
         return true;
     }
 
     public boolean deletePersona(Integer id) {
-        if (!personaRepository.existsById(id)) {
+        if (!personRepository.existsById(id)) {
             return false;
         }
 
-        personaRepository.deleteById(id);
+        personRepository.deleteById(id);
         return true;
     }
 

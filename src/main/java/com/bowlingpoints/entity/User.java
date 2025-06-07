@@ -1,85 +1,82 @@
 package com.bowlingpoints.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import jakarta.persistence.Entity;
-import java.sql.Date;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Builder
-@Table(name="users", uniqueConstraints = {@UniqueConstraint(columnNames = {"username"})})
+@Entity
+@Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = {"nickname"})})
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private int userId;
-    @Column(name="nickname")
+
+    @Column(name = "nickname", nullable = false)
     private String nickname;
 
-    @Column(name="person_id",insertable=false, updatable=false)
-    private String idPerson;
-    @Column(name="password")
+    @Column(name = "password", nullable = false)
     private String password;
-    @Column(name="last_login_at")
-    private Integer last_login_at;
 
-    @Column(name="status")
-    private String status;
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
-    @Column(name="attempts_login")
-    private Integer attempts_login;
+    @Column(name = "status")
+    private boolean status = true;
 
-    @Column(name="created_by")
-    private Integer created_by;
+    @Column(name = "attempts_login")
+    private Integer attemptsLogin = 0;
 
-    @Column(name="created_at")
-    private Date created_at;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name="updated_at")
-    private Date updated_at;
+    @Column(name = "created_by")
+    private Integer createdBy;
 
-    @Column(name="updated_by")
-    private Integer updated_by;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "updated_by")
+    private Integer updatedBy;
 
     @ManyToOne
     @JoinColumn(name = "person_id", referencedColumnName = "person_id")
-    private Persona persona;
+    private Person person;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<UserRole> userRoles = new ArrayList<>();
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-
-        if (this.nickname != null) {
-            switch (this.nickname) {
-                case "1143993925" -> authorities.add(new SimpleGrantedAuthority("ADMIN"));
-                case "1005890604" -> authorities.add(new SimpleGrantedAuthority("ENTRENADOR"));
-                default -> authorities.add(new SimpleGrantedAuthority("JUGADOR"));
-            }
-        } else {
-            authorities.add(new SimpleGrantedAuthority("JUGADOR")); // Por si el idPerson es null
-        }
-
-        return authorities;
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
+    // Spring Security
     @Override
-    public String getPassword() {
-        return password;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (userRoles == null) return List.of();
+
+        return userRoles.stream()
+                .filter(UserRole::isGranted)
+                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getDescription()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -104,6 +101,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return status;
     }
 }
