@@ -37,6 +37,9 @@ public class Role {
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<UserRole> userRoles;
 
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    private List<RolePermission> rolePermissions; //
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
