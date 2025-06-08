@@ -1,5 +1,6 @@
 package com.bowlingpoints.controller;
 
+import com.bowlingpoints.dto.RoleDTO;
 import com.bowlingpoints.dto.UserFullDTO;
 import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.service.UserFullService;

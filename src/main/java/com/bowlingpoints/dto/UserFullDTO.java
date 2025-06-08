@@ -20,6 +20,7 @@ public class UserFullDTO {
     private String phone;
     private String gender;
     private String roleDescription;
+    private String password;
 
     private List<String> roles;
 }

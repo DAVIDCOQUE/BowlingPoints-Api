@@ -11,6 +11,7 @@ import com.bowlingpoints.repository.UserFullRepository;
 import com.bowlingpoints.repository.UserRepository;
 import com.bowlingpoints.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,22 +27,25 @@ public class UserFullService {
     private final PersonRepository personRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserFullDTO> getAllUsersWithDetails() {
         return userFullRepository.getUserFullInfoRaw().stream()
-                .map(obj -> new UserFullDTO(
-                        (Integer) obj[0],
-                        (String) obj[1],
-                        (String) obj[2],
-                        (String) obj[3],
-                        (String) obj[4],
-                        (String) obj[5],
-                        (String) obj[6],
-                        (String) obj[7],
-                        (String) obj[8],
-                        (String) obj[9],
-                        null
-                ))
+                .map(obj -> {
+                    UserFullDTO dto = new UserFullDTO();
+                    dto.setUserId((Integer) obj[0]);
+                    dto.setNickname((String) obj[1]);
+                    dto.setEmail((String) obj[2]);
+                    dto.setFirstname((String) obj[3]);
+                    dto.setSecondname((String) obj[4]);
+                    dto.setLastname((String) obj[5]);
+                    dto.setSecondlastname((String) obj[6]);
+                    dto.setPhone((String) obj[7]);
+                    dto.setGender((String) obj[8]);
+                    dto.setRoleDescription((String) obj[9]);
+                    dto.setRoles(null);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -59,6 +63,7 @@ public class UserFullService {
         User user = userOpt.get();
         Person person = user.getPerson();
 
+        // Actualiza los datos personales
         person.setFirstName(input.getFirstname());
         person.setSecondName(input.getSecondname());
         person.setLastname(input.getLastname());
@@ -66,10 +71,16 @@ public class UserFullService {
         person.setEmail(input.getEmail());
         person.setPhone(input.getPhone());
         person.setGender(input.getGender());
-
         personRepository.save(person);
 
+        // Actualiza el nickname
         user.setNickname(input.getNickname());
+
+        // 🔐 Si viene contraseña, actualizarla codificada
+        if (input.getPassword() != null && !input.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(input.getPassword()));
+        }
+
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
@@ -95,6 +106,7 @@ public class UserFullService {
     }
 
     public void createUser(UserFullDTO input) {
+        // Crear persona
         Person person = new Person();
         person.setFirstName(input.getFirstname());
         person.setSecondName(input.getSecondname());
@@ -104,16 +116,24 @@ public class UserFullService {
         person.setPhone(input.getPhone());
         person.setGender(input.getGender());
         person.setStatus(true);
-
         personRepository.save(person);
 
+        // Crear usuario
         User user = new User();
         user.setNickname(input.getNickname());
         user.setPerson(person);
-        user.setPassword("encrypted-password"); // default or encryption placeholder
+
+        // Aquí encriptamos la contraseña recibida
+        if (input.getPassword() != null && !input.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(input.getPassword()));
+        } else {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+
         user.setStatus(true);
         userRepository.save(user);
 
+        // Asociar roles
         if (input.getRoles() != null && !input.getRoles().isEmpty()) {
             for (String roleName : input.getRoles()) {
                 Optional<Role> role = roleRepository.findByDescription(roleName);

@@ -92,7 +92,7 @@ public class DatabaseSeeder {
                     .secondName(secondName)
                     .lastname(lastname)
                     .secondLastname(secondLastname)
-                    .gender("M")
+                    .gender("Masculino")
                     .email(email)
                     .phone("3100000000")
                     .status(true)
