@@ -11,7 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 public class UserFullDTO {
     private Integer userId;
+    private String photoUrl;
     private String nickname;
+    private String document;
     private String email;
     private String firstname;
     private String secondname;

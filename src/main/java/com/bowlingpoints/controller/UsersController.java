@@ -1,5 +1,6 @@
 package com.bowlingpoints.controller;
 
+import com.bowlingpoints.config.jwt.JwtService;
 import com.bowlingpoints.dto.RoleDTO;
 import com.bowlingpoints.dto.UserFullDTO;
 import com.bowlingpoints.dto.ResponseGenericDTO;
@@ -17,11 +18,25 @@ import java.util.List;
 public class UsersController {
 
     private final UserFullService userFullService;
+    private final JwtService jwtService;
 
     @GetMapping("/all")
     public ResponseEntity<ResponseGenericDTO<List<UserFullDTO>>> getAllUsers() {
         List<UserFullDTO> users = userFullService.getAllUsersWithDetails();
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "User list retrieved successfully", users));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ResponseGenericDTO<UserFullDTO>> getCurrentUser(@RequestHeader("Authorization") String token) {
+        String username = jwtService.getUsernameFromToken(token.replace("Bearer ", ""));
+
+        UserFullDTO user = userFullService.getByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseGenericDTO<>(false, "User not found", null));
+        }
+
+        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "User retrieved", user));
     }
 
     @GetMapping("/{id}")

@@ -34,19 +34,28 @@ public class UserFullService {
                 .map(obj -> {
                     UserFullDTO dto = new UserFullDTO();
                     dto.setUserId((Integer) obj[0]);
-                    dto.setNickname((String) obj[1]);
-                    dto.setEmail((String) obj[2]);
-                    dto.setFirstname((String) obj[3]);
-                    dto.setSecondname((String) obj[4]);
-                    dto.setLastname((String) obj[5]);
-                    dto.setSecondlastname((String) obj[6]);
-                    dto.setPhone((String) obj[7]);
-                    dto.setGender((String) obj[8]);
-                    dto.setRoleDescription((String) obj[9]);
+                    dto.setPhotoUrl((String) obj[1]);
+                    dto.setNickname((String) obj[2]);
+                    dto.setDocument((String) obj[3]);
+                    dto.setEmail((String) obj[4]);
+                    dto.setFirstname((String) obj[5]);
+                    dto.setSecondname((String) obj[6]);
+                    dto.setLastname((String) obj[7]);
+                    dto.setSecondlastname((String) obj[8]);
+                    dto.setPhone((String) obj[9]);
+                    dto.setGender((String) obj[10]);
+                    dto.setRoleDescription((String) obj[11]);
                     dto.setRoles(null);
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public UserFullDTO getByUsername(String username) {
+        return getAllUsersWithDetails().stream()
+                .filter(u -> u.getNickname().equals(username))
+                .findFirst()
+                .orElse(null);
     }
 
     public UserFullDTO getUserById(Integer id) {
@@ -64,6 +73,8 @@ public class UserFullService {
         Person person = user.getPerson();
 
         // Actualiza los datos personales
+        person.setPhotoUrl(input.getPhotoUrl());
+        person.setDocument(input.getDocument());
         person.setFirstName(input.getFirstname());
         person.setSecondName(input.getSecondname());
         person.setLastname(input.getLastname());
@@ -81,11 +92,38 @@ public class UserFullService {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
+        // ✅ Actualiza el rol si viene uno
+        if (input.getRoles() != null && !input.getRoles().isEmpty()) {
+            String roleName = input.getRoles().get(0); // Asumimos un único rol
+            Optional<Role> optionalRole = roleRepository.findByDescription(roleName);
+
+            if (optionalRole.isPresent()) {
+                Role role = optionalRole.get();
+
+                // ❌ Eliminar roles anteriores
+                userRoleRepository.deleteAll(user.getUserRoles());
+
+                // 🔁 Crear nuevo UserRole
+                UserRole userRole = new UserRole();
+                userRole.setUser(user);
+                userRole.setRole(role);
+                userRole.setStatus(true);
+
+                userRoleRepository.save(userRole);
+
+                // ✅ Usar lista MUTABLE para evitar excepción de Hibernate
+                List<UserRole> mutableRoles = new ArrayList<>();
+                mutableRoles.add(userRole);
+                user.setUserRoles(mutableRoles);
+            }
+        }
+
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         return true;
     }
+
 
     public boolean deleteUser(Integer id) {
         Optional<User> userOpt = userRepository.findById(id);
@@ -108,6 +146,8 @@ public class UserFullService {
     public void createUser(UserFullDTO input) {
         // Crear persona
         Person person = new Person();
+        person.setPhotoUrl(input.getPhotoUrl());
+        person.setDocument(input.getDocument());
         person.setFirstName(input.getFirstname());
         person.setSecondName(input.getSecondname());
         person.setLastname(input.getLastname());

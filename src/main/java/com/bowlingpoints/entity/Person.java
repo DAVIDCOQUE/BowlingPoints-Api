@@ -19,6 +19,12 @@ public class Person {
     @Column(name = "person_id")
     private Integer idPerson;
 
+    @Column(name = "photo_url")
+    private String photoUrl;
+
+    @Column(name = "document")
+    private String document;
+
     @Column(name = "first_name", nullable = false)
     private String firstName;
 

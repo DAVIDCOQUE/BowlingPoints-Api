@@ -14,7 +14,9 @@ public interface UserFullRepository extends CrudRepository<User, Integer> {
     @Query(value = """
             SELECT
                 u.user_id,
+                p.photo_url,
                 u.nickname,
+                 p.document,
                 p.email,
                 p.first_name,
                 p.second_name,
