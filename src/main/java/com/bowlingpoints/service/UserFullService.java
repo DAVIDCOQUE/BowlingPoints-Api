@@ -72,7 +72,7 @@ public class UserFullService {
         User user = userOpt.get();
         Person person = user.getPerson();
 
-        // Actualiza los datos personales
+        // 🧠 Actualiza datos personales
         person.setPhotoUrl(input.getPhotoUrl());
         person.setDocument(input.getDocument());
         person.setFirstName(input.getFirstname());
@@ -84,38 +84,30 @@ public class UserFullService {
         person.setGender(input.getGender());
         personRepository.save(person);
 
-        // Actualiza el nickname
+        // 📝 Actualiza nickname
         user.setNickname(input.getNickname());
 
-        // 🔐 Si viene contraseña, actualizarla codificada
+        // 🔐 Si hay nueva contraseña, la actualizamos
         if (input.getPassword() != null && !input.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
-        // ✅ Actualiza el rol si viene uno
+        // ✅ Cambiar rol si viene
         if (input.getRoles() != null && !input.getRoles().isEmpty()) {
-            String roleName = input.getRoles().get(0); // Asumimos un único rol
-            Optional<Role> optionalRole = roleRepository.findByDescription(roleName);
+            String roleName = input.getRoles().get(0); // 👈 asumimos solo un rol
+            Role role = roleRepository.findByDescription(roleName)
+                    .orElseThrow(() -> new RuntimeException("❌ Rol no encontrado: " + roleName));
 
-            if (optionalRole.isPresent()) {
-                Role role = optionalRole.get();
+            // Limpiar roles anteriores (gracias a orphanRemoval = true)
+            user.getUserRoles().clear();
 
-                // ❌ Eliminar roles anteriores
-                userRoleRepository.deleteAll(user.getUserRoles());
+            UserRole newRole = UserRole.builder()
+                    .user(user)
+                    .role(role)
+                    .status(true)
+                    .build();
 
-                // 🔁 Crear nuevo UserRole
-                UserRole userRole = new UserRole();
-                userRole.setUser(user);
-                userRole.setRole(role);
-                userRole.setStatus(true);
-
-                userRoleRepository.save(userRole);
-
-                // ✅ Usar lista MUTABLE para evitar excepción de Hibernate
-                List<UserRole> mutableRoles = new ArrayList<>();
-                mutableRoles.add(userRole);
-                user.setUserRoles(mutableRoles);
-            }
+            user.getUserRoles().add(newRole);
         }
 
         user.setUpdatedAt(LocalDateTime.now());
@@ -123,6 +115,7 @@ public class UserFullService {
 
         return true;
     }
+
 
 
     public boolean deleteUser(Integer id) {
@@ -146,7 +139,11 @@ public class UserFullService {
     public void createUser(UserFullDTO input) {
         // Crear persona
         Person person = new Person();
-        person.setPhotoUrl(input.getPhotoUrl());
+        if (input.getPhotoUrl() == null || input.getPhotoUrl().isBlank()) {
+            person.setPhotoUrl("/uploads/users/default.png"); // ✅ Imagen por defecto
+        } else {
+            person.setPhotoUrl(input.getPhotoUrl());
+        }
         person.setDocument(input.getDocument());
         person.setFirstName(input.getFirstname());
         person.setSecondName(input.getSecondname());

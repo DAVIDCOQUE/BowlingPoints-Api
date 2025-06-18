@@ -54,7 +54,7 @@ public class User implements UserDetails {
     @JoinColumn(name = "person_id", referencedColumnName = "person_id")
     private Person person;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserRole> userRoles = new ArrayList<>();
 
     @PrePersist
@@ -102,5 +102,15 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return status;
+    }
+
+    public void setSingleRole(Role role) {
+        this.userRoles.clear();
+        UserRole userRole = UserRole.builder()
+                .user(this)
+                .role(role)
+                .status(true)
+                .build();
+        this.userRoles.add(userRole);
     }
 }

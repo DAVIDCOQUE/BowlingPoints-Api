@@ -2,16 +2,18 @@ package com.bowlingpoints.config;
 
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.sql.Date;
-import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Configuration
+@RequiredArgsConstructor
 public class DatabaseSeeder {
 
     @Bean
@@ -22,32 +24,26 @@ public class DatabaseSeeder {
             PersonRepository personRepository,
             UserRepository userRepository,
             UserRoleRepository userRoleRepository,
+            ClubsRepository clubRepository,
+            ClubPersonRepository clubPersonRepository,
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
             System.out.println("🔧 [Seeder] Iniciando carga de datos...");
 
-            // Crear roles si no existen
-            if (roleRepository.count() == 0) {
-                System.out.println("📌 Insertando roles...");
-                roleRepository.save(Role.builder().description("ADMIN").build());
-                roleRepository.save(Role.builder().description("ENTRENADOR").build());
-                roleRepository.save(Role.builder().description("JUGADOR").build());
-                System.out.println("✅ Roles insertados.");
-            }
+            // 1. Crear roles globales
+            createRoleIfMissing("ADMIN", roleRepository);
+            createRoleIfMissing("ENTRENADOR", roleRepository);
+            createRoleIfMissing("JUGADOR", roleRepository);
 
-            // Crear permisos si no existen
-            if (permissionRepository.count() == 0) {
-                System.out.println("📌 Insertando permisos...");
-                permissionRepository.save(Permission.builder().name("VER_DASHBOARD").description("Acceso al tablero").build());
-                permissionRepository.save(Permission.builder().name("VER_PERFIL").description("Acceso al perfil").build());
-                permissionRepository.save(Permission.builder().name("VER_MIS_TORNEOS").description("Consulta torneos").build());
-                permissionRepository.save(Permission.builder().name("GESTIONAR_CLUBES").description("Administra clubes").build());
-                permissionRepository.save(Permission.builder().name("VER_USUARIOS").description("Gestiona usuarios").build());
-                System.out.println("✅ Permisos insertados.");
-            }
+            // 2. Crear permisos base
+            createPermissionIfMissing("VER_DASHBOARD", "Acceso al tablero", permissionRepository);
+            createPermissionIfMissing("VER_PERFIL", "Acceso al perfil", permissionRepository);
+            createPermissionIfMissing("VER_MIS_TORNEOS", "Consulta torneos", permissionRepository);
+            createPermissionIfMissing("GESTIONAR_CLUBES", "Administra clubes", permissionRepository);
+            createPermissionIfMissing("VER_USUARIOS", "Gestiona usuarios", permissionRepository);
 
-            // Asignar todos los permisos al rol ADMIN
+            // 3. Asignar permisos a ADMIN
             Role adminRole = roleRepository.findByDescription("ADMIN")
                     .orElseThrow(() -> new RuntimeException("❌ Rol ADMIN no encontrado"));
 
@@ -60,68 +56,118 @@ public class DatabaseSeeder {
                             .build());
                 }
             });
-            System.out.println("✅ Permisos asignados al rol ADMIN.");
 
-            // Crear usuario ADMIN
-            createUserIfNotExists("davidcoque", "David", "Armando", "Sánchez", "Sanchez",
+            // 4. Crear usuarios
+            User admin = createUserIfNotExists("davidcoque", "David", "Armando", "Sánchez", "Sanchez",
                     "david03sc@gmail.com", "ADMIN", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            // Crear usuario ENTRENADOR
-            createUserIfNotExists("jhon", "jhon", "Elena", "Martínez", "Pérez",
+            User entrenador = createUserIfNotExists("jhon", "Jhon", "Elena", "Martínez", "Pérez",
                     "jhon@gmail.com", "ENTRENADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            // Crear usuario JUGADOR
-            createUserIfNotExists("sara", "sara", null, "Pérez", null,
+            User jugador = createUserIfNotExists("sara", "Sara", null, "Pérez", null,
                     "sara@gmail.com", "JUGADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            System.out.println("🎉 [Seeder] Carga inicial completada con éxito.");
+            // 5. Crear club
+            if (clubRepository.count() == 0) {
+                System.out.println("📌 Creando club 'Bowling Club Central'...");
+                Clubs  club = Clubs.builder()
+                        .name("Bowling Club Central")
+                        .description("Club principal de la ciudad")
+                        .foundationDate(LocalDate.of(2020, 1, 1))
+                        .city("Ciudad Bowling")
+                        .imageUrl("/uploads/clubs/default.png")
+                        .status(true)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                clubRepository.save(club);
+
+                // Agregar miembros al club
+                clubPersonRepository.save(ClubPerson.builder()
+                        .club(club)
+                        .person(entrenador.getPerson())
+                        .roleInClub("ENTRENADOR")
+                        .joinedAt(LocalDateTime.now())
+                        .status(true)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+
+                clubPersonRepository.save(ClubPerson.builder()
+                        .club(club)
+                        .person(jugador.getPerson())
+                        .roleInClub("JUGADOR")
+                        .joinedAt(LocalDateTime.now())
+                        .status(true)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+
+                System.out.println("✅ Club creado con miembros.");
+            }
+
+            System.out.println("🎉 [Seeder] Carga inicial completada.");
         };
     }
 
-    private void createUserIfNotExists(String nickname, String firstName, String secondName,
+    private void createRoleIfMissing(String name, RoleRepository roleRepository) {
+        roleRepository.findByDescription(name).orElseGet(() ->
+                roleRepository.save(Role.builder().description(name).build())
+        );
+    }
+
+    private void createPermissionIfMissing(String name, String description, PermissionRepository repository) {
+        repository.findByName(name).orElseGet(() ->
+                repository.save(Permission.builder().name(name).description(description).build())
+        );
+    }
+
+    private User createUserIfNotExists(String nickname, String firstName, String secondName,
                                        String lastname, String secondLastname, String email,
                                        String roleDescription, PasswordEncoder passwordEncoder,
                                        PersonRepository personRepository, UserRepository userRepository,
                                        UserRoleRepository userRoleRepository, RoleRepository roleRepository) {
 
-        if (!userRepository.existsByNickname(nickname)) {
-            System.out.printf("📌 Creando usuario '%s'...%n", nickname);
-
-            Person person = Person.builder()
-                    .firstName(firstName)
-                    .secondName(secondName)
-                    .lastname(lastname)
-                    .secondLastname(secondLastname)
-                    .gender("Masculino")
-                    .email(email)
-                    .phone("3100000000")
-                    .status(true)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            personRepository.save(person);
-
-            User user = User.builder()
-                    .nickname(nickname)
-                    .password(passwordEncoder.encode("admin"))
-                    .status(true)
-                    .attemptsLogin(0)
-                    .lastLoginAt(LocalDateTime.now())
-                    .person(person)
-                    .build();
-            userRepository.save(user);
-
-            Role role = roleRepository.findByDescription(roleDescription)
-                    .orElseThrow(() -> new RuntimeException("❌ Rol no encontrado: " + roleDescription));
-
-            userRoleRepository.save(UserRole.builder()
-                    .user(user)
-                    .role(role)
-                    .status(true)
-                    .build());
-
-            System.out.printf("✅ Usuario '%s' creado con rol %s.%n", nickname, roleDescription);
-        } else {
+        Optional<User> existingUser = userRepository.findByNickname(nickname);
+        if (existingUser.isPresent()) {
             System.out.printf("🔁 Usuario '%s' ya existe, se omite.%n", nickname);
+            return existingUser.get();
         }
+
+        System.out.printf("📌 Creando usuario '%s'...%n", nickname);
+
+        Person person = Person.builder()
+                .firstName(firstName)
+                .secondName(secondName)
+                .lastname(lastname)
+                .secondLastname(secondLastname)
+                .gender("Masculino")
+                .email(email)
+                .phone("3100000000")
+                .status(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+        personRepository.save(person);
+
+        User user = User.builder()
+                .nickname(nickname)
+                .password(passwordEncoder.encode("admin"))
+                .status(true)
+                .attemptsLogin(0)
+                .lastLoginAt(LocalDateTime.now())
+                .person(person)
+                .createdAt(LocalDateTime.now())
+                .build();
+        userRepository.save(user);
+
+        Role role = roleRepository.findByDescription(roleDescription)
+                .orElseThrow(() -> new RuntimeException("❌ Rol no encontrado: " + roleDescription));
+
+        userRoleRepository.save(UserRole.builder()
+                .user(user)
+                .role(role)
+                .status(true)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        System.out.printf("✅ Usuario '%s' creado con rol %s.%n", nickname, roleDescription);
+        return user;
     }
 }

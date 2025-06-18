@@ -1,5 +1,6 @@
 package com.bowlingpoints.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +18,7 @@ public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "person_id")
-    private Integer idPerson;
+    private Integer personId;
 
     @Column(name = "photo_url")
     private String photoUrl;
@@ -63,6 +64,10 @@ public class Person {
 
     @OneToMany(mappedBy = "person", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<User> users;
+
+    @OneToMany(mappedBy = "person")
+    @JsonBackReference
+    private List<ClubPerson> clubs;
 
     @PrePersist
     public void prePersist() {
