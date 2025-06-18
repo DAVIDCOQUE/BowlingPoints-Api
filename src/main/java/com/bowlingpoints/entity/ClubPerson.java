@@ -20,14 +20,13 @@ public class ClubPerson {
     @Column(name = "club_person_id")
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "club_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "club_id", nullable = false)
     @JsonBackReference
     private Clubs club;
 
     @ManyToOne
     @JoinColumn(name = "person_id")
-    @JsonManagedReference
     private Person person;
 
     @Column(name = "role_in_club")

@@ -7,6 +7,7 @@ import com.bowlingpoints.service.ClubMemberService;
 import com.bowlingpoints.service.ClubsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,20 +45,16 @@ public class ClubsController {
         return ResponseEntity.ok(dto);
     }
 
-    // ✅ Actualizar un club (solo campos del club, no miembros)
+    // ✅ Actualizar un club
     @PutMapping("/{id}")
-    public ResponseEntity<Clubs> updateClub(@PathVariable Integer id, @RequestBody CreateClubRequestDTO dto) {
-        return clubsRepository.findById(id)
-                .map(existing -> {
-                    existing.setName(dto.getName());
-                    existing.setCity(dto.getCity());
-                    existing.setFoundationDate(dto.getFoundationDate());
-                    existing.setDescription(dto.getDescription());
-                    existing.setStatus(dto.getStatus());
-                    existing.setUpdatedAt(LocalDateTime.now());
-                    return ResponseEntity.ok(clubsRepository.save(existing));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseGenericDTO<Void>> updateClub(@PathVariable Integer id, @RequestBody ClubsDTO dto) {
+        try {
+            clubsService.updateClubWithMembers(id, dto);
+            return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Club actualizado correctamente", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseGenericDTO<>(false, e.getMessage(), null));
+        }
     }
 
     // ✅ Eliminar lógicamente un club

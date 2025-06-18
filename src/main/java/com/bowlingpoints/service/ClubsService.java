@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -100,18 +101,46 @@ public class ClubsService {
                 }).toList();
     }
 
-    // ✅ Actualizar un club (solo datos del club, no miembros)
-    public Optional<Clubs> updateClub(Integer id, Clubs updatedClub) {
-        return clubsRepository.findById(id).map(existing -> {
-            existing.setName(updatedClub.getName());
-            existing.setCity(updatedClub.getCity());
-            existing.setFoundationDate(updatedClub.getFoundationDate());
-            existing.setImageUrl(updatedClub.getImageUrl());
-            existing.setDescription(updatedClub.getDescription());
-            existing.setUpdatedAt(LocalDateTime.now());
-            return clubsRepository.save(existing);
-        });
+    // ✅ Actualizar un club
+    public void updateClubWithMembers(Integer clubId, ClubsDTO dto) {
+        Clubs club = clubsRepository.findById(clubId)
+                .orElseThrow(() -> new RuntimeException("❌ Club no encontrado con ID " + clubId));
+
+        // 🔁 Actualiza campos básicos
+        club.setName(dto.getName());
+        club.setCity(dto.getCity());
+        club.setDescription(dto.getDescription());
+        club.setFoundationDate(dto.getFoundationDate());
+        club.setImageUrl(dto.getImageUrl());
+        club.setStatus(dto.getStatus());
+        club.setUpdatedAt(LocalDateTime.now());
+
+        // 🧹 Limpia miembros anteriores (por seguridad)
+        club.getMembers().clear();
+
+        // ➕ Crea nuevos miembros
+        List<ClubPerson> nuevosMiembros = dto.getMembers().stream()
+                .map(m -> {
+                    Person person = personRepository.findById(m.getPersonId())
+                            .orElseThrow(() -> new RuntimeException("❌ Persona no encontrada con ID " + m.getPersonId()));
+
+                    return ClubPerson.builder()
+                            .club(club)
+                            .person(person)
+                            .roleInClub(m.getRoleInClub())
+                            .joinedAt(LocalDateTime.now())
+                            .status(true)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                })
+                .toList();
+
+        // 🔗 Asociar nuevos miembros al club
+
+        club.getMembers().addAll(nuevosMiembros); // ✅ Reasignar
+        clubsRepository.save(club);
     }
+
 
     // ✅ Eliminar lógicamente un club
     public boolean deleteClub(Integer id) {
