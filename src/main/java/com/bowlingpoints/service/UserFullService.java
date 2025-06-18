@@ -34,17 +34,18 @@ public class UserFullService {
                 .map(obj -> {
                     UserFullDTO dto = new UserFullDTO();
                     dto.setUserId((Integer) obj[0]);
-                    dto.setPhotoUrl((String) obj[1]);
-                    dto.setNickname((String) obj[2]);
-                    dto.setDocument((String) obj[3]);
-                    dto.setEmail((String) obj[4]);
-                    dto.setFirstname((String) obj[5]);
-                    dto.setSecondname((String) obj[6]);
-                    dto.setLastname((String) obj[7]);
-                    dto.setSecondlastname((String) obj[8]);
-                    dto.setPhone((String) obj[9]);
-                    dto.setGender((String) obj[10]);
-                    dto.setRoleDescription((String) obj[11]);
+                    dto.setPersonId((Integer) obj[1]);
+                    dto.setPhotoUrl((String) obj[2]);
+                    dto.setNickname((String) obj[3]);
+                    dto.setDocument((String) obj[4]);
+                    dto.setEmail((String) obj[5]);
+                    dto.setFirstname((String) obj[6]);
+                    dto.setSecondname((String) obj[7]);
+                    dto.setLastname((String) obj[8]);
+                    dto.setSecondlastname((String) obj[9]);
+                    dto.setPhone((String) obj[10]);
+                    dto.setGender((String) obj[11]);
+                    dto.setRoleDescription((String) obj[12]);
                     dto.setRoles(null);
                     return dto;
                 })
