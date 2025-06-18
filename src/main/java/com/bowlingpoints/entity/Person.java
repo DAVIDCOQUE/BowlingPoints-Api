@@ -62,6 +62,9 @@ public class Person {
     @Column(name = "updated_by")
     private Integer updatedBy;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @OneToMany(mappedBy = "person", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<User> users;
 

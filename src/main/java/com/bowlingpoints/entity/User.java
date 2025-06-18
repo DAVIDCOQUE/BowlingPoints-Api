@@ -68,6 +68,9 @@ public class User implements UserDetails {
         updatedAt = LocalDateTime.now();
     }
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     // Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

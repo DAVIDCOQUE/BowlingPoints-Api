@@ -123,13 +123,19 @@ public class UserFullService {
         if (userOpt.isEmpty()) return false;
 
         User user = userOpt.get();
-        user.setStatus(false);
+        user.setStatus(false); // 🟡 Opcional: marcar como inactivo
+
+        // 🔴 Soft delete en User
         user.setUpdatedAt(LocalDateTime.now());
+        user.setDeletedAt(LocalDateTime.now()); // ⬅️ Asegúrate de tener este campo en la entidad
 
+        // 🔴 Soft delete en Person
         Person person = user.getPerson();
-        person.setStatus(false);
+        person.setStatus(false); // Opcional también
         person.setUpdatedAt(LocalDateTime.now());
+        person.setDeletedAt(LocalDateTime.now()); // ⬅️ Necesitas este campo también
 
+        // Guardar los cambios
         userRepository.save(user);
         personRepository.save(person);
 
