@@ -28,7 +28,7 @@ public class EventoCategoriaService {
         eventoCategoriaList.forEach(
                 eventoCategoria -> {
                     eventoCategorias.add(EventoCategorias.builder()
-                                    .nombreCategoria(eventoCategoria.getCategoria().getNombreCategoria())
+                                    .nombreCategoria(eventoCategoria.getCategory().getName())
                                     .numeroJugadores(1)
                             .build());
                 }

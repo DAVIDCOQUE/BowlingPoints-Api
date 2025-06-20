@@ -27,7 +27,7 @@ public class EventoCategoria {
     private Evento evento;
 
     @ManyToOne
-    @JoinColumn(name = "id_categoria", referencedColumnName = "id_categoria")
-    private Categoria categoria;
+    @JoinColumn(name = "category_id", referencedColumnName = "category_id")
+    private Category category;
 
 }
