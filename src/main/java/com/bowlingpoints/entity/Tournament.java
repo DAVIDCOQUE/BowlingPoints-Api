@@ -1,39 +1,62 @@
 package com.bowlingpoints.entity;
 
-
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-import java.util.Date;
-
-@Data
 @Entity
 @Table(name = "tournament")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Tournament {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tournament_id")
-    private int tournamentId;
+    private Integer tournamentId;
 
-    private String tournamentName;
+    @Column(name = "tournament_name", nullable = false)
+    private String name;
 
-    private Boolean status;
+    @ManyToOne
+    @JoinColumn(name = "modality_id")
+    private Modality modality;
 
-    private Integer createdBy;
+    @Column(name = "start_date")
+    private LocalDate startDate;
 
-    private Date startDate;
+    @Column(name = "end_date")
+    private LocalDate endDate;
 
-    private Date endDate;
+    @Column(name = "location")
+    private String location;
 
-    private Date createdAt;
-
-    private Integer updatedBy;
-
-    private Date updatedAt;
-
+    @Column(name = "cause_status")
     private String causeStatus;
 
-    private String place;
+    @Column(name = "status")
+    private Boolean status = true;
 
+    @Column(name = "created_by")
+    private Integer createdBy;
+
+    @Column(name = "updated_by")
+    private Integer updatedBy;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

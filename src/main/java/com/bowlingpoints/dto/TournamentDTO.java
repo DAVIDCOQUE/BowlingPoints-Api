@@ -1,22 +1,21 @@
 package com.bowlingpoints.dto;
 
+import lombok.*;
+import java.time.LocalDate;
 
-import lombok.Builder;
-import lombok.Data;
-
-import java.util.Date;
-
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class TournamentDTO {
-
-    String tournamentName;
-    String startDate;
-    String endDate;
-    String place;
-    String modality;
-    String category;
-    String causeStatus;
-    String status;
-
+    private Integer tournamentId;
+    private String name;
+    private Integer modalityId;
+    private String modalityName;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String location;
+    private String causeStatus;
+    private Boolean status;
 }

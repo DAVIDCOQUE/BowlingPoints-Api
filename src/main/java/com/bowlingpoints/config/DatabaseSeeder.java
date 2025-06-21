@@ -26,6 +26,8 @@ public class DatabaseSeeder {
             UserRoleRepository userRoleRepository,
             ClubsRepository clubRepository,
             ClubPersonRepository clubPersonRepository,
+            CategoryRepository categoryRepository,
+            ModalityRepository modalityRepository,
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
@@ -58,19 +60,19 @@ public class DatabaseSeeder {
             });
 
             // 4. Crear usuarios
-            User admin = createUserIfNotExists("davidcoque", "David", "Armando", "Sánchez", "Sanchez",
+            User admin = createUserIfNotExists("davidcoque", "/uploads/users/default.png","1143993925","David", "Armando", "Sánchez", "Sanchez",
                     "david03sc@gmail.com", "ADMIN", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            User entrenador = createUserIfNotExists("jhon", "Jhon", "Elena", "Martínez", "Pérez",
+            User entrenador = createUserIfNotExists("jhon", "/uploads/users/default.png","198445652","Jhon", "Elena", "Martínez", "Pérez",
                     "jhon@gmail.com", "ENTRENADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            User jugador = createUserIfNotExists("sara", "Sara", null, "Pérez", null,
+            User jugador = createUserIfNotExists("sara", "/uploads/users/default.png","11455625","Sara", null, "Pérez", null,
                     "sara@gmail.com", "JUGADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
             // 5. Crear club
             if (clubRepository.count() == 0) {
                 System.out.println("📌 Creando club 'Bowling Club Central'...");
-                Clubs  club = Clubs.builder()
+                Clubs club = Clubs.builder()
                         .name("Bowling Club Central")
                         .description("Club principal de la ciudad")
                         .foundationDate(LocalDate.of(2020, 1, 1))
@@ -103,6 +105,59 @@ public class DatabaseSeeder {
                 System.out.println("✅ Club creado con miembros.");
             }
 
+            // 6. Crear categorías
+            String[] categorias = {
+                    "Masculina",
+                    "Femenina",
+                    "Mixto",
+                    "Sub 8",
+                    "Sub 10",
+                    "Sub 12",
+                    "Sub 14",
+                    "Sub 16",
+                    "Sub 18",
+                    "Sub 21",
+                    "Sub 23",
+                    "Mayores",
+                    "Sénior",
+                    "Super Sénior",
+                    "Master"
+            };
+
+            for (String nombre : categorias) {
+                if (!categoryRepository.findByName(nombre).isPresent()) {
+                    categoryRepository.save(Category.builder()
+                            .name(nombre)
+                            .description("Categoría " + nombre)
+                            .status(true)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                }
+            }
+
+            // 7. Crear modalidades
+            String[] modalidades = {
+                    "Individual",
+                    "Parejas",
+                    "Ternas",
+                    "Equipos (cuartetos)",
+                    "Equipos (quintetos)",
+                    "Todo Evento",
+                    "Doble Mixto",
+                    "Baker"
+            };
+
+            for (String nombre : modalidades) {
+                if (!modalityRepository.findByName(nombre).isPresent()) {
+                    modalityRepository.save(Modality.builder()
+                            .name(nombre)
+                            .description("Modalidad de " + nombre)
+                            .status(true)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                }
+            }
+
             System.out.println("🎉 [Seeder] Carga inicial completada.");
         };
     }
@@ -119,7 +174,7 @@ public class DatabaseSeeder {
         );
     }
 
-    private User createUserIfNotExists(String nickname, String firstName, String secondName,
+    private User createUserIfNotExists(String nickname, String photo_url, String document, String firstName, String secondName,
                                        String lastname, String secondLastname, String email,
                                        String roleDescription, PasswordEncoder passwordEncoder,
                                        PersonRepository personRepository, UserRepository userRepository,
@@ -143,6 +198,8 @@ public class DatabaseSeeder {
                 .phone("3100000000")
                 .status(true)
                 .createdAt(LocalDateTime.now())
+                .photoUrl(photo_url)
+                .document(document)
                 .build();
         personRepository.save(person);
 
