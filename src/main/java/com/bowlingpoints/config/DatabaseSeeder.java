@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Configuration
@@ -29,7 +31,8 @@ public class DatabaseSeeder {
             CategoryRepository categoryRepository,
             ModalityRepository modalityRepository,
             AmbitRepository ambitRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            TournamentRepository tournamentRepository
     ) {
         return args -> {
             System.out.println("🔧 [Seeder] Iniciando carga de datos...");
@@ -181,7 +184,61 @@ public class DatabaseSeeder {
                 }
             }
 
+            // 1. Crear torneos de ejemplo si no existen
+            String[] nombresTorneos = {
+                    "Torneo Apertura Nacional",
+                    "Copa Regional Andina",
+                    "Masters del Caribe"
+            };
 
+                Modality modalidad1 = modalityRepository.findById(1).orElseThrow();
+                Modality modalidad2 = modalityRepository.findById(2).orElseThrow();
+                Modality modalidad3 = modalityRepository.findById(3).orElseThrow();
+
+            boolean seCreoAlMenosUno = false;
+
+                if (!tournamentRepository.findByName("Torneo Apertura Nacional").isPresent()) {
+                    tournamentRepository.save(Tournament.builder()
+                            .name("Torneo Apertura Nacional")
+                            .modality(modalidad1)
+                            .startDate(LocalDate.of(2025, 8, 10))
+                            .endDate(LocalDate.of(2025, 8, 15))
+                            .location("Bogotá, Colombia")
+                            .causeStatus("Programado")
+                            .status(true)
+                            .build());
+                    seCreoAlMenosUno = true;
+                }
+                if (!tournamentRepository.findByName("Copa Regional Andina").isPresent()) {
+                    tournamentRepository.save(Tournament.builder()
+                            .name("Copa Regional Andina")
+                            .modality(modalidad2)
+                            .startDate(LocalDate.of(2025, 9, 5))
+                            .endDate(LocalDate.of(2025, 9, 7))
+                            .location("Medellín, Colombia")
+                            .causeStatus("En curso")
+                            .status(true)
+                            .build());
+                    seCreoAlMenosUno = true;
+                }
+                if (!tournamentRepository.findByName("Masters del Caribe").isPresent()) {
+                    tournamentRepository.save(Tournament.builder()
+                            .name("Masters del Caribe")
+                            .modality(modalidad3)
+                            .startDate(LocalDate.of(2025, 10, 20))
+                            .endDate(LocalDate.of(2025, 10, 25))
+                            .location("Cartagena, Colombia")
+                            .causeStatus("En juego actualmente")
+                            .status(true)
+                            .build());
+                    seCreoAlMenosUno = true;
+                }
+
+            if (seCreoAlMenosUno) {
+                System.out.println("✅ Torneos de ejemplo cargados");
+            } else {
+                System.out.println("ℹ️ Ya existen todos los torneos de ejemplo");
+            }
 
             System.out.println("🎉 [Seeder] Carga inicial completada.");
         };
