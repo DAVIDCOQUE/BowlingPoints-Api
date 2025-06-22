@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "person", schema = "public")
+@Table(name = "person", schema = "bowlingpoints")
 public class Person {
 
     @Id
@@ -72,6 +72,11 @@ public class Person {
     @JsonBackReference
     private List<ClubPerson> clubs;
 
+    public Person(Integer personId) {
+        this.personId = personId;
+    }
+
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -83,3 +88,5 @@ public class Person {
         this.updatedAt = LocalDateTime.now();
     }
 }
+
+

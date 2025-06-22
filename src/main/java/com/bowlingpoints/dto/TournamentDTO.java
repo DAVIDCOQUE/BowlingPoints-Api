@@ -1,5 +1,6 @@
 package com.bowlingpoints.dto;
 
+import com.bowlingpoints.entity.Ambit;
 import lombok.*;
 import java.time.LocalDate;
 
@@ -15,6 +16,8 @@ public class TournamentDTO {
     private String modalityName;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer ambitId;
+    private String ambitName;
     private String location;
     private String causeStatus;
     private Boolean status;

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class ClubMemberDTO {
 
     private Integer personId;
+    private String photoUrl;
     private String fullName;
     private String email;
     private String roleInClub;
@@ -23,6 +24,7 @@ public class ClubMemberDTO {
         Person person = member.getPerson();
         return ClubMemberDTO.builder()
                 .personId(person.getPersonId())
+                .photoUrl(person.getPhotoUrl())
                 .fullName(person.getFirstName() + " " + person.getLastname())
                 .email(person.getEmail())
                 .roleInClub(member.getRoleInClub())

@@ -12,6 +12,7 @@ import java.util.List;
 public class UserFullDTO {
     private Integer userId;
     private Integer personId;
+    private Integer clubId;
     private String photoUrl;
     private String nickname;
     private String document;

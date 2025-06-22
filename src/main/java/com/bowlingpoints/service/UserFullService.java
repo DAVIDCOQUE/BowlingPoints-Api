@@ -5,11 +5,7 @@ import com.bowlingpoints.entity.Person;
 import com.bowlingpoints.entity.Role;
 import com.bowlingpoints.entity.User;
 import com.bowlingpoints.entity.UserRole;
-import com.bowlingpoints.repository.PersonRepository;
-import com.bowlingpoints.repository.RoleRepository;
-import com.bowlingpoints.repository.UserFullRepository;
-import com.bowlingpoints.repository.UserRepository;
-import com.bowlingpoints.repository.UserRoleRepository;
+import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +24,7 @@ public class UserFullService {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClubPersonRepository clubPersonRepository;
 
     public List<UserFullDTO> getAllUsersWithDetails() {
         return userFullRepository.getUserFullInfoRaw().stream()
@@ -53,10 +50,20 @@ public class UserFullService {
     }
 
     public UserFullDTO getByUsername(String username) {
-        return getAllUsersWithDetails().stream()
+        UserFullDTO dto = getAllUsersWithDetails().stream()
                 .filter(u -> u.getNickname().equals(username))
                 .findFirst()
                 .orElse(null);
+
+        // Si existe el usuario, buscamos su club activo
+        if (dto != null && dto.getPersonId() != null) {
+            clubPersonRepository.findFirstByPersonAndStatusIsTrue(
+                    new Person(dto.getPersonId()) // Constructor mínimo, solo con el ID
+            ).ifPresent(clubPerson -> dto.setClubId(
+                    clubPerson.getClub().getClubId()
+            ));
+        }
+        return dto;
     }
 
     public UserFullDTO getUserById(Integer id) {

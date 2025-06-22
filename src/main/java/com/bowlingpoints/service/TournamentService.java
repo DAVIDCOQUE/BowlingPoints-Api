@@ -1,8 +1,10 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.TournamentDTO;
+import com.bowlingpoints.entity.Ambit;
 import com.bowlingpoints.entity.Modality;
 import com.bowlingpoints.entity.Tournament;
+import com.bowlingpoints.repository.AmbitRepository;
 import com.bowlingpoints.repository.ModalityRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ public class TournamentService {
 
     private final TournamentRepository tournamentRepository;
     private final ModalityRepository modalityRepository;
+    private final AmbitRepository ambitRepository;
 
     public List<TournamentDTO> getAll() {
         return tournamentRepository.findAllByDeletedAtIsNull()
@@ -53,6 +56,12 @@ public class TournamentService {
             entity.setModality(modality);
         }
 
+        if (dto.getAmbitId() != null) {
+            Ambit ambit = ambitRepository.findById(dto.getAmbitId())
+                    .orElseThrow(() -> new RuntimeException("Ambit not found"));
+            entity.setAmbit(ambit);
+        }
+
         tournamentRepository.save(entity);
         return true;
     }
@@ -75,6 +84,8 @@ public class TournamentService {
                 .name(entity.getName())
                 .modalityId(entity.getModality() != null ? entity.getModality().getModalityId() : null)
                 .modalityName(entity.getModality() != null ? entity.getModality().getName() : null)
+                .ambitId(entity.getAmbit() != null ? entity.getAmbit().getAmbitId() : null)         // <-- Agrega esto
+                .ambitName(entity.getAmbit() != null ? entity.getAmbit().getName() : null)
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
                 .location(entity.getLocation())
@@ -87,9 +98,16 @@ public class TournamentService {
         Modality modality = modalityRepository.findById(dto.getModalityId())
                 .orElseThrow(() -> new RuntimeException("Modality not found"));
 
+        Ambit ambit = null;
+        if (dto.getAmbitId() != null) {
+            ambit = ambitRepository.findById(dto.getAmbitId())
+                    .orElseThrow(() -> new RuntimeException("Ambit not found"));
+        }
+
         return Tournament.builder()
                 .name(dto.getName())
                 .modality(modality)
+                .ambit(ambit)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .location(dto.getLocation())

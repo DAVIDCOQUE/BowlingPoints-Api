@@ -31,6 +31,10 @@ public class Tournament {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @ManyToOne
+    @JoinColumn(name = "ambit_id")
+    private Ambit  ambit;
+
     @Column(name = "location")
     private String location;
 

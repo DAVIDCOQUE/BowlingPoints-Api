@@ -28,6 +28,7 @@ public class DatabaseSeeder {
             ClubPersonRepository clubPersonRepository,
             CategoryRepository categoryRepository,
             ModalityRepository modalityRepository,
+            AmbitRepository ambitRepository,
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
@@ -63,10 +64,10 @@ public class DatabaseSeeder {
             User admin = createUserIfNotExists("davidcoque", "/uploads/users/default.png","1143993925","David", "Armando", "Sánchez", "Sanchez",
                     "david03sc@gmail.com", "ADMIN", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            User entrenador = createUserIfNotExists("jhon", "/uploads/users/default.png","198445652","Jhon", "Elena", "Martínez", "Pérez",
+            User entrenador = createUserIfNotExists("jhonsoto", "/uploads/users/default.png","198445652","Jhon", "", "Soto", "",
                     "jhon@gmail.com", "ENTRENADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
-            User jugador = createUserIfNotExists("sara", "/uploads/users/default.png","11455625","Sara", null, "Pérez", null,
+            User jugador = createUserIfNotExists("saraarteaga", "/uploads/users/default.png","11455625","Sara", null, "Arteaga", null,
                     "sara@gmail.com", "JUGADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
 
             // 5. Crear club
@@ -157,6 +158,30 @@ public class DatabaseSeeder {
                             .build());
                 }
             }
+
+            // 6. Crear Ámbitos
+            String[] ambitos = {
+                    "Internacional",
+                    "Nacional",
+                    "Departamental",
+                    "Regional",
+                    "Municipal",
+                    "Empresarial",
+                    "Universitario"
+            };
+
+            for (String nombre : ambitos) {
+                if (!ambitRepository.findByName(nombre).isPresent()) {
+                    ambitRepository.save(Ambit.builder()
+                            .name(nombre)
+                            .description("Ámbito " + nombre)
+                            .status(true)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                }
+            }
+
+
 
             System.out.println("🎉 [Seeder] Carga inicial completada.");
         };
