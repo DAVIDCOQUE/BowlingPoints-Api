@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "ambit")
@@ -20,6 +21,9 @@ public class Ambit {
     private String name;
 
     private String description;
+
+    @Column(name = "imageUrl")
+    private String imageUrl;
 
     @Column(name = "status")
     private Boolean status = true;
@@ -38,6 +42,9 @@ public class Ambit {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "ambit")
+    private List<Tournament> tournaments;
 
     @PrePersist
     public void onCreate() {

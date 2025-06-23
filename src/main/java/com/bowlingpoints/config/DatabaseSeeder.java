@@ -32,7 +32,9 @@ public class DatabaseSeeder {
             ModalityRepository modalityRepository,
             AmbitRepository ambitRepository,
             PasswordEncoder passwordEncoder,
-            TournamentRepository tournamentRepository
+            TournamentRepository tournamentRepository,
+            TournamentModalityRepository tournamentModalityRepository,
+            TournamentCategoryRepository tournamentCategoryRepository
     ) {
         return args -> {
             System.out.println("🔧 [Seeder] Iniciando carga de datos...");
@@ -162,7 +164,7 @@ public class DatabaseSeeder {
                 }
             }
 
-            // 6. Crear Ámbitos
+            // 8. Crear Ámbitos
             String[] ambitos = {
                     "Internacional",
                     "Nacional",
@@ -172,74 +174,71 @@ public class DatabaseSeeder {
                     "Empresarial",
                     "Universitario"
             };
-
             for (String nombre : ambitos) {
                 if (!ambitRepository.findByName(nombre).isPresent()) {
                     ambitRepository.save(Ambit.builder()
                             .name(nombre)
                             .description("Ámbito " + nombre)
+                            .imageUrl("/uploads/ambits/" + nombre.replace(" ", "_").toLowerCase() + ".png")
                             .status(true)
                             .createdAt(LocalDateTime.now())
                             .build());
                 }
             }
 
-            // 1. Crear torneos de ejemplo si no existen
+            // 8. Crear torneos de ejemplo si no existen
+
+            // Buscar categorías y modalidades
+            List<Category> allCategories = categoryRepository.findAll();
+            List<Modality> allModalities = modalityRepository.findAll();
+            List<Ambit> allAmbits = ambitRepository.findAll();
+
+            // --- CREAR TORNEOS ---
             String[] nombresTorneos = {
                     "Torneo Apertura Nacional",
                     "Copa Regional Andina",
                     "Masters del Caribe"
             };
 
-                Modality modalidad1 = modalityRepository.findById(1).orElseThrow();
-                Modality modalidad2 = modalityRepository.findById(2).orElseThrow();
-                Modality modalidad3 = modalityRepository.findById(3).orElseThrow();
-
-            boolean seCreoAlMenosUno = false;
-
-                if (!tournamentRepository.findByName("Torneo Apertura Nacional").isPresent()) {
-                    tournamentRepository.save(Tournament.builder()
-                            .name("Torneo Apertura Nacional")
-                            .modality(modalidad1)
-                            .startDate(LocalDate.of(2025, 8, 10))
-                            .endDate(LocalDate.of(2025, 8, 15))
-                            .location("Bogotá, Colombia")
+            for (int i = 0; i < nombresTorneos.length; i++) {
+                String nombreTorneo = nombresTorneos[i];
+                if (tournamentRepository.findByName(nombreTorneo).isEmpty()) {
+                    Tournament torneo = Tournament.builder()
+                            .name(nombreTorneo)
+                            .ambit(allAmbits.get(i % allAmbits.size())) // Asigna un ámbito distinto
+                            .imageUrl("/uploads/tournaments/" + nombreTorneo.replace(" ", "_").toLowerCase() + ".png")
+                            .startDate(LocalDate.of(2025, 8 + i, 10 + i))
+                            .endDate(LocalDate.of(2025, 8 + i, 15 + i))
+                            .location(i == 0 ? "Bogotá, Colombia" : (i == 1 ? "Medellín, Colombia" : "Cartagena, Colombia"))
                             .causeStatus("Programado")
                             .status(true)
-                            .build());
-                    seCreoAlMenosUno = true;
-                }
-                if (!tournamentRepository.findByName("Copa Regional Andina").isPresent()) {
-                    tournamentRepository.save(Tournament.builder()
-                            .name("Copa Regional Andina")
-                            .modality(modalidad2)
-                            .startDate(LocalDate.of(2025, 9, 5))
-                            .endDate(LocalDate.of(2025, 9, 7))
-                            .location("Medellín, Colombia")
-                            .causeStatus("En curso")
-                            .status(true)
-                            .build());
-                    seCreoAlMenosUno = true;
-                }
-                if (!tournamentRepository.findByName("Masters del Caribe").isPresent()) {
-                    tournamentRepository.save(Tournament.builder()
-                            .name("Masters del Caribe")
-                            .modality(modalidad3)
-                            .startDate(LocalDate.of(2025, 10, 20))
-                            .endDate(LocalDate.of(2025, 10, 25))
-                            .location("Cartagena, Colombia")
-                            .causeStatus("En juego actualmente")
-                            .status(true)
-                            .build());
-                    seCreoAlMenosUno = true;
-                }
+                            .build();
+                    tournamentRepository.save(torneo);
 
-            if (seCreoAlMenosUno) {
-                System.out.println("✅ Torneos de ejemplo cargados");
-            } else {
-                System.out.println("ℹ️ Ya existen todos los torneos de ejemplo");
+                    // --- ASIGNAR 2-3 MODALIDADES Y CATEGORÍAS ---
+                    // Modality
+                    List<Modality> mods = allModalities.subList(0, Math.min(3, allModalities.size()));
+                    for (Modality mod : mods) {
+                        TournamentModality tm = TournamentModality.builder()
+                                .tournament(torneo)
+                                .modality(mod)
+                                .build();
+                        tournamentModalityRepository.save(tm);
+                    }
+                    // Category
+                    List<Category> cats = allCategories.subList(i, Math.min(i + 3, allCategories.size()));
+                    for (Category cat : cats) {
+                        TournamentCategory tc = TournamentCategory.builder()
+                                .tournament(torneo)
+                                .category(cat)
+                                .build();
+                        tournamentCategoryRepository.save(tc);
+                    }
+                }
             }
 
+
+            System.out.println("✅ Torneos de ejemplo cargados");
             System.out.println("🎉 [Seeder] Carga inicial completada.");
         };
     }

@@ -1,8 +1,8 @@
 package com.bowlingpoints.dto;
 
-import com.bowlingpoints.entity.Ambit;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,13 +12,34 @@ import java.time.LocalDate;
 public class TournamentDTO {
     private Integer tournamentId;
     private String name;
-    private Integer modalityId;
-    private String modalityName;
-    private LocalDate startDate;
-    private LocalDate endDate;
+
+    // Relación con ambit
     private Integer ambitId;
     private String ambitName;
+
+    private String imageUrl; // 🔥 Nuevo campo para la imagen
+
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String location;
     private String causeStatus;
     private Boolean status;
+
+    // 🔥 NUEVO: múltiples categorías/modalidades
+    private List<Integer> categoryIds;
+    private List<Integer> modalityIds;
+
+    // (Opcional) Nombres si quieres mostrarlos en el front:
+    private List<String> categoryNames;
+    private List<String> modalityNames;
+
+    // Constructor personalizado (opcional, puedes actualizarlo si lo necesitas)
+    public TournamentDTO(Integer tournamentId, String name, String location, String modalityName, String ambitName, LocalDate startDate) {
+        this.tournamentId = tournamentId;
+        this.name = name;
+        this.location = location;
+        this.ambitName = ambitName;
+        this.startDate = startDate;
+        // Como ahora es lista, modalityName y categoryName ya no hacen falta aquí
+    }
 }

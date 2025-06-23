@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tournament")
@@ -22,18 +24,17 @@ public class Tournament {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "modality_id")
-    private Modality modality;
+    @JoinColumn(name = "ambit_id")
+    private Ambit ambit;
+
+    @Column(name = "imageUrl")
+    private String imageUrl;
 
     @Column(name = "start_date")
     private LocalDate startDate;
 
     @Column(name = "end_date")
     private LocalDate endDate;
-
-    @ManyToOne
-    @JoinColumn(name = "ambit_id")
-    private Ambit  ambit;
 
     @Column(name = "location")
     private String location;
@@ -58,6 +59,12 @@ public class Tournament {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TournamentModality> modalities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TournamentCategory> categories = new ArrayList<>();
 
     @PreUpdate
     public void onUpdate() {

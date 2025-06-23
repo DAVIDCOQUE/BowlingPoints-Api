@@ -8,7 +8,9 @@ import lombok.*;
 @Builder
 public class AmbitDTO {
     private Integer ambitId;
+    private String imageUrl;
     private String name;
     private String description;
     private Boolean status;
+
 }
