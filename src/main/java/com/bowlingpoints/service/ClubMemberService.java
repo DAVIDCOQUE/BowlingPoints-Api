@@ -24,14 +24,18 @@ public class ClubMemberService {
     private final PersonRepository personRepository;
 
     public List<ClubMemberDTO> getMembersByClubId(Integer clubId) {
-        Clubs club = clubsRepository.findById(clubId).orElseThrow(() ->
-                new RuntimeException("Club no encontrado"));
+        Clubs club = clubsRepository.findById(clubId)
+                .orElseThrow(() -> new RuntimeException("Club no encontrado"));
 
         List<ClubPerson> miembros = clubPersonRepository.findByClubAndStatusIsTrue(club);
 
         return miembros.stream().map(cp -> ClubMemberDTO.builder()
                 .personId(cp.getPerson().getPersonId())
-                .fullName(cp.getPerson().getFirstName() + " " + cp.getPerson().getLastname())
+                .fullName(
+                        (cp.getPerson().getFullName() != null ? cp.getPerson().getFullName() : "") +
+                                " " +
+                                (cp.getPerson().getFullSurname() != null ? cp.getPerson().getFullSurname() : "")
+                )
                 .email(cp.getPerson().getEmail())
                 .roleInClub(cp.getRoleInClub())
                 .joinedAt(cp.getJoinedAt())
@@ -46,13 +50,18 @@ public class ClubMemberService {
         Person person = personRepository.findById(request.getPersonId())
                 .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
 
+        // 👇 Verifica si ya existe la relación club-persona
+        if (clubPersonRepository.findByClubAndPerson(club, person).isPresent()) {
+            throw new RuntimeException("El miembro ya está asignado a este club.");
+        }
+
         ClubPerson member = ClubPerson.builder()
                 .club(club)
                 .person(person)
                 .roleInClub(request.getRoleInClub())
                 .status(true)
                 .joinedAt(LocalDateTime.now())
-                .createdBy(1) // ID del usuario autenticado (si aplica)
+                .createdBy(1)
                 .build();
 
         return clubPersonRepository.save(member);

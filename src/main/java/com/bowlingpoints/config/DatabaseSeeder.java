@@ -66,15 +66,26 @@ public class DatabaseSeeder {
             });
 
             // 4. Crear usuarios
-            User admin = createUserIfNotExists("davidcoque", "/uploads/users/default.png","1143993925","David", "Armando", "Sánchez", "Sanchez",
-                    "david03sc@gmail.com", "ADMIN", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
+            User admin = createUserIfNotExists(
+                    "davidcoque", "/uploads/users/default.png", "1143993925",
+                    "David Armando", "Sánchez Sánchez", LocalDate.of(1993, 4, 12),
+                    "david03sc@gmail.com", "Masculino", "ADMIN",
+                    passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
+            );
 
-            User entrenador = createUserIfNotExists("jhonsoto", "/uploads/users/default.png","198445652","Jhon", "", "Soto", "",
-                    "jhon@gmail.com", "ENTRENADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
+            User entrenador = createUserIfNotExists(
+                    "jhonsoto", "/uploads/users/default.png", "198445652",
+                    "Jhon", "Soto", LocalDate.of(1980, 7, 22),
+                    "jhon@gmail.com", "Masculino", "ENTRENADOR",
+                    passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
+            );
 
-            User jugador = createUserIfNotExists("saraarteaga", "/uploads/users/default.png","11455625","Sara", null, "Arteaga", null,
-                    "sara@gmail.com", "JUGADOR", passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository);
-
+            User jugador = createUserIfNotExists(
+                    "saraarteaga", "/uploads/users/default.png", "11455625",
+                    "Sara", "Arteaga", LocalDate.of(2002, 1, 7),
+                    "sara@gmail.com", "Femenino", "JUGADOR",
+                    passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
+            );
             // 5. Crear club
             if (clubRepository.count() == 0) {
                 System.out.println("📌 Creando club 'Bowling Club Central'...");
@@ -255,12 +266,22 @@ public class DatabaseSeeder {
         );
     }
 
-    private User createUserIfNotExists(String nickname, String photo_url, String document, String firstName, String secondName,
-                                       String lastname, String secondLastname, String email,
-                                       String roleDescription, PasswordEncoder passwordEncoder,
-                                       PersonRepository personRepository, UserRepository userRepository,
-                                       UserRoleRepository userRoleRepository, RoleRepository roleRepository) {
-
+    private User createUserIfNotExists(
+            String nickname,
+            String photoUrl,
+            String document,
+            String fullName,
+            String fullSurname,
+            LocalDate birthDate,
+            String email,
+            String gender,
+            String roleDescription,
+            PasswordEncoder passwordEncoder,
+            PersonRepository personRepository,
+            UserRepository userRepository,
+            UserRoleRepository userRoleRepository,
+            RoleRepository roleRepository
+    ) {
         Optional<User> existingUser = userRepository.findByNickname(nickname);
         if (existingUser.isPresent()) {
             System.out.printf("🔁 Usuario '%s' ya existe, se omite.%n", nickname);
@@ -270,16 +291,15 @@ public class DatabaseSeeder {
         System.out.printf("📌 Creando usuario '%s'...%n", nickname);
 
         Person person = Person.builder()
-                .firstName(firstName)
-                .secondName(secondName)
-                .lastname(lastname)
-                .secondLastname(secondLastname)
-                .gender("Masculino")
+                .fullName(fullName)
+                .fullSurname(fullSurname)
+                .birthDate(birthDate)
+                .gender(gender)
                 .email(email)
                 .phone("3100000000")
                 .status(true)
                 .createdAt(LocalDateTime.now())
-                .photoUrl(photo_url)
+                .photoUrl(photoUrl)
                 .document(document)
                 .build();
         personRepository.save(person);

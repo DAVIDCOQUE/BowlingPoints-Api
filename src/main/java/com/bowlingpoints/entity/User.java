@@ -50,8 +50,8 @@ public class User implements UserDetails {
     @Column(name = "updated_by")
     private Integer updatedBy;
 
-    @ManyToOne
-    @JoinColumn(name = "person_id", referencedColumnName = "person_id")
+    @OneToOne
+    @JoinColumn(name = "person_id", referencedColumnName = "person_id", unique = true, nullable = false)
     private Person person;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)

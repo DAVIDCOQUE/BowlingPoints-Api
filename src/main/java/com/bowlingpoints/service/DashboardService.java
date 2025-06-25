@@ -1,6 +1,7 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.*;
+import com.bowlingpoints.entity.Tournament;
 import com.bowlingpoints.repository.AmbitRepository;
 import com.bowlingpoints.repository.ClubsRepository;
 import com.bowlingpoints.repository.ResultRepository;
@@ -21,11 +22,14 @@ public class DashboardService {
     private final AmbitRepository ambitRepository;
 
     public DashboardDTO getDashboardData() {
-        List<TournamentDTO> activeTournaments = tournamentRepository.findActiveTournaments();
+        // Trae solo torneos activos y no eliminados
+        List<TournamentDTO> activeTournaments = tournamentRepository.findAllByStatusTrueAndDeletedAtIsNull()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
 
         List<PlayerRankingDTO> topPlayers = resultRepository.findTop10PlayersByAvgScore();
 
-        // Aquí está el cambio importante:
         List<ClubDashboardDTO> topClubs = resultRepository.findTopClubsRaw().stream()
                 .map(row -> ClubDashboardDTO.builder()
                         .clubId(((Number) row[0]).intValue())
@@ -41,6 +45,50 @@ public class DashboardService {
                 .topPlayers(topPlayers)
                 .topClubs(topClubs)
                 .ambits(ambits)
+                .build();
+    }
+
+    // Este método convierte un Tournament a TournamentDTO incluyendo nombres de categorías y modalidades
+    private TournamentDTO toDTO(Tournament entity) {
+        List<Integer> categoryIds = entity.getCategories() != null
+                ? entity.getCategories().stream()
+                .map(tc -> tc.getCategory().getCategoryId())
+                .collect(Collectors.toList())
+                : List.of();
+
+        List<Integer> modalityIds = entity.getModalities() != null
+                ? entity.getModalities().stream()
+                .map(tm -> tm.getModality().getModalityId())
+                .collect(Collectors.toList())
+                : List.of();
+
+        List<String> categoryNames = entity.getCategories() != null
+                ? entity.getCategories().stream()
+                .map(tc -> tc.getCategory().getName())
+                .collect(Collectors.toList())
+                : List.of();
+
+        List<String> modalityNames = entity.getModalities() != null
+                ? entity.getModalities().stream()
+                .map(tm -> tm.getModality().getName())
+                .collect(Collectors.toList())
+                : List.of();
+
+        return TournamentDTO.builder()
+                .tournamentId(entity.getTournamentId())
+                .name(entity.getName())
+                .ambitId(entity.getAmbit() != null ? entity.getAmbit().getAmbitId() : null)
+                .ambitName(entity.getAmbit() != null ? entity.getAmbit().getName() : null)
+                .imageUrl(entity.getImageUrl())
+                .startDate(entity.getStartDate())
+                .endDate(entity.getEndDate())
+                .location(entity.getLocation())
+                .causeStatus(entity.getCauseStatus())
+                .status(entity.getStatus())
+                .categoryIds(categoryIds)
+                .modalityIds(modalityIds)
+                .categoryNames(categoryNames)
+                .modalityNames(modalityNames)
                 .build();
     }
 }

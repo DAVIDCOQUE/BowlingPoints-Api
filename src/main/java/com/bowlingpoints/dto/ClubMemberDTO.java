@@ -22,10 +22,14 @@ public class ClubMemberDTO {
     // ✅ Método estático para crear DTO desde entidad
     public static ClubMemberDTO from(ClubPerson member) {
         Person person = member.getPerson();
+        // Usamos fullName y fullSurname
+        String fullName = (person.getFullName() != null ? person.getFullName() : "") +
+                " " +
+                (person.getFullSurname() != null ? person.getFullSurname() : "");
         return ClubMemberDTO.builder()
                 .personId(person.getPersonId())
                 .photoUrl(person.getPhotoUrl())
-                .fullName(person.getFirstName() + " " + person.getLastname())
+                .fullName(fullName.trim())
                 .email(person.getEmail())
                 .roleInClub(member.getRoleInClub())
                 .joinedAt(member.getJoinedAt())

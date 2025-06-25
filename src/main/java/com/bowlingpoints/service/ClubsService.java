@@ -102,11 +102,12 @@ public class ClubsService {
     }
 
     // ✅ Actualizar un club
+    @Transactional
     public void updateClubWithMembers(Integer clubId, ClubsDTO dto) {
         Clubs club = clubsRepository.findById(clubId)
                 .orElseThrow(() -> new RuntimeException("❌ Club no encontrado con ID " + clubId));
 
-        // 🔁 Actualiza campos básicos
+        // 1. Actualiza campos básicos
         club.setName(dto.getName());
         club.setCity(dto.getCity());
         club.setDescription(dto.getDescription());
@@ -115,29 +116,48 @@ public class ClubsService {
         club.setStatus(dto.getStatus());
         club.setUpdatedAt(LocalDateTime.now());
 
-        // 🧹 Limpia miembros anteriores (por seguridad)
-        club.getMembers().clear();
+        // 2. Miembros actuales en BD
+        List<ClubPerson> currentMembers = new ArrayList<>(club.getMembers());
+        // Para búsqueda rápida
+        var currentByPersonId = currentMembers.stream()
+                .collect(Collectors.toMap(cp -> cp.getPerson().getPersonId(), cp -> cp));
 
-        // ➕ Crea nuevos miembros
-        List<ClubPerson> nuevosMiembros = dto.getMembers().stream()
-                .map(m -> {
-                    Person person = personRepository.findById(m.getPersonId())
-                            .orElseThrow(() -> new RuntimeException("❌ Persona no encontrada con ID " + m.getPersonId()));
+        // 3. IDs de los nuevos miembros
+        var incomingIds = dto.getMembers().stream()
+                .map(ClubMemberRequestDTO::getPersonId)
+                .collect(Collectors.toSet());
 
-                    return ClubPerson.builder()
-                            .club(club)
-                            .person(person)
-                            .roleInClub(m.getRoleInClub())
-                            .joinedAt(LocalDateTime.now())
-                            .status(true)
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                })
-                .toList();
+        // 4. Elimina miembros que ya no están
+        for (ClubPerson oldMember : currentMembers) {
+            if (!incomingIds.contains(oldMember.getPerson().getPersonId())) {
+                clubPersonRepository.delete(oldMember);
+            }
+        }
 
-        // 🔗 Asociar nuevos miembros al club
-
-        club.getMembers().addAll(nuevosMiembros); // ✅ Reasignar
+        // 5. Inserta o actualiza miembros nuevos
+        for (ClubMemberRequestDTO m : dto.getMembers()) {
+            ClubPerson existing = currentByPersonId.get(m.getPersonId());
+            if (existing != null) {
+                // Si el rol cambió, actualízalo
+                if (!existing.getRoleInClub().equals(m.getRoleInClub())) {
+                    existing.setRoleInClub(m.getRoleInClub());
+                    clubPersonRepository.save(existing);
+                }
+            } else {
+                // Nuevo miembro
+                Person person = personRepository.findById(m.getPersonId())
+                        .orElseThrow(() -> new RuntimeException("❌ Persona no encontrada con ID " + m.getPersonId()));
+                ClubPerson nuevo = ClubPerson.builder()
+                        .club(club)
+                        .person(person)
+                        .roleInClub(m.getRoleInClub())
+                        .joinedAt(LocalDateTime.now())
+                        .status(true)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                clubPersonRepository.save(nuevo);
+            }
+        }
         clubsRepository.save(club);
     }
 

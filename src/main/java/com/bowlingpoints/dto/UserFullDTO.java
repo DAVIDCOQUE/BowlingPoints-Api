@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -16,11 +17,10 @@ public class UserFullDTO {
     private String photoUrl;
     private String nickname;
     private String document;
+    private String fullName;
+    private String fullSurname;
+    private LocalDate birthDate;
     private String email;
-    private String firstname;
-    private String secondname;
-    private String lastname;
-    private String secondlastname;
     private String phone;
     private String gender;
     private String roleDescription;

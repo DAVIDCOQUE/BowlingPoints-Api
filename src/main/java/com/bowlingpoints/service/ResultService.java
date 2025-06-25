@@ -100,7 +100,9 @@ public class ResultService {
                 .resultId(result.getResultId())
 
                 .personId(result.getPerson() != null ? result.getPerson().getPersonId() : null)
-                .personName(result.getPerson() != null ? result.getPerson().getFirstName() + " " + result.getPerson().getLastname() : null)
+                .personName(result.getPerson() != null
+                        ? (result.getPerson().getFullName() + " " + result.getPerson().getFullSurname()).trim()
+                        : null)
 
                 .teamId(result.getTeam() != null ? result.getTeam().getTeamId() : null)
                 .teamName(result.getTeam() != null ? result.getTeam().getNameTeam() : null)

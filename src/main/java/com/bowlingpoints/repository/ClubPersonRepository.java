@@ -22,6 +22,8 @@ public interface ClubPersonRepository extends JpaRepository<ClubPerson, Integer>
     // Trae el registro activo de una persona (más limpio si solo puede tener uno)
     Optional<ClubPerson> findFirstByPersonAndStatusIsTrue(Person person);
 
+    Optional<ClubPerson> findByClubAndPerson(Clubs club, Person person);
+
     // Borra todos los registros asociados a un club
     @Transactional
     void deleteAllByClub_ClubId(Integer clubId);

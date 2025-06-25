@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "person", schema = "bowlingpoints")
+@Table(name = "person", schema = "bowlingpoints") // Quita "schema" si no lo usas
 public class Person {
 
     @Id
@@ -20,26 +21,23 @@ public class Person {
     @Column(name = "person_id")
     private Integer personId;
 
+    @Column(name = "document", unique = true, nullable = false)
+    private String document;
+
     @Column(name = "photo_url")
     private String photoUrl;
 
-    @Column(name = "document")
-    private String document;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
-    @Column(name = "first_name", nullable = false)
-    private String firstName;
+    @Column(name = "full_surname", nullable = false)
+    private String fullSurname;
 
-    @Column(name = "second_name")
-    private String secondName;
-
-    @Column(name = "lastname", nullable = false)
-    private String lastname;
-
-    @Column(name = "second_lastname")
-    private String secondLastname;
-
-    @Column(name = "gender", length = 1)
+    @Column(name = "gender")
     private String gender;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     @Column(name = "email", unique = true, nullable = false)
     private String email;
@@ -65,8 +63,8 @@ public class Person {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "person", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<User> users;
+    @OneToOne(mappedBy = "person", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private User user;
 
     @OneToMany(mappedBy = "person")
     @JsonBackReference
@@ -75,7 +73,6 @@ public class Person {
     public Person(Integer personId) {
         this.personId = personId;
     }
-
 
     @PrePersist
     public void prePersist() {
@@ -88,5 +85,3 @@ public class Person {
         this.updatedAt = LocalDateTime.now();
     }
 }
-
-

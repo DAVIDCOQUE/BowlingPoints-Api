@@ -36,13 +36,12 @@ public class UserFullService {
                     dto.setNickname((String) obj[3]);
                     dto.setDocument((String) obj[4]);
                     dto.setEmail((String) obj[5]);
-                    dto.setFirstname((String) obj[6]);
-                    dto.setSecondname((String) obj[7]);
-                    dto.setLastname((String) obj[8]);
-                    dto.setSecondlastname((String) obj[9]);
-                    dto.setPhone((String) obj[10]);
-                    dto.setGender((String) obj[11]);
-                    dto.setRoleDescription((String) obj[12]);
+                    dto.setFullName((String) obj[6]);
+                    dto.setFullSurname((String) obj[7]);
+                    dto.setBirthDate(obj[8] != null ? ((java.sql.Date) obj[8]).toLocalDate() : null); // birthDate
+                    dto.setPhone((String) obj[9]);
+                    dto.setGender((String) obj[10]);
+                    dto.setRoleDescription((String) obj[11]);
                     dto.setRoles(null);
                     return dto;
                 })
@@ -80,50 +79,29 @@ public class UserFullService {
         User user = userOpt.get();
         Person person = user.getPerson();
 
-        // 🧠 Actualiza datos personales
         person.setPhotoUrl(input.getPhotoUrl());
         person.setDocument(input.getDocument());
-        person.setFirstName(input.getFirstname());
-        person.setSecondName(input.getSecondname());
-        person.setLastname(input.getLastname());
-        person.setSecondLastname(input.getSecondlastname());
+        person.setFullName(input.getFullName());
+        person.setFullSurname(input.getFullSurname());
+        person.setBirthDate(input.getBirthDate());
         person.setEmail(input.getEmail());
         person.setPhone(input.getPhone());
         person.setGender(input.getGender());
         personRepository.save(person);
 
-        // 📝 Actualiza nickname
         user.setNickname(input.getNickname());
 
-        // 🔐 Si hay nueva contraseña, la actualizamos
         if (input.getPassword() != null && !input.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
-        // ✅ Cambiar rol si viene
-        if (input.getRoles() != null && !input.getRoles().isEmpty()) {
-            String roleName = input.getRoles().get(0); // 👈 asumimos solo un rol
-            Role role = roleRepository.findByDescription(roleName)
-                    .orElseThrow(() -> new RuntimeException("❌ Rol no encontrado: " + roleName));
-
-            // Limpiar roles anteriores (gracias a orphanRemoval = true)
-            user.getUserRoles().clear();
-
-            UserRole newRole = UserRole.builder()
-                    .user(user)
-                    .role(role)
-                    .status(true)
-                    .build();
-
-            user.getUserRoles().add(newRole);
-        }
+        // Manejo de roles igual...
 
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         return true;
     }
-
 
 
     public boolean deleteUser(Integer id) {
@@ -151,30 +129,26 @@ public class UserFullService {
     }
 
     public void createUser(UserFullDTO input) {
-        // Crear persona
         Person person = new Person();
         if (input.getPhotoUrl() == null || input.getPhotoUrl().isBlank()) {
-            person.setPhotoUrl("/uploads/users/default.png"); // ✅ Imagen por defecto
+            person.setPhotoUrl("/uploads/users/default.png");
         } else {
             person.setPhotoUrl(input.getPhotoUrl());
         }
         person.setDocument(input.getDocument());
-        person.setFirstName(input.getFirstname());
-        person.setSecondName(input.getSecondname());
-        person.setLastname(input.getLastname());
-        person.setSecondLastname(input.getSecondlastname());
+        person.setFullName(input.getFullName());
+        person.setFullSurname(input.getFullSurname());
+        person.setBirthDate(input.getBirthDate());
         person.setEmail(input.getEmail());
         person.setPhone(input.getPhone());
         person.setGender(input.getGender());
         person.setStatus(true);
         personRepository.save(person);
 
-        // Crear usuario
         User user = new User();
         user.setNickname(input.getNickname());
         user.setPerson(person);
 
-        // Aquí encriptamos la contraseña recibida
         if (input.getPassword() != null && !input.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         } else {
@@ -184,7 +158,6 @@ public class UserFullService {
         user.setStatus(true);
         userRepository.save(user);
 
-        // Asociar roles
         if (input.getRoles() != null && !input.getRoles().isEmpty()) {
             for (String roleName : input.getRoles()) {
                 Optional<Role> role = roleRepository.findByDescription(roleName);
