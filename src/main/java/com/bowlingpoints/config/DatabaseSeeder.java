@@ -180,17 +180,20 @@ public class DatabaseSeeder {
                     "Internacional",
                     "Nacional",
                     "Departamental",
-                    "Regional",
                     "Municipal",
                     "Empresarial",
                     "Universitario"
             };
             for (String nombre : ambitos) {
                 if (!ambitRepository.findByName(nombre).isPresent()) {
+                    // Genera el path en minúsculas, reemplaza espacios y asegúrate que coincida con el archivo
+                    String nombreArchivo = nombre + ".png"; // Respeta mayúsculas según tus archivos
+                    String url = "/uploads/tournament/" + nombreArchivo; // ← este es el path correcto
+
                     ambitRepository.save(Ambit.builder()
                             .name(nombre)
                             .description("Ámbito " + nombre)
-                            .imageUrl("/uploads/ambits/" + nombre.replace(" ", "_").toLowerCase() + ".png")
+                            .imageUrl(url)
                             .status(true)
                             .createdAt(LocalDateTime.now())
                             .build());
