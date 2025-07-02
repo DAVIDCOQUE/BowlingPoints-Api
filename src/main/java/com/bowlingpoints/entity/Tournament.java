@@ -27,6 +27,9 @@ public class Tournament {
     @JoinColumn(name = "ambit_id")
     private Ambit ambit;
 
+    @Column(name = "organizer")
+    private String organizer;
+
     @Column(name = "imageUrl")
     private String imageUrl;
 

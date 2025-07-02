@@ -1,6 +1,7 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.TournamentDTO;
+import com.bowlingpoints.dto.TournamentSummaryDTO;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class TournamentService {
     private final CategoryRepository categoryRepository;
     private final TournamentCategoryRepository tournamentCategoryRepository;
     private final TournamentModalityRepository tournamentModalityRepository;
+    private final ResultRepository resultRepository;
 
     public List<TournamentDTO> getAll() {
         return tournamentRepository.findAllByDeletedAtIsNull()
@@ -190,4 +192,63 @@ public class TournamentService {
                 .status(dto.getStatus() != null ? dto.getStatus() : true)
                 .build();
     }
+
+    public List<TournamentDTO> getTournamentsByAmbit(Integer ambitId, String ambitName) {
+        return tournamentRepository.findTournamentsByAmbit(ambitId, ambitName);
+    }
+
+    //Resumen torneo
+
+    public TournamentSummaryDTO getTournamentSummary(Integer tournamentId) {
+        Tournament t = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new RuntimeException("Torneo no encontrado"));
+
+        // Modalidades
+        List<String> modalities = t.getModalities().stream()
+                .map(tm -> tm.getModality().getName())
+                .toList();
+
+        // Categorías
+        List<String> categories = t.getCategories().stream()
+                .map(tc -> tc.getCategory().getName())
+                .toList();
+
+        // Total masculino/femenino, a prueba de todo
+        Object countsRaw = resultRepository.countPlayersByGenderInTournament(tournamentId);
+
+        Integer totalMasculino = 0;
+        Integer totalFemenino = 0;
+
+        if (countsRaw == null) {
+            totalMasculino = 0;
+            totalFemenino = 0;
+        } else if (countsRaw instanceof Object[]) {
+            Object[] arr = (Object[]) countsRaw;
+            if (arr.length == 2 && arr[0] instanceof Number && arr[1] instanceof Number) {
+                totalMasculino = arr[0] != null ? ((Number) arr[0]).intValue() : 0;
+                totalFemenino = arr[1] != null ? ((Number) arr[1]).intValue() : 0;
+            } else if (arr.length == 1 && arr[0] instanceof Object[]) {
+                Object[] inner = (Object[]) arr[0];
+                totalMasculino = inner[0] != null ? ((Number) inner[0]).intValue() : 0;
+                totalFemenino = inner[1] != null ? ((Number) inner[1]).intValue() : 0;
+            }
+        } else {
+            throw new IllegalStateException("Tipo inesperado: " + countsRaw.getClass());
+        }
+
+        return TournamentSummaryDTO.builder()
+                .tournamentId(t.getTournamentId())
+                .organizer(t.getOrganizer())
+                .tournamentName(t.getName())
+                .startDate(t.getStartDate())
+                .endDate(t.getEndDate())
+                .location(t.getLocation())
+                .modalities(modalities)
+                .categories(categories)
+                .totalMasculino(totalMasculino)
+                .totalFemenino(totalFemenino)
+                .build();
+    }
+
+
 }

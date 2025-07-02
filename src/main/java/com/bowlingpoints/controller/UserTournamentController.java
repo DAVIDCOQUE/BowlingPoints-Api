@@ -21,5 +21,4 @@ public class UserTournamentController {
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Torneos jugados obtenidos correctamente", data));
     }
 
-
 }

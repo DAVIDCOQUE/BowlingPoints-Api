@@ -103,4 +103,63 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                 ORDER BY MAX(r.score) DESC
             """)
     List<TopTournamentDTO> findTopTournamentsByUser(@Param("userId") Integer userId);
+
+    // todo evento
+
+    @Query("""
+                SELECT 
+                    p.personId,
+                    CONCAT(p.fullName, ' ', p.fullSurname),
+                    p.gender,
+                    m.modalityId,
+                    m.name,
+                    SUM(r.score),
+                    AVG(r.score),
+                    COUNT(r.resultId)
+                FROM Result r
+                JOIN r.person p
+                JOIN r.modality m
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.deletedAt IS NULL
+                GROUP BY p.personId, p.fullName, p.fullSurname, p.gender, m.modalityId, m.name
+            """)
+    List<Object[]> findPlayerModalitySummariesByTournament(@Param("tournamentId") Integer tournamentId);
+
+
+    //resumen torneo
+
+    @Query("""
+                SELECT
+                  sum(case when p.gender = 'masculino' then 1 else 0 end),
+                  sum(case when p.gender = 'femenino' then 1 else 0 end)
+                FROM Result r
+                JOIN r.person p
+                WHERE r.tournament.tournamentId = :tournamentId AND r.deletedAt IS NULL
+            """)
+    Object[] countPlayersByGenderInTournament(@Param("tournamentId") Integer tournamentId);
+
+
+    //detalle torneo
+    @Query("""
+                SELECT 
+                    p.personId,
+                    CONCAT(p.fullName, ' ', p.fullSurname),
+                    cp.club.name,
+                    r.round.roundNumber,
+                    r.score
+                FROM Result r
+                JOIN r.person p
+                LEFT JOIN p.clubs cp
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.modality.modalityId = :modalityId
+                  AND r.deletedAt IS NULL
+                  AND (cp.status = true OR cp IS NULL)
+                  AND (cp.deletedAt IS NULL OR cp IS NULL)
+                ORDER BY p.personId, r.round.roundNumber
+            """)
+    List<Object[]> findRawPlayerResultsForTable(
+            @Param("tournamentId") Integer tournamentId,
+            @Param("modalityId") Integer modalityId
+    );
+
 }

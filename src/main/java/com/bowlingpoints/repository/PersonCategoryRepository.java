@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface PersonCategoryRepository extends JpaRepository<PersonCategory, Integer> {
     List<PersonCategory> findByPerson_PersonId(Integer personId);
+
     void deleteAllByPerson_PersonId(Integer personId);
 }

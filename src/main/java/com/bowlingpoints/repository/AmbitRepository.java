@@ -16,16 +16,16 @@ public interface AmbitRepository extends JpaRepository<Ambit, Integer> {
     Optional<Ambit> findByName(String name);
 
     @Query("""
-SELECT DISTINCT new com.bowlingpoints.dto.AmbitDTO(
-    a.ambitId,
-    a.imageUrl,
-    a.name,
-    a.description,
-    a.status
-)
-FROM Tournament t
-JOIN t.ambit a
-WHERE t.deletedAt IS NULL
-""")
+            SELECT DISTINCT new com.bowlingpoints.dto.AmbitDTO(
+                a.ambitId,
+                a.imageUrl,
+                a.name,
+                a.description,
+                a.status
+            )
+            FROM Tournament t
+            JOIN t.ambit a
+            WHERE t.deletedAt IS NULL
+            """)
     List<AmbitDTO> findDistinctWithTournaments();
 }

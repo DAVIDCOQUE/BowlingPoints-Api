@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface TournamentCategoryRepository extends JpaRepository<TournamentCategory, Integer> {
     List<TournamentCategory> findByTournament_TournamentId(Integer tournamentId);
-    // Puedes agregar más métodos si lo necesitas, ej: findByCategory_CategoryId
 }

@@ -1,13 +1,15 @@
 package com.bowlingpoints.service;
 
+import com.bowlingpoints.dto.PlayerModalitySummaryDTO;
+import com.bowlingpoints.dto.PlayerResultSummaryDTO;
+import com.bowlingpoints.dto.PlayerResultTableDTO;
 import com.bowlingpoints.dto.ResultDTO;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,13 +27,13 @@ public class ResultService {
     public List<ResultDTO> getAll() {
         return resultRepository.findAll()
                 .stream()
-                .map(this::mapToDTO)
+                .map(this::mapEntityToDto)
                 .collect(Collectors.toList());
     }
 
     public ResultDTO getById(Integer id) {
         return resultRepository.findById(id)
-                .map(this::mapToDTO)
+                .map(this::mapEntityToDto)
                 .orElse(null);
     }
 
@@ -95,34 +97,91 @@ public class ResultService {
         return result;
     }
 
-    private ResultDTO mapToDTO(Result result) {
-        return ResultDTO.builder()
-                .resultId(result.getResultId())
 
-                .personId(result.getPerson() != null ? result.getPerson().getPersonId() : null)
-                .personName(result.getPerson() != null
-                        ? (result.getPerson().getFullName() + " " + result.getPerson().getFullSurname()).trim()
-                        : null)
+    public Map<String, List<PlayerResultSummaryDTO>> getTournamentResultsByGender(Integer tournamentId) {
+        List<Object[]> rows = resultRepository.findPlayerModalitySummariesByTournament(tournamentId);
 
-                .teamId(result.getTeam() != null ? result.getTeam().getTeamId() : null)
-                .teamName(result.getTeam() != null ? result.getTeam().getNameTeam() : null)
+        // Agrupamos por género y luego por jugador
+        Map<String, Map<Integer, List<Object[]>>> grouped = rows.stream().collect(
+                Collectors.groupingBy(
+                        row -> ((String) row[2]).toLowerCase(), // gender: masculino/femenino
+                        Collectors.groupingBy(
+                                row -> ((Number) row[0]).intValue() // playerId
+                        )
+                )
+        );
 
-                .tournamentId(result.getTournament().getTournamentId())
-                .tournamentName(result.getTournament().getName())
+        Map<String, List<PlayerResultSummaryDTO>> result = new HashMap<>();
 
-                .roundId(result.getRound().getRoundId())
-                .roundNumber(result.getRound().getRoundNumber())
+        for (String gender : grouped.keySet()) {
+            List<PlayerResultSummaryDTO> players = new ArrayList<>();
+            for (List<Object[]> playerRows : grouped.get(gender).values()) {
+                Integer playerId = ((Number) playerRows.get(0)[0]).intValue();
+                String playerName = (String) playerRows.get(0)[1];
 
-                .categoryId(result.getCategory().getCategoryId())
-                .categoryName(result.getCategory().getName())
+                List<PlayerModalitySummaryDTO> modalities = playerRows.stream().map(row ->
+                        new PlayerModalitySummaryDTO(
+                                ((Number) row[3]).intValue(), // modalityId
+                                (String) row[4], // modalityName
+                                ((Number) row[5]).intValue(), // total
+                                ((Number) row[6]).doubleValue(), // promedio
+                                ((Number) row[7]).intValue() // lineas
+                        )
+                ).collect(Collectors.toList());
 
-                .modalityId(result.getModality().getModalityId())
-                .modalityName(result.getModality().getName())
+                // Calcular totales globales
+                int totalGlobal = modalities.stream().mapToInt(PlayerModalitySummaryDTO::getTotal).sum();
+                int lineasGlobal = modalities.stream().mapToInt(PlayerModalitySummaryDTO::getLineas).sum();
+                double promedioGlobal = lineasGlobal > 0 ? (double) totalGlobal / lineasGlobal : 0;
 
-                .laneNumber(result.getLaneNumber())
-                .lineNumber(result.getLineNumber())
-                .score(result.getScore())
-                .build();
+                players.add(new PlayerResultSummaryDTO(
+                        playerId, playerName, modalities, totalGlobal, promedioGlobal, lineasGlobal
+                ));
+            }
+            result.put(gender, players);
+        }
+        return result;
+    }
+
+    //detalle torneo.
+
+    public List<PlayerResultTableDTO> getPlayerResultsForTable(Integer tournamentId, Integer modalityId) {
+        List<Object[]> raw = resultRepository.findRawPlayerResultsForTable(tournamentId, modalityId);
+
+        // Mapear por jugadorId a su DTO
+        Map<Integer, PlayerResultTableDTO> playerMap = new LinkedHashMap<>();
+
+        for (Object[] row : raw) {
+            Integer personId = (Integer) row[0];
+            String playerName = (String) row[1];
+            String clubName = (String) row[2];
+            Integer roundNumber = (Integer) row[3];
+            Integer score = (Integer) row[4];
+
+            PlayerResultTableDTO dto = playerMap.get(personId);
+            if (dto == null) {
+                dto = PlayerResultTableDTO.builder()
+                        .personId(personId)
+                        .playerName(playerName)
+                        .clubName(clubName)
+                        .scores(new ArrayList<>())
+                        .total(0)
+                        .promedio(0.0)
+                        .build();
+                playerMap.put(personId, dto);
+            }
+            dto.getScores().add(score);
+            dto.setTotal(dto.getTotal() + score);
+        }
+
+        // Calcula el promedio
+        for (PlayerResultTableDTO dto : playerMap.values()) {
+            if (!dto.getScores().isEmpty()) {
+                dto.setPromedio(dto.getTotal() / (double) dto.getScores().size());
+            }
+        }
+
+        return new ArrayList<>(playerMap.values());
     }
 
 }

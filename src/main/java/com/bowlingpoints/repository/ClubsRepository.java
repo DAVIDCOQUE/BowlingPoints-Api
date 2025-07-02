@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ClubsRepository extends JpaRepository<Clubs, Integer> {
 
-    // Puedes agregar consultas personalizadas si se requieren más adelante.
 }

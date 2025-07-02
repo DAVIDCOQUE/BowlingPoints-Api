@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface TournamentModalityRepository extends JpaRepository<TournamentModality, Integer> {
     List<TournamentModality> findByTournament_TournamentId(Integer tournamentId);
-    // Puedes agregar más métodos si lo necesitas, ej: findByModality_ModalityId
+
 }
