@@ -1,17 +1,18 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.PlayerModalitySummaryDTO;
-import com.bowlingpoints.dto.PlayerResultSummaryDTO;
-import com.bowlingpoints.dto.PlayerResultTableDTO;
-import com.bowlingpoints.dto.ResultDTO;
+import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio principal para gestión de resultados, ranking y resúmenes de torneos.
+ */
 @Service
 @RequiredArgsConstructor
 public class ResultService {
@@ -24,6 +25,9 @@ public class ResultService {
     private final CategoryRepository categoryRepository;
     private final ModalityRepository modalityRepository;
 
+    /**
+     * Retorna TODOS los resultados (todas las filas de la tabla result).
+     */
     public List<ResultDTO> getAll() {
         return resultRepository.findAll()
                 .stream()
@@ -31,18 +35,27 @@ public class ResultService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca un resultado específico por su ID.
+     */
     public ResultDTO getById(Integer id) {
         return resultRepository.findById(id)
                 .map(this::mapEntityToDto)
                 .orElse(null);
     }
 
+    /**
+     * Crea un nuevo resultado a partir de un DTO.
+     */
     public ResultDTO create(ResultDTO dto) {
         Result result = mapDtoToEntity(dto, new Result());
         Result saved = resultRepository.save(result);
         return mapEntityToDto(saved);
     }
 
+    /**
+     * Actualiza un resultado existente por ID.
+     */
     public boolean update(Integer id, ResultDTO dto) {
         Optional<Result> existingOpt = resultRepository.findById(id);
         if (existingOpt.isEmpty()) return false;
@@ -52,38 +65,58 @@ public class ResultService {
         return true;
     }
 
+    /**
+     * Elimina un resultado por su ID.
+     */
     public boolean delete(Integer id) {
         if (!resultRepository.existsById(id)) return false;
         resultRepository.deleteById(id);
         return true;
     }
 
-    // 🔁 Mapear de Entity a DTO
+    /**
+     * Mapea una entidad Result a su DTO correspondiente.
+     */
     private ResultDTO mapEntityToDto(Result r) {
         return ResultDTO.builder()
                 .resultId(r.getResultId())
+                // Persona
                 .personId(r.getPerson() != null ? r.getPerson().getPersonId() : null)
+                .personName(r.getPerson() != null ? r.getPerson().getFullName() : null)
+                // Equipo
                 .teamId(r.getTeam() != null ? r.getTeam().getTeamId() : null)
-                .tournamentId(r.getTournament().getTournamentId())
-                .roundId(r.getRound().getRoundId())
-                .categoryId(r.getCategory().getCategoryId())
-                .modalityId(r.getModality().getModalityId())
+                .teamName(r.getTeam() != null ? r.getTeam().getNameTeam() : null)
+                // Torneo
+                .tournamentId(r.getTournament() != null ? r.getTournament().getTournamentId() : null)
+                .tournamentName(r.getTournament() != null ? r.getTournament().getName() : null)
+                // Ronda
+                .roundId(r.getRound() != null ? r.getRound().getRoundId() : null)
+                .roundNumber(r.getRound() != null ? r.getRound().getRoundNumber() : null)
+                // Categoría
+                .categoryId(r.getCategory() != null ? r.getCategory().getCategoryId() : null)
+                .categoryName(r.getCategory() != null ? r.getCategory().getName() : null)
+                // Modalidad
+                .modalityId(r.getModality() != null ? r.getModality().getModalityId() : null)
+                .modalityName(r.getModality() != null ? r.getModality().getName() : null)
+                // Datos propios del resultado
                 .laneNumber(r.getLaneNumber())
                 .lineNumber(r.getLineNumber())
                 .score(r.getScore())
                 .build();
     }
 
-    // 🔁 Mapear de DTO a Entity
+    /**
+     * Mapea un DTO a una entidad Result (para crear o actualizar resultados).
+     */
     private Result mapDtoToEntity(ResultDTO dto, Result result) {
         if (dto.getPersonId() != null) {
             result.setPerson(personRepository.findById(dto.getPersonId()).orElse(null));
-            result.setTeam(null); // 💡 borra equipo si ahora se usa persona
+            result.setTeam(null); // Si se establece persona, elimina equipo
         }
 
         if (dto.getTeamId() != null) {
             result.setTeam(teamRepository.findById(dto.getTeamId()).orElse(null));
-            result.setPerson(null); // 💡 borra persona si ahora se usa equipo
+            result.setPerson(null); // Si se establece equipo, elimina persona
         }
 
         result.setTournament(tournamentRepository.findById(dto.getTournamentId()).orElseThrow());
@@ -97,7 +130,10 @@ public class ResultService {
         return result;
     }
 
-
+    /**
+     * Agrupa los resultados de un torneo por género y por jugador.
+     * Devuelve para cada género una lista de resúmenes por jugador.
+     */
     public Map<String, List<PlayerResultSummaryDTO>> getTournamentResultsByGender(Integer tournamentId) {
         List<Object[]> rows = resultRepository.findPlayerModalitySummariesByTournament(tournamentId);
 
@@ -143,8 +179,9 @@ public class ResultService {
         return result;
     }
 
-    //detalle torneo.
-
+    /**
+     * Devuelve los resultados individuales de los jugadores de un torneo/modality para tabla de resultados.
+     */
     public List<PlayerResultTableDTO> getPlayerResultsForTable(Integer tournamentId, Integer modalityId) {
         List<Object[]> raw = resultRepository.findRawPlayerResultsForTable(tournamentId, modalityId);
 
@@ -182,6 +219,13 @@ public class ResultService {
         }
 
         return new ArrayList<>(playerMap.values());
+    }
+    /**
+     * Devuelve todos los jugadores ordenados por promedio de score descendente.
+     * Útil para ranking general (ojo con listas grandes, puede paginar).
+     */
+    public List<PlayerRankingDTO> getAllPlayersByAvgScore() {
+        return resultRepository.findAllPlayersByAvgScore();
     }
 
 }

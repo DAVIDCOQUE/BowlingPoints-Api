@@ -6,13 +6,26 @@ import com.bowlingpoints.dto.UserStatsProjection;
 import com.bowlingpoints.entity.Result;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+/**
+ * Repositorio para consultas complejas y personalizadas de la entidad Result.
+ * Incluye rankings, resúmenes, estadísticas y datos para tablas comparativas.
+ */
 public interface ResultRepository extends JpaRepository<Result, Integer> {
 
-    // 1. Ranking de jugadores
+    // -------------------------------------------------------------------------
+    // 1. RANKING DE JUGADORES POR PROMEDIO
+    // -------------------------------------------------------------------------
+
+    /**
+     * Devuelve los jugadores con mejor promedio de score.
+     * Si usas Pageable, puedes limitar a top 10, top 50, etc.
+     * Ejemplo: findTopPlayersByAvgScore(PageRequest.of(0, 10))
+     */
     @Query("""
                 SELECT new com.bowlingpoints.dto.PlayerRankingDTO(
                     r.person.personId,
@@ -26,9 +39,35 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                 GROUP BY r.person.personId, p.fullName, p.fullSurname, p.photoUrl
                 ORDER BY AVG(r.score) DESC
             """)
-    List<PlayerRankingDTO> findTop10PlayersByAvgScore();
+    List<PlayerRankingDTO> findTopPlayersByAvgScore(Pageable pageable);
 
-    // 2. Ranking de clubes (Nativo)
+    /**
+     * Devuelve todos los jugadores ordenados por promedio de score (¡ojo si hay miles!).
+     */
+    @Query("""
+                SELECT new com.bowlingpoints.dto.PlayerRankingDTO(
+                    r.person.personId,
+                    CONCAT(p.fullName, ' ', p.fullSurname),
+                    AVG(r.score),
+                    p.photoUrl
+                )
+                FROM Result r
+                JOIN r.person p
+                WHERE r.deletedAt IS NULL
+                GROUP BY r.person.personId, p.fullName, p.fullSurname, p.photoUrl
+                ORDER BY AVG(r.score) DESC
+            """)
+    List<PlayerRankingDTO> findAllPlayersByAvgScore();
+
+    // -------------------------------------------------------------------------
+    // 2. TOP CLUBS (Ranking de clubes por puntaje total acumulado)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Ranking de clubes por puntaje total. (Solo top 10)
+     * Se hace con native query por rendimiento y sumarización.
+     * Devuelve: [clubId, clubName, totalScore]
+     */
     @Query(value = """
                 SELECT
                     c.club_id AS clubId,
@@ -45,15 +84,23 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """, nativeQuery = true)
     List<Object[]> findTopClubsRaw();
 
-    // 3. Torneos jugados por usuario (se puede hacer DTO si quieres)
+    // -------------------------------------------------------------------------
+    // 3. TORNEOS JUGADOS POR UN USUARIO
+    // -------------------------------------------------------------------------
+
+    /**
+     * Devuelve todos los torneos jugados por una persona (userId).
+     * Útil para la sección de "Mis Torneos".
+     * Devuelve datos crudos, puedes armar DTO con esta info.
+     */
     @Query("""
                 SELECT
                     t.tournamentId,
                     t.name,
                     t.startDate,
                     t.location,
-                    m.name,
-                    c.name,
+                    m.name,        
+                    c.name,      
                     COUNT(r.resultId),
                     t.imageUrl
                 FROM Result r
@@ -66,7 +113,14 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Object[]> findTournamentsByPersonId(@Param("userId") Integer userId);
 
-    // 4. Detalle de resultados de usuario en torneo
+    // -------------------------------------------------------------------------
+    // 4. DETALLE DE RESULTADOS DE UN USUARIO EN UN TORNEO
+    // -------------------------------------------------------------------------
+
+    /**
+     * Devuelve la lista de Result para un usuario y torneo concreto.
+     * Útil para el detalle/desglose de un torneo jugado.
+     */
     @Query("""
                 SELECT r FROM Result r
                 WHERE r.person.personId = :userId AND r.tournament.tournamentId = :tournamentId
@@ -74,7 +128,18 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Result> findResultsByPersonAndTournament(@Param("userId") Integer userId, @Param("tournamentId") Integer tournamentId);
 
-    // 5. Estadísticas agregadas del usuario (proyección)
+    // -------------------------------------------------------------------------
+    // 5. ESTADÍSTICAS GLOBALES DEL USUARIO (proyección, no DTO)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Devuelve estadísticas globales para un usuario:
+     * - Total torneos
+     * - Total chuzas/strikes
+     * - Promedio
+     * - Mejor partida
+     * - Torneos ganados (ejemplo: puntaje perfecto)
+     */
     @Query("""
                 SELECT
                     COUNT(DISTINCT r.tournament.tournamentId) as totalTournaments,
@@ -87,7 +152,14 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     UserStatsProjection findStatsByUserId(@Param("userId") Integer userId);
 
-    // 6. Top 3 mejores torneos jugados (por puntaje más alto en cada torneo)
+    // -------------------------------------------------------------------------
+    // 6. TOP TORNEOS JUGADOS (Mejor puntaje obtenido en cada torneo por el usuario)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Devuelve el top 3 de torneos jugados por un usuario, según mejor puntaje alcanzado.
+     * Útil para resumen/estadísticas.
+     */
     @Query("""
                 SELECT new com.bowlingpoints.dto.TopTournamentDTO(
                     t.tournamentId,
@@ -104,8 +176,14 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<TopTournamentDTO> findTopTournamentsByUser(@Param("userId") Integer userId);
 
-    // todo evento
+    // -------------------------------------------------------------------------
+    // 7. RESÚMENES POR JUGADOR/MODALIDAD EN TORNEO (para tablas comparativas)
+    // -------------------------------------------------------------------------
 
+    /**
+     * Devuelve resúmenes agregados por jugador y modalidad en un torneo.
+     * Útil para tablas estadísticas de un torneo.
+     */
     @Query("""
                 SELECT 
                     p.personId,
@@ -125,9 +203,14 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Object[]> findPlayerModalitySummariesByTournament(@Param("tournamentId") Integer tournamentId);
 
+    // -------------------------------------------------------------------------
+    // 8. CUENTA JUGADORES POR GÉNERO EN UN TORNEO
+    // -------------------------------------------------------------------------
 
-    //resumen torneo
-
+    /**
+     * Devuelve el conteo de jugadores masculino/femenino de un torneo.
+     * Útil para estadísticas rápidas de participación.
+     */
     @Query("""
                 SELECT
                   sum(case when p.gender = 'masculino' then 1 else 0 end),
@@ -138,8 +221,13 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     Object[] countPlayersByGenderInTournament(@Param("tournamentId") Integer tournamentId);
 
+    // -------------------------------------------------------------------------
+    // 9. DETALLE PARA TABLA DE RESULTADOS DE UN TORNEO Y MODALIDAD
+    // -------------------------------------------------------------------------
 
-    //detalle torneo
+    /**
+     * Devuelve datos crudos para armar tabla: persona, club, ronda, score.
+     */
     @Query("""
                 SELECT 
                     p.personId,

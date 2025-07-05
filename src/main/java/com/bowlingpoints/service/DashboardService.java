@@ -7,6 +7,7 @@ import com.bowlingpoints.repository.ClubsRepository;
 import com.bowlingpoints.repository.ResultRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class DashboardService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
 
-        List<PlayerRankingDTO> topPlayers = resultRepository.findTop10PlayersByAvgScore();
+        List<PlayerRankingDTO> topPlayers = resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10));
 
         List<ClubDashboardDTO> topClubs = resultRepository.findTopClubsRaw().stream()
                 .map(row -> ClubDashboardDTO.builder()
