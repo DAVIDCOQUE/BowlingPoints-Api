@@ -68,7 +68,7 @@ public class Person {
 
     @OneToMany(mappedBy = "person")
     @JsonBackReference
-    private List<ClubPerson> clubs;
+    private List<ClubPerson> clubPersons;
 
     public Person(Integer personId) {
         this.personId = personId;

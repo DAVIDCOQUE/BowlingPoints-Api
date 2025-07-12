@@ -237,7 +237,7 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                     r.score
                 FROM Result r
                 JOIN r.person p
-                LEFT JOIN p.clubs cp
+                LEFT JOIN p.clubPersons cp
                 WHERE r.tournament.tournamentId = :tournamentId
                   AND r.modality.modalityId = :modalityId
                   AND r.deletedAt IS NULL

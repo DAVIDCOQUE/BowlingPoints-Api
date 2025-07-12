@@ -14,4 +14,10 @@ public class UserStatisticsDTO {
     private Integer bestGame;             // Mejor partida
     private Integer tournamentsWon;       // Torneos ganados
     // Puedes agregar más según quieras mostrar gráficas (histograma, etc.)
+
+    private Integer personId;
+    private String fullName;
+    private String club;
+    private String age;
+    private String photoUrl;
 }
