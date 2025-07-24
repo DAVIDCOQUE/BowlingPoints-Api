@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface AmbitRepository extends JpaRepository<Ambit, Integer> {
     // Solo los no eliminados
-    List<Ambit> findAllByDeletedAtIsNull();
+    List<Ambit> findAllByDeletedAtIsNullOrderByNameAsc();
 
     Optional<Ambit> findByName(String name);
 
@@ -26,6 +26,7 @@ public interface AmbitRepository extends JpaRepository<Ambit, Integer> {
             FROM Tournament t
             JOIN t.ambit a
             WHERE t.deletedAt IS NULL
+            ORDER BY a.name ASC
             """)
     List<AmbitDTO> findDistinctWithTournaments();
 }

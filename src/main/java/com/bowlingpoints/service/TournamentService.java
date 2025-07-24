@@ -24,7 +24,7 @@ public class TournamentService {
     private final ResultRepository resultRepository;
 
     public List<TournamentDTO> getAll() {
-        return tournamentRepository.findAllByDeletedAtIsNull()
+        return tournamentRepository.findAllByDeletedAtIsNullOrderByStartDateDesc()
                 .stream()
                 .map(this::toDTO)
                 .toList();

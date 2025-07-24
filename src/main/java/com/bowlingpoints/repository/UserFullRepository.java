@@ -30,6 +30,7 @@ public interface UserFullRepository extends CrudRepository<User, Integer> {
             JOIN bowlingpoints.user_role ur ON ur.user_id = u.user_id
             JOIN bowlingpoints.roles r ON r.role_id = ur.role_id
             WHERE u.deleted_at IS NULL AND p.deleted_at IS NULL
+            ORDER BY p.full_name ASC
             """, nativeQuery = true)
     List<Object[]> getUserFullInfoRaw();
 }

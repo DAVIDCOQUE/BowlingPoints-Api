@@ -38,7 +38,7 @@ public class AmbitService {
     }
 
     public ResponseGenericDTO<List<AmbitDTO>> getAll() {
-        List<AmbitDTO> result = ambitRepository.findAllByDeletedAtIsNull().stream().map(this::toDTO).toList();
+        List<AmbitDTO> result = ambitRepository.findAllByDeletedAtIsNullOrderByNameAsc().stream().map(this::toDTO).toList();
         return new ResponseGenericDTO<>(true, "Ámbitos cargados correctamente", result);
     }
 

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Integer> {
-    List<Tournament> findAllByDeletedAtIsNull(); // <- solo activos (no eliminados)
+    List<Tournament> findAllByDeletedAtIsNullOrderByStartDateDesc(); // <- solo activos (no eliminados)
 
     Optional<Tournament> findByName(String name);  // <-- ¡AGREGA ESTA LÍNEA!
 
@@ -38,6 +38,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
                 WHERE (:ambitId IS NULL OR t.ambit.ambitId = :ambitId)
                   AND (:ambitName IS NULL OR t.ambit.name = :ambitName)
                   AND t.deletedAt IS NULL
+                  ORDER BY t.startDate DESC
             """)
     List<TournamentDTO> findTournamentsByAmbit(
             @Param("ambitId") Integer ambitId,

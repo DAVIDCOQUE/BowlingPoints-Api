@@ -17,7 +17,7 @@ public class ModalityService {
     private final ModalityRepository modalityRepository;
 
     public List<ModalityDTO> getAll() {
-        return modalityRepository.findAll().stream()
+        return modalityRepository.findAllByOrderByNameAsc().stream()
                 .map(m -> new ModalityDTO(m.getModalityId(), m.getName(), m.getDescription(), m.getStatus()))
                 .collect(toList());
     }

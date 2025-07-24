@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
     List<Category> findAllByDeletedAtIsNull(); // soft delete
 
+    List<Category> findAllByDeletedAtIsNullOrderByNameAsc();
     Optional<Category> findByName(String name);
 }

@@ -17,7 +17,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     public List<CategoryDTO> getAll() {
-        return categoryRepository.findAllByDeletedAtIsNull().stream()
+        return categoryRepository.findAllByDeletedAtIsNullOrderByNameAsc().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
