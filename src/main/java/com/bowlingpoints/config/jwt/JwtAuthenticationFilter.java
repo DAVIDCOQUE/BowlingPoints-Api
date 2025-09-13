@@ -1,6 +1,6 @@
 package com.bowlingpoints.config.jwt;
 
-
+import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 
 import org.springframework.http.HttpHeaders;
@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -39,7 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        username=jwtService.getUsernameFromToken(token);
+        try {
+            username = jwtService.getUsernameFromToken(token);
+        } catch (Exception ex) {
+            log.warn("Token inválido o corrupto: {}", ex.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (username!=null && SecurityContextHolder.getContext().getAuthentication()==null)
         {
@@ -53,11 +60,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                System.out.println("🧪 Username en el token: " + username);
-                System.out.println("🧪 Authorities: " + userDetails.getAuthorities());
-                System.out.println("🧪 Context antes: " + SecurityContextHolder.getContext().getAuthentication());
-
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
 

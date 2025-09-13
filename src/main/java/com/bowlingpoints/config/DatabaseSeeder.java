@@ -67,21 +67,21 @@ public class DatabaseSeeder {
 
             // 4. Crear usuarios
             User admin = createUserIfNotExists(
-                    "davidcoque", "/uploads/users/default.png", "1143993925",
+                    "1143993925", "/uploads/users/default.png", "1143993925",
                     "David Armando", "Sánchez Sánchez", LocalDate.of(1993, 4, 12),
                     "david03sc@gmail.com", "Masculino", "ADMIN",
                     passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
             );
 
             User entrenador = createUserIfNotExists(
-                    "jhonsoto", "/uploads/users/default.png", "198445652",
+                    "198445652", "/uploads/users/default.png", "198445652",
                     "Jhon", "Soto", LocalDate.of(1980, 7, 22),
                     "jhon@gmail.com", "Masculino", "ENTRENADOR",
                     passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
             );
 
             User jugador = createUserIfNotExists(
-                    "saraarteaga", "/uploads/users/default.png", "11455625",
+                    "11455625", "/uploads/users/default.png", "11455625",
                     "Sara", "Arteaga", LocalDate.of(2002, 1, 7),
                     "sara@gmail.com", "Femenino", "JUGADOR",
                     passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository

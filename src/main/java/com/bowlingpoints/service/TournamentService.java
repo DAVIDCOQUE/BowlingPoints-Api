@@ -73,6 +73,7 @@ public class TournamentService {
 
         Tournament entity = existingOpt.get();
         entity.setName(dto.getName());
+        entity.setOrganizer(dto.getOrganizer());
         entity.setStartDate(dto.getStartDate());
         entity.setEndDate(dto.getEndDate());
         entity.setLocation(dto.getLocation());
@@ -159,6 +160,7 @@ public class TournamentService {
         return TournamentDTO.builder()
                 .tournamentId(entity.getTournamentId())
                 .name(entity.getName())
+                .organizer(entity.getOrganizer())
                 .ambitId(entity.getAmbit() != null ? entity.getAmbit().getAmbitId() : null)
                 .ambitName(entity.getAmbit() != null ? entity.getAmbit().getName() : null)
                 .imageUrl(entity.getImageUrl()) // Por si usas imageUrl
@@ -184,6 +186,7 @@ public class TournamentService {
 
         return Tournament.builder()
                 .name(dto.getName())
+                .organizer(dto.getOrganizer())
                 .ambit(ambit)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())

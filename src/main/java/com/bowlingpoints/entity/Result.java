@@ -42,6 +42,9 @@ public class Result {
     @JoinColumn(name = "modality_id")
     private Modality modality;
 
+    @Column(name = "rama", nullable = false)
+    private String rama;
+
     @Column(name = "lane_number")
     private Integer laneNumber;
 

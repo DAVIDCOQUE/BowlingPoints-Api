@@ -6,9 +6,9 @@ import com.bowlingpoints.entity.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 import java.security.Key;
 import java.util.*;
@@ -16,16 +16,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
-    private static final String SECRET_KEY = "586E3272357538782F413F4428472B4B6250655368566B597033733676397924";
+    private final JwtConfig jwtConfig;
 
     public String getToken(User user) {
         return getToken(new HashMap<>(), user);
     }
 
     private String getToken(Map<String, Object> extraClaims, User user) {
-        long expirationMs = 36000000; // 1 hora
+        long expirationMs = jwtConfig.getExpiration();
 
         // Roles
         List<String> roles = user.getUserRoles().stream()
@@ -41,7 +42,6 @@ public class JwtService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Claims personalizados
         extraClaims.put("roles", roles);
         extraClaims.put("permissions", permissions);
         extraClaims.put("correo", user.getPerson().getEmail());
@@ -56,9 +56,10 @@ public class JwtService {
     }
 
     private Key getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(jwtConfig.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
 
     public String getUsernameFromToken(String token) {
         return getClaim(token, Claims::getSubject);

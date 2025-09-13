@@ -21,6 +21,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
                 SELECT new com.bowlingpoints.dto.TournamentDTO(
                     t.tournamentId,
                     t.name,
+                    t.organizer,
                     t.ambit.ambitId,
                     t.ambit.name,
                     t.imageUrl,

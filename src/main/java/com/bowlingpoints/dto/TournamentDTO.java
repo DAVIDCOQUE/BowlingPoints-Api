@@ -13,6 +13,7 @@ import java.util.List;
 public class TournamentDTO {
     private Integer tournamentId;
     private String name;
+    private String organizer;
 
     // Relación con ambit
     private Integer ambitId;
@@ -35,9 +36,10 @@ public class TournamentDTO {
     private List<String> modalityNames;
 
     // Constructor personalizado (opcional, puedes actualizarlo si lo necesitas)
-    public TournamentDTO(Integer tournamentId, String name, String location, String modalityName, String ambitName, LocalDate startDate) {
+    public TournamentDTO(Integer tournamentId, String name, String organizer, String location, String modalityName, String ambitName, LocalDate startDate) {
         this.tournamentId = tournamentId;
         this.name = name;
+        this.organizer = organizer;
         this.location = location;
         this.ambitName = ambitName;
         this.startDate = startDate;

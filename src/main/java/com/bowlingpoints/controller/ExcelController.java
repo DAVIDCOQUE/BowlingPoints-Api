@@ -1,6 +1,7 @@
 package com.bowlingpoints.controller;
 
 
+import com.bowlingpoints.dto.PlayerResultUploadDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class ExcelController {
     private ExcelService jugadorService;
 
     @PostMapping("/upload")
-    public List<Jugador> obtenerJugadores(@RequestParam("file") MultipartFile file) {
-        return jugadorService.obtenerJugadoresDesdeArchivo(file);
+    public List<PlayerResultUploadDTO> uploadResults(@RequestParam("file") MultipartFile file) {
+        return jugadorService.uploadResultsFromExcel(file);
     }
 }
