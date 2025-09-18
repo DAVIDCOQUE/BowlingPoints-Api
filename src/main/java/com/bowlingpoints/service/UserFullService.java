@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,51 +26,41 @@ public class UserFullService {
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ClubPersonRepository clubPersonRepository;
+    private final EmailService emailService;
 
     public List<UserFullDTO> getAllUsersWithDetails() {
-        return userFullRepository.getUserFullInfoRaw().stream()
-                .map(obj -> {
-                    UserFullDTO dto = new UserFullDTO();
-                    dto.setUserId((Integer) obj[0]);
-                    dto.setPersonId((Integer) obj[1]);
-                    dto.setPhotoUrl((String) obj[2]);
-                    dto.setNickname((String) obj[3]);
-                    dto.setDocument((String) obj[4]);
-                    dto.setEmail((String) obj[5]);
-                    dto.setFullName((String) obj[6]);
-                    dto.setFullSurname((String) obj[7]);
-                    dto.setBirthDate(obj[8] != null ? ((java.sql.Date) obj[8]).toLocalDate() : null); // birthDate
-                    dto.setPhone((String) obj[9]);
-                    dto.setGender((String) obj[10]);
-                    dto.setRoleDescription((String) obj[11]);
-                    dto.setRoles(null);
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        return userFullRepository.getUserFullInfoRaw().stream().map(obj -> {
+            UserFullDTO dto = new UserFullDTO();
+            dto.setUserId((Integer) obj[0]);
+            dto.setPersonId((Integer) obj[1]);
+            dto.setPhotoUrl((String) obj[2]);
+            dto.setNickname((String) obj[3]);
+            dto.setDocument((String) obj[4]);
+            dto.setEmail((String) obj[5]);
+            dto.setFullName((String) obj[6]);
+            dto.setFullSurname((String) obj[7]);
+            dto.setBirthDate(obj[8] != null ? ((java.sql.Date) obj[8]).toLocalDate() : null); // birthDate
+            dto.setPhone((String) obj[9]);
+            dto.setGender((String) obj[10]);
+            dto.setRoleDescription((String) obj[11]);
+            dto.setRoles(null);
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     public UserFullDTO getByUsername(String username) {
-        UserFullDTO dto = getAllUsersWithDetails().stream()
-                .filter(u -> u.getNickname().equals(username))
-                .findFirst()
-                .orElse(null);
+        UserFullDTO dto = getAllUsersWithDetails().stream().filter(u -> u.getNickname().equals(username)).findFirst().orElse(null);
 
         // Si existe el usuario, buscamos su club activo
         if (dto != null && dto.getPersonId() != null) {
-            clubPersonRepository.findFirstByPersonAndStatusIsTrue(
-                    new Person(dto.getPersonId()) // Constructor mínimo, solo con el ID
-            ).ifPresent(clubPerson -> dto.setClubId(
-                    clubPerson.getClub().getClubId()
-            ));
+            clubPersonRepository.findFirstByPersonAndStatusIsTrue(new Person(dto.getPersonId()) // Constructor mínimo, solo con el ID
+            ).ifPresent(clubPerson -> dto.setClubId(clubPerson.getClub().getClubId()));
         }
         return dto;
     }
 
     public UserFullDTO getUserById(Integer id) {
-        return getAllUsersWithDetails().stream()
-                .filter(user -> user.getUserId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return getAllUsersWithDetails().stream().filter(user -> user.getUserId().equals(id)).findFirst().orElse(null);
     }
 
     public boolean updateUser(Integer id, UserFullDTO input) {
@@ -129,6 +120,8 @@ public class UserFullService {
     }
 
     public void createUser(UserFullDTO input) {
+
+        //Guardar persona
         Person person = new Person();
         if (input.getPhotoUrl() == null || input.getPhotoUrl().isBlank()) {
             person.setPhotoUrl("/uploads/users/default.png");
@@ -145,6 +138,7 @@ public class UserFullService {
         person.setStatus(true);
         personRepository.save(person);
 
+        //Guardar usuario
         User user = new User();
         user.setNickname(input.getNickname());
         user.setPerson(person);
@@ -158,6 +152,7 @@ public class UserFullService {
         user.setStatus(true);
         userRepository.save(user);
 
+        //  Guardar roles
         if (input.getRoles() != null && !input.getRoles().isEmpty()) {
             for (String roleName : input.getRoles()) {
                 Optional<Role> role = roleRepository.findByDescription(roleName);
@@ -170,5 +165,13 @@ public class UserFullService {
                 });
             }
         }
+        // Enviar correo al usuario
+//        try {
+//            String html = "<h2>¡Bienvenido a BowlingPoints!</h2>" + "<p>Tu usuario ha sido creado exitosamente.</p>" + "<p><b>Usuario:</b> " + input.getNickname() + "</p>" + "<p><b>Contraseña:</b> " + input.getPassword() + "</p>";
+//
+//            emailService.sendHtmlMessage(input.getEmail(), "Cuenta creada", html);
+//        } catch (Exception e) {
+//            System.err.println("⚠️ Error enviando correo: " + e.getMessage());
+//        }
     }
 }
