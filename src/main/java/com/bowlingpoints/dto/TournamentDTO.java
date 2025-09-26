@@ -24,7 +24,7 @@ public class TournamentDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String location;
-    private String causeStatus;
+    private String stage;
     private Boolean status;
 
     // 🔥 NUEVO: múltiples categorías/modalidades

@@ -28,7 +28,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
                     t.startDate,
                     t.endDate,
                     t.location,
-                    t.causeStatus,
+                    t.stage,
                     t.status,
                     null,
                     null,

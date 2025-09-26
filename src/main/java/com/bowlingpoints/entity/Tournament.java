@@ -42,8 +42,8 @@ public class Tournament {
     @Column(name = "location")
     private String location;
 
-    @Column(name = "cause_status")
-    private String causeStatus;
+    @Column(name = "stage")
+    private String stage;
 
     @Column(name = "status")
     private Boolean status = true;

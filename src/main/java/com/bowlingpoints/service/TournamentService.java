@@ -77,7 +77,7 @@ public class TournamentService {
         entity.setStartDate(dto.getStartDate());
         entity.setEndDate(dto.getEndDate());
         entity.setLocation(dto.getLocation());
-        entity.setCauseStatus(dto.getCauseStatus());
+        entity.setStage(dto.getStage());
         entity.setStatus(dto.getStatus());
 
         if (dto.getAmbitId() != null) {
@@ -167,7 +167,7 @@ public class TournamentService {
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
                 .location(entity.getLocation())
-                .causeStatus(entity.getCauseStatus())
+                .stage(entity.getStage())
                 .status(entity.getStatus())
                 .categoryIds(categoryIds)
                 .categoryNames(categoryNames)
@@ -191,7 +191,7 @@ public class TournamentService {
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .location(dto.getLocation())
-                .causeStatus(dto.getCauseStatus())
+                .stage(dto.getStage())
                 .status(dto.getStatus() != null ? dto.getStatus() : true)
                 .build();
     }

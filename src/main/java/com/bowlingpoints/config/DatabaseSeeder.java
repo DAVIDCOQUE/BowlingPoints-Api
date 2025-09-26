@@ -224,7 +224,7 @@ public class DatabaseSeeder {
                             .startDate(LocalDate.of(2025, 8 + i, 10 + i))
                             .endDate(LocalDate.of(2025, 8 + i, 15 + i))
                             .location(i == 0 ? "Bogotá, Colombia" : (i == 1 ? "Medellín, Colombia" : "Cartagena, Colombia"))
-                            .causeStatus("Programado")
+                            .stage("Programado")
                             .status(true)
                             .build();
                     tournamentRepository.save(torneo);

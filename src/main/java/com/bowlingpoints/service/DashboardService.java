@@ -84,7 +84,7 @@ public class DashboardService {
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
                 .location(entity.getLocation())
-                .causeStatus(entity.getCauseStatus())
+                .stage(entity.getStage())
                 .status(entity.getStatus())
                 .categoryIds(categoryIds)
                 .modalityIds(modalityIds)
