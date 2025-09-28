@@ -16,7 +16,7 @@ public class AmbitController {
 
     private final AmbitService ambitService;
 
-    @GetMapping
+    @GetMapping("/all-ambit")
     public ResponseEntity<ResponseGenericDTO<List<AmbitDTO>>> getAll() {
         return ResponseEntity.ok(ambitService.getAll());
     }
@@ -26,7 +26,7 @@ public class AmbitController {
         return ResponseEntity.ok(ambitService.getById(id));
     }
 
-    @PostMapping
+    @PostMapping("/save-ambit")
     public ResponseEntity<ResponseGenericDTO<AmbitDTO>> create(@RequestBody AmbitDTO dto) {
         return ResponseEntity.ok(ambitService.create(dto));
     }

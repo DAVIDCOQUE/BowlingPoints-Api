@@ -5,6 +5,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-public interface ExcelService {
+public interface FileService {
     List<PlayerResultUploadDTO> uploadResultsFromExcel(MultipartFile file);
 }

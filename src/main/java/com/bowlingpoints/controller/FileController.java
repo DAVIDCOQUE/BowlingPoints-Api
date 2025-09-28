@@ -12,8 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/jugadores")
-public class ExcelController {
+@RequestMapping("/file/process")
+public class FileController {
 
     @Autowired
     private ExcelService jugadorService;
