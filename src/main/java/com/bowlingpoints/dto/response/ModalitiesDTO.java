@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ModalitiesDTO {
 
-    private int idModality;
-    private String nameModality;
+    private int modalityId;
+    private String name;
 }
