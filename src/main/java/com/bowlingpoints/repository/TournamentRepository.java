@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Integer> {
-    List<Tournament> findAllByDeletedAtIsNullOrderByStartDateDesc(); // <- solo activos (no eliminados)
+    List<Tournament> findAllByDeletedAtIsNullOrderByStartDateDesc();
 
-    Optional<Tournament> findByName(String name);  // <-- ¡AGREGA ESTA LÍNEA!
+    Optional<Tournament> findByName(String name);
 
     List<Tournament> findAllByStatusTrueAndDeletedAtIsNull();
 
 
-    @Query("""
+   /* @Query("""
                 SELECT new com.bowlingpoints.dto.TournamentDTO(
                     t.tournamentId,
                     t.name,
@@ -44,6 +44,6 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
     List<TournamentDTO> findTournamentsByAmbit(
             @Param("ambitId") Integer ambitId,
             @Param("ambitName") String ambitName
-    );
+    );*/
 
 }

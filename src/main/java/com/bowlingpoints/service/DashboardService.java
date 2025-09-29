@@ -86,10 +86,10 @@ public class DashboardService {
                 .location(entity.getLocation())
                 .stage(entity.getStage())
                 .status(entity.getStatus())
-                .categoryIds(categoryIds)
-                .modalityIds(modalityIds)
-                .categoryNames(categoryNames)
-                .modalityNames(modalityNames)
+                //.categoryIds(categoryIds)
+                //.modalityIds(modalityIds)
+                //.categoryNames(categoryNames)
+                //.modalityNames(modalityNames)
                 .build();
     }
 }
