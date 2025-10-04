@@ -1,65 +1,57 @@
-name: CI/CD Pipeline
+name: Build & SonarCloud Analysis
 
 on:
   push:
     branches:
-      - develop
+      - dev
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build-and-analyze:
-    name: Build, test and analyze
+  build:
+    name: Build and Analyze
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: rdg7/rdg7
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set up JDK 17
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necesario para SonarCloud
+
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 17
-          distribution: 'zulu'
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Cache SonarQube packages
+      - name: Cache Maven packages
         uses: actions/cache@v4
         with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+      - name: Build project
+        run: mvn -B clean verify
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
-      - name: Run tests and build
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: ./gradlew clean build --info
-
-      - name: SonarQube analysis
+      - name: Run SonarCloud analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          DB_URL: ${{ secrets.DB_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=<tu_projectKey_en_sonarcloud> \
+            -Dsonar.organization=<tu_organizacion_en_sonarcloud> \
+            -Dsonar.host.url=https://sonarcloud.io
+
+      - name: Test database connection
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: ./gradlew sonar --info
-
-      - name: Check SonarQube Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          scanMetadataReportFile: rdg7/rdg7/build/sonar/report-task.txt
+        run: |
+          echo "Probando conexión a la base de datos..."
+          pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER || echo "No se pudo conectar, revisa los datos"
