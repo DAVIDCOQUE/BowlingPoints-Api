@@ -56,12 +56,7 @@ public class AmbitService {
     public ResponseGenericDTO<Void> update(Integer id, AmbitDTO dto) {
         Optional<Ambit> optional = ambitRepository.findById(id);
         if (optional.isPresent()) {
-            Ambit entity = optional.get();
-            entity.setName(dto.getName());
-            entity.setDescription(dto.getDescription());
-            entity.setStatus(dto.getStatus());
-            entity.setUpdatedAt(LocalDateTime.now());
-            ambitRepository.save(entity);
+            ambitRepository.save(this.validateUpdateData(optional.get(),dto));
             return new ResponseGenericDTO<>(true, "Ámbito actualizado correctamente", null);
         }
         return new ResponseGenericDTO<>(false, "Ámbito no encontrado", null);
@@ -71,12 +66,35 @@ public class AmbitService {
         Optional<Ambit> optional = ambitRepository.findById(id);
         if (optional.isPresent()) {
             Ambit entity = optional.get();
-            entity.setStatus(false); // Soft delete
-            entity.setDeletedAt(LocalDateTime.now()); // ← Esto marca el registro como eliminado!
+            entity.setStatus(false);
+            entity.setDeletedAt(LocalDateTime.now());
             entity.setUpdatedAt(LocalDateTime.now());
             ambitRepository.save(entity);
             return new ResponseGenericDTO<>(true, "Ámbito eliminado correctamente", null);
         }
         return new ResponseGenericDTO<>(false, "Ámbito no encontrado", null);
+    }
+
+    private Ambit validateUpdateData(Ambit existenceAmbit, AmbitDTO newAmbit){
+        boolean haveChange = false;
+        if (newAmbit.getName() != null && !newAmbit.getName().equals(existenceAmbit.getName())) {
+            existenceAmbit.setName(newAmbit.getName());
+            haveChange = true;
+        }
+
+        if (newAmbit.getDescription() != null && !newAmbit.getDescription().equals(existenceAmbit.getDescription())) {
+            existenceAmbit.setDescription(newAmbit.getDescription());
+            haveChange = true;
+        }
+
+        if (newAmbit.getStatus() != null && !newAmbit.getStatus().equals(existenceAmbit.getStatus())) {
+            existenceAmbit.setStatus(newAmbit.getStatus());
+            haveChange = true;
+        }
+
+        if(haveChange){
+            existenceAmbit.setUpdatedAt(LocalDateTime.now());
+        }
+        return existenceAmbit;
     }
 }

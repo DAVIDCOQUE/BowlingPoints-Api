@@ -1,6 +1,8 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.*;
+import com.bowlingpoints.dto.response.CategoriesDTO;
+import com.bowlingpoints.dto.response.ModalitiesDTO;
 import com.bowlingpoints.entity.Tournament;
 import com.bowlingpoints.repository.AmbitRepository;
 import com.bowlingpoints.repository.ClubsRepository;
@@ -10,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,29 +54,23 @@ public class DashboardService {
 
     // Este método convierte un Tournament a TournamentDTO incluyendo nombres de categorías y modalidades
     private TournamentDTO toDTO(Tournament entity) {
-        List<Integer> categoryIds = entity.getCategories() != null
+        List<CategoriesDTO> categoriesDTOS = entity.getCategories() != null
                 ? entity.getCategories().stream()
-                .map(tc -> tc.getCategory().getCategoryId())
-                .collect(Collectors.toList())
-                : List.of();
+                .map(tc -> new CategoriesDTO(
+                        tc.getCategory().getCategoryId(),
+                        tc.getCategory().getName()
+                ))
+                .toList()
+                : Collections.emptyList();
 
-        List<Integer> modalityIds = entity.getModalities() != null
+        List<ModalitiesDTO> modalitiesDTOS = entity.getModalities() != null
                 ? entity.getModalities().stream()
-                .map(tm -> tm.getModality().getModalityId())
-                .collect(Collectors.toList())
-                : List.of();
-
-        List<String> categoryNames = entity.getCategories() != null
-                ? entity.getCategories().stream()
-                .map(tc -> tc.getCategory().getName())
-                .collect(Collectors.toList())
-                : List.of();
-
-        List<String> modalityNames = entity.getModalities() != null
-                ? entity.getModalities().stream()
-                .map(tm -> tm.getModality().getName())
-                .collect(Collectors.toList())
-                : List.of();
+                .map(tc -> new ModalitiesDTO(
+                        tc.getModality().getModalityId(),
+                        tc.getModality().getName()
+                ))
+                .toList()
+                : Collections.emptyList();
 
         return TournamentDTO.builder()
                 .tournamentId(entity.getTournamentId())
@@ -86,10 +83,8 @@ public class DashboardService {
                 .location(entity.getLocation())
                 .stage(entity.getStage())
                 .status(entity.getStatus())
-                .categoryIds(categoryIds)
-                .modalityIds(modalityIds)
-                .categoryNames(categoryNames)
-                .modalityNames(modalityNames)
+                .modalities(modalitiesDTOS)
+                .categories(categoriesDTOS)
                 .build();
     }
 }

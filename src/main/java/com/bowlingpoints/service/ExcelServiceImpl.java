@@ -3,7 +3,7 @@ package com.bowlingpoints.service.impl;
 import com.bowlingpoints.dto.PlayerResultUploadDTO;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
-import com.bowlingpoints.service.ExcelService;
+import com.bowlingpoints.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class ExcelServiceImpl implements ExcelService {
+public class ExcelServiceImpl implements FileService {
 
     private final PersonRepository personRepository;
     private final ResultRepository resultRepository;

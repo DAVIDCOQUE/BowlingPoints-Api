@@ -1,11 +1,14 @@
 package com.bowlingpoints.service;
 
+import com.bowlingpoints.dto.CategoryDTO;
 import com.bowlingpoints.dto.TournamentDTO;
 import com.bowlingpoints.dto.TournamentSummaryDTO;
+import com.bowlingpoints.dto.response.ModalitiesDTO;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.bowlingpoints.dto.response.CategoriesDTO;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,7 +42,7 @@ public class TournamentService {
         Tournament saved = tournamentRepository.save(entity);
 
         // Guardar categorías (pivot)
-        if (dto.getCategoryIds() != null) {
+        /*if (dto.getCategoryIds() != null) {
             for (Integer catId : dto.getCategoryIds()) {
                 Category category = categoryRepository.findById(catId)
                         .orElseThrow(() -> new RuntimeException("Category not found: " + catId));
@@ -62,7 +65,7 @@ public class TournamentService {
                         .build();
                 tournamentModalityRepository.save(tm);
             }
-        }
+        }*/
 
         return toDTO(saved);
     }
@@ -92,7 +95,7 @@ public class TournamentService {
         tournamentCategoryRepository.deleteAll(tournamentCategoryRepository.findByTournament_TournamentId(updated.getTournamentId()));
         tournamentModalityRepository.deleteAll(tournamentModalityRepository.findByTournament_TournamentId(updated.getTournamentId()));
 
-        if (dto.getCategoryIds() != null) {
+        /*if (dto.getCategoryIds() != null) {
             for (Integer catId : dto.getCategoryIds()) {
                 Category category = categoryRepository.findById(catId)
                         .orElseThrow(() -> new RuntimeException("Category not found: " + catId));
@@ -114,7 +117,7 @@ public class TournamentService {
                         .build();
                 tournamentModalityRepository.save(tm);
             }
-        }
+        }*/
 
         return true;
     }
@@ -133,28 +136,22 @@ public class TournamentService {
     // 🔁 Mapping
     private TournamentDTO toDTO(Tournament entity) {
         // Obtener categorías y modalidades relacionadas (IDs y Nombres)
-        List<Integer> categoryIds = entity.getCategories() != null
+        List<CategoriesDTO> categoriesDTOS = entity.getCategories() != null
                 ? entity.getCategories().stream()
-                .map(tc -> tc.getCategory().getCategoryId())
-                .collect(Collectors.toList())
+                .map(tc -> new CategoriesDTO(
+                        tc.getCategory().getCategoryId(),
+                        tc.getCategory().getName()
+                ))
+                .toList()
                 : Collections.emptyList();
 
-        List<String> categoryNames = entity.getCategories() != null
-                ? entity.getCategories().stream()
-                .map(tc -> tc.getCategory().getName())
-                .collect(Collectors.toList())
-                : Collections.emptyList();
-
-        List<Integer> modalityIds = entity.getModalities() != null
+        List<ModalitiesDTO> modalitiesDTOS = entity.getModalities() != null
                 ? entity.getModalities().stream()
-                .map(tm -> tm.getModality().getModalityId())
-                .collect(Collectors.toList())
-                : Collections.emptyList();
-
-        List<String> modalityNames = entity.getModalities() != null
-                ? entity.getModalities().stream()
-                .map(tm -> tm.getModality().getName())
-                .collect(Collectors.toList())
+                .map(tc -> new ModalitiesDTO(
+                        tc.getModality().getModalityId(),
+                        tc.getModality().getName()
+                ))
+                .toList()
                 : Collections.emptyList();
 
         return TournamentDTO.builder()
@@ -169,10 +166,8 @@ public class TournamentService {
                 .location(entity.getLocation())
                 .stage(entity.getStage())
                 .status(entity.getStatus())
-                .categoryIds(categoryIds)
-                .categoryNames(categoryNames)
-                .modalityIds(modalityIds)
-                .modalityNames(modalityNames)
+                .categories(categoriesDTOS)
+                .modalities(modalitiesDTOS)
                 .build();
     }
 
@@ -197,7 +192,7 @@ public class TournamentService {
     }
 
     public List<TournamentDTO> getTournamentsByAmbit(Integer ambitId, String ambitName) {
-        return tournamentRepository.findTournamentsByAmbit(ambitId, ambitName);
+        return null;
     }
 
     //Resumen torneo
