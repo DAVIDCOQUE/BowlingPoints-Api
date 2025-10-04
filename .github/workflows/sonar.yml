@@ -15,7 +15,7 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # necesario para que SonarCloud analice correctamente el historial
+          fetch-depth: 0  # necesario para un análisis completo
 
       - name: Configurar JDK
         uses: actions/setup-java@v4
@@ -40,13 +40,9 @@ jobs:
             ${{ runner.os }}-sonar
 
       - name: Compilar y testear con Maven
-        run: mvn -B verify
+        run: mvn -B clean verify
 
       - name: Analizar con SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify sonar:sonar \
-          -Dsonar.organization=davidcoque \
-          -Dsonar.projectKey=bowlingpointsback \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify sonar:sonar -Dsonar.organization=davidcoque -Dsonar.projectKey=bowlingpointsback -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
