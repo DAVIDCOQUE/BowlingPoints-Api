@@ -41,8 +41,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=<tu_projectKey_en_sonarcloud> \
-            -Dsonar.organization=<tu_organizacion_en_sonarcloud> \
+            -Dsonar.projectKey=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.organization=davidcoque \
             -Dsonar.host.url=https://sonarcloud.io
 
       - name: Test database connection
