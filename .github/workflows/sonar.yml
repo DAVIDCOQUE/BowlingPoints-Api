@@ -1,4 +1,4 @@
-name: Análisis SonarQube con Maven
+name: Análisis SonarCloud con Maven
 
 on:
   push:
@@ -8,9 +8,14 @@ on:
 
 jobs:
   sonar:
+    name: Build y análisis con SonarCloud
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout del código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # necesario para que SonarCloud analice correctamente el historial
 
       - name: Configurar JDK
         uses: actions/setup-java@v4
@@ -18,13 +23,30 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Compilar y testear con Maven
-        run: mvn clean verify
+      - name: Cachear dependencias de Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2
 
-      - name: Analizar con SonarQube
+      - name: Cachear SonarCloud
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: |
+            ${{ runner.os }}-sonar
+
+      - name: Compilar y testear con Maven
+        run: mvn -B verify
+
+      - name: Analizar con SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn sonar:sonar \
+        run: mvn -B verify sonar:sonar \
+          -Dsonar.organization=davidcoque \
           -Dsonar.projectKey=bowlingpointsback \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
