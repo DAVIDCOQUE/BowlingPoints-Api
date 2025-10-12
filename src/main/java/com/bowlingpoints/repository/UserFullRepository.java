@@ -25,10 +25,10 @@ public interface UserFullRepository extends CrudRepository<User, Integer> {
                 p.phone,
                 p.gender,
                 r.description AS role_description
-            FROM bowlingpoints.users u
-            JOIN bowlingpoints.person p ON u.person_id = p.person_id
-            JOIN bowlingpoints.user_role ur ON ur.user_id = u.user_id
-            JOIN bowlingpoints.roles r ON r.role_id = ur.role_id
+            FROM users u
+            JOIN person p ON u.person_id = p.person_id
+            JOIN user_role ur ON ur.user_id = u.user_id
+            JOIN roles r ON r.role_id = ur.role_id
             WHERE u.deleted_at IS NULL AND p.deleted_at IS NULL
             ORDER BY p.full_name ASC
             """, nativeQuery = true)
