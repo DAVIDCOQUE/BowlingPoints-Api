@@ -73,10 +73,10 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                     c.club_id AS clubId,
                     c.name AS name,
                     SUM(r.score) AS totalScore
-                FROM bowlingpoints.result r
-                JOIN bowlingpoints.person p ON r.person_id = p.person_id
-                JOIN bowlingpoints.club_person cp ON cp.person_id = p.person_id
-                JOIN bowlingpoints.clubs c ON c.club_id = cp.club_id
+                FROM result r
+                JOIN person p ON r.person_id = p.person_id
+                JOIN club_person cp ON cp.person_id = p.person_id
+                JOIN clubs c ON c.club_id = cp.club_id
                 WHERE r.deleted_at IS NULL
                 GROUP BY c.club_id, c.name
                 ORDER BY totalScore DESC

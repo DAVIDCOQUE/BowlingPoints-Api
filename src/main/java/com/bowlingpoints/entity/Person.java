@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "person", schema = "bowlingpoints") // Quita "schema" si no lo usas
+@Table(name = "person") // Quita "schema" si no lo usas
 public class Person {
 
     @Id

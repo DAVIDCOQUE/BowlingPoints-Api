@@ -12,6 +12,7 @@ import com.bowlingpoints.repository.ClubsRepository;
 import com.bowlingpoints.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -243,6 +244,53 @@ class ClubsServiceTest {
         verify(clubPersonRepository).save(argThat(member ->
             member.getRoleInClub().equals("MEMBER")
         ));
+    }
+
+    @Test
+    void updateClubWithMembers_WhenAddingNewMember_ShouldCreateNewClubPerson() {
+        // Arrange
+        testClub.setMembers(Collections.emptyList());
+        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+
+        Person newPerson = Person.builder()
+                .personId(2)
+                .fullName("Jane")
+                .fullSurname("Doe")
+                .document("123456789")
+                .email("jane.doe@example.com")
+                .status(true)
+                .build();
+        when(personRepository.findById(2)).thenReturn(Optional.of(newPerson));
+
+        ClubsDTO updateDTO = new ClubsDTO();
+        updateDTO.setName(testClub.getName());
+        updateDTO.setCity(testClub.getCity());
+        updateDTO.setDescription(testClub.getDescription());
+        updateDTO.setFoundationDate(testClub.getFoundationDate());
+        updateDTO.setImageUrl(testClub.getImageUrl());
+        updateDTO.setStatus(true);
+
+        ClubMemberRequestDTO newMember = new ClubMemberRequestDTO();
+        newMember.setPersonId(2);
+        newMember.setRoleInClub("MEMBER");
+        updateDTO.setMembers(Collections.singletonList(newMember));
+
+        // Act
+        clubsService.updateClubWithMembers(1, updateDTO);
+
+        // Assert
+        verify(personRepository).findById(2);
+        
+        ArgumentCaptor<ClubPerson> clubPersonCaptor = ArgumentCaptor.forClass(ClubPerson.class);
+        verify(clubPersonRepository).save(clubPersonCaptor.capture());
+        
+        ClubPerson savedClubPerson = clubPersonCaptor.getValue();
+        assertEquals(newPerson, savedClubPerson.getPerson());
+        assertEquals("MEMBER", savedClubPerson.getRoleInClub());
+        assertEquals(testClub, savedClubPerson.getClub());
+        assertTrue(savedClubPerson.getStatus());
+        assertNotNull(savedClubPerson.getJoinedAt());
+        assertNotNull(savedClubPerson.getCreatedAt());
     }
 
     @Test
