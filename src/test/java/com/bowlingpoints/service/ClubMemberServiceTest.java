@@ -174,7 +174,7 @@ class ClubMemberServiceTest {
             request.setRoleInClub("MEMBER");
             clubMemberService.addMemberToClub(request);
         });
-        assertEquals("Club no encontrado", exception.getMessage());
+        assertEquals("Club no encontrado con ID: 999" , exception.getMessage());
         verify(clubPersonRepository, never()).save(any());
     }
 
