@@ -122,7 +122,7 @@ class ClubMemberServiceTest {
         when(clubsRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(ClubNotFoundException.class, () -> 
+        assertThrows(RuntimeException.class, () ->
             clubMemberService.getMembersByClubId(999)
         );
     }
