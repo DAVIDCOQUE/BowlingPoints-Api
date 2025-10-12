@@ -2,9 +2,11 @@ package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.ClubMemberDTO;
 import com.bowlingpoints.dto.ClubMemberRequestDTO;
+import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.entity.ClubPerson;
 import com.bowlingpoints.entity.Clubs;
 import com.bowlingpoints.entity.Person;
+
 import com.bowlingpoints.repository.ClubPersonRepository;
 import com.bowlingpoints.repository.ClubsRepository;
 import com.bowlingpoints.repository.PersonRepository;
@@ -13,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,29 +24,21 @@ public class ClubMemberService {
     private final ClubsRepository clubsRepository;
     private final PersonRepository personRepository;
 
-    public List<ClubMemberDTO> getMembersByClubId(Integer clubId) {
+    public ResponseGenericDTO<List<ClubMemberDTO>> getMembersByClubId(Integer clubId) {
         Clubs club = clubsRepository.findById(clubId)
-                .orElseThrow(() -> new RuntimeException("Club no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Club no encontrado con ID: " + clubId));
 
         List<ClubPerson> miembros = clubPersonRepository.findByClubAndStatusIsTrue(club);
-
-        return miembros.stream().map(cp -> ClubMemberDTO.builder()
-                .personId(cp.getPerson().getPersonId())
-                .fullName(
-                        (cp.getPerson().getFullName() != null ? cp.getPerson().getFullName() : "") +
-                                " " +
-                                (cp.getPerson().getFullSurname() != null ? cp.getPerson().getFullSurname() : "")
-                )
-                .email(cp.getPerson().getEmail())
-                .roleInClub(cp.getRoleInClub())
-                .joinedAt(cp.getJoinedAt())
-                .build()
-        ).collect(Collectors.toList());
+        if (miembros == null || miembros.isEmpty()) {
+            return new ResponseGenericDTO<>(true, "El club no tiene miembros activos", List.of());
+        }
+        List<ClubMemberDTO> dtos = miembros.stream().map(ClubMemberDTO::from).toList();
+        return new ResponseGenericDTO<>(true, "Miembros cargados correctamente", dtos);
     }
 
     public ClubPerson addMemberToClub(ClubMemberRequestDTO request) {
         Clubs club = clubsRepository.findById(request.getClubId())
-                .orElseThrow(() -> new RuntimeException("Club no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Club no encontrado con ID: " + request.getClubId()));
 
         Person person = personRepository.findById(request.getPersonId())
                 .orElseThrow(() -> new RuntimeException("Persona no encontrada"));

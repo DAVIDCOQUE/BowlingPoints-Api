@@ -66,9 +66,9 @@ public class ClubsController {
 
     // ✅ Obtener miembros de un club por ID
     @GetMapping("/{id}/members")
-    public ResponseEntity<List<ClubMemberDTO>> getClubMembers(@PathVariable Integer id) {
-        List<ClubMemberDTO> members = clubMemberService.getMembersByClubId(id);
-        return ResponseEntity.ok(members);
+    public ResponseGenericDTO<List<ClubMemberDTO>> getClubMembers(@PathVariable Integer id) {
+
+        return clubMemberService.getMembersByClubId(id);
     }
 
     // ✅ Agregar miembro a un club (individual)
