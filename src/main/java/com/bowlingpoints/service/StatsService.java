@@ -4,7 +4,6 @@ import com.bowlingpoints.dto.TopTournamentDTO;
 import com.bowlingpoints.dto.UserStatisticsDTO;
 import com.bowlingpoints.dto.UserStatsProjection;
 import com.bowlingpoints.entity.Person;
-import com.bowlingpoints.entity.ClubPerson;
 import com.bowlingpoints.repository.PersonRepository;
 import com.bowlingpoints.repository.ResultRepository;
 import lombok.RequiredArgsConstructor;

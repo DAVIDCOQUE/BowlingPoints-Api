@@ -195,6 +195,8 @@
                                 <exclude>**/entity/**</exclude>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/config/**</exclude>
+                                <exclude>**/util/**</exclude>
+                                <exclude>**/impl/**</exclude>
                                 <exclude>**/BowlingpointsApplication*</exclude>
                             </excludes>
                             <formats>

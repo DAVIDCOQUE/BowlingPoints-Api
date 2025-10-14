@@ -121,7 +121,16 @@ public class UserFullService {
 
     public void createUser(UserFullDTO input) {
 
-        //Guardar persona
+        // ✅ VALIDACIONES PRIMERO - antes de guardar nada
+        if (input.getPassword() == null || input.getPassword().isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+
+        if (input.getNickname() == null || input.getNickname().isBlank()) {
+            throw new IllegalArgumentException("El nickname no puede estar vacío");
+        }
+
+        // Guardar persona
         Person person = new Person();
         if (input.getPhotoUrl() == null || input.getPhotoUrl().isBlank()) {
             person.setPhotoUrl("/uploads/users/default.png");
@@ -138,21 +147,15 @@ public class UserFullService {
         person.setStatus(true);
         personRepository.save(person);
 
-        //Guardar usuario
+        // Guardar usuario
         User user = new User();
         user.setNickname(input.getNickname());
         user.setPerson(person);
-
-        if (input.getPassword() != null && !input.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(input.getPassword()));
-        } else {
-            throw new IllegalArgumentException("La contraseña no puede estar vacía");
-        }
-
+        user.setPassword(passwordEncoder.encode(input.getPassword())); // Ya validado arriba
         user.setStatus(true);
         userRepository.save(user);
 
-        //  Guardar roles
+        // Guardar roles
         if (input.getRoles() != null && !input.getRoles().isEmpty()) {
             for (String roleName : input.getRoles()) {
                 Optional<Role> role = roleRepository.findByDescription(roleName);
@@ -165,13 +168,17 @@ public class UserFullService {
                 });
             }
         }
+
         // Enviar correo al usuario
-//        try {
-//            String html = "<h2>¡Bienvenido a BowlingPoints!</h2>" + "<p>Tu usuario ha sido creado exitosamente.</p>" + "<p><b>Usuario:</b> " + input.getNickname() + "</p>" + "<p><b>Contraseña:</b> " + input.getPassword() + "</p>";
+//    try {
+//        String html = "<h2>¡Bienvenido a BowlingPoints!</h2>" +
+//                      "<p>Tu usuario ha sido creado exitosamente.</p>" +
+//                      "<p><b>Usuario:</b> " + input.getNickname() + "</p>" +
+//                      "<p><b>Contraseña:</b> " + input.getPassword() + "</p>";
 //
-//            emailService.sendHtmlMessage(input.getEmail(), "Cuenta creada", html);
-//        } catch (Exception e) {
-//            System.err.println("⚠️ Error enviando correo: " + e.getMessage());
-//        }
+//        emailService.sendHtmlMessage(input.getEmail(), "Cuenta creada", html);
+//    } catch (Exception e) {
+//        System.err.println("⚠️ Error enviando correo: " + e.getMessage());
+//    }
     }
 }

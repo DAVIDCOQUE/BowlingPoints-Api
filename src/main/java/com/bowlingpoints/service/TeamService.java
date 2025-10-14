@@ -79,7 +79,7 @@ public class TeamService {
 
         teamPersonRepository.saveAll(members);
 
-        return getById(savedTeam.getTeamId());
+        return dto;
     }
 
     public boolean update(Integer id, TeamDTO dto) {

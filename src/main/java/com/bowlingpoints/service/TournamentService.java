@@ -1,6 +1,5 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.CategoryDTO;
 import com.bowlingpoints.dto.TournamentDTO;
 import com.bowlingpoints.dto.TournamentSummaryDTO;
 import com.bowlingpoints.dto.response.ModalitiesDTO;
@@ -12,8 +11,6 @@ import com.bowlingpoints.dto.response.CategoriesDTO;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class TournamentService {

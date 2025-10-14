@@ -14,11 +14,4 @@ public class PlayerRankingDTO {
     private Integer bestGame;
     private Integer titlesWon;
     private String photoUrl;
-
-    public PlayerRankingDTO(Integer personId, String fullName, Double avgScore, String photoUrl) {
-        this.personId = personId;
-        this.fullName = fullName;
-        this.averageScore = avgScore;
-        this.photoUrl = photoUrl;
-    }
 }
