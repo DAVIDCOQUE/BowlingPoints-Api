@@ -48,8 +48,8 @@ jobs:
           -Dsonar.projectKey=bowlingpoints \
           -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
           -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-          -Dsonar.coverage.jacoco.xmlReportPaths=bowlingpoints/target/site/jacoco/jacoco.xml \
-          -Dsonar.java.binaries=bowlingpoints/target/classes
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+          -Dsonar.java.binaries=target/classes
 
       - name: Check SonarQube Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@master
