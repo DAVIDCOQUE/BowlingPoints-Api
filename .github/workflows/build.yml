@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "🚀 Iniciando análisis SonarQube..."
           mvn sonar:sonar \
-            -Dsonar.projectKey=bowlingpoints \
+            -Dsonar.projectKey=BowlingPoints \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
