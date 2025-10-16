@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class TopTournamentDTO {
     private Integer tournamentId;
     private String name;

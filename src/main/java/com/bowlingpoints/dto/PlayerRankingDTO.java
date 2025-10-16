@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class PlayerRankingDTO {
     private Integer personId;
     private String fullName;

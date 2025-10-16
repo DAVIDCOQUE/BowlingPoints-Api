@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class RoundDTO {
     private Integer roundId;
     private Integer tournamentId;

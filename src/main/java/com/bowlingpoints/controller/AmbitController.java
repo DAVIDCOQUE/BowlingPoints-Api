@@ -16,7 +16,7 @@ public class AmbitController {
 
     private final AmbitService ambitService;
 
-    @GetMapping("/all-ambit")
+    @GetMapping
     public ResponseEntity<ResponseGenericDTO<List<AmbitDTO>>> getAll() {
         return ResponseEntity.ok(ambitService.getAll());
     }

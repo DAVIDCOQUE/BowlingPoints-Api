@@ -8,6 +8,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class TeamDTO {
     private Integer teamId;
     private String nameTeam;

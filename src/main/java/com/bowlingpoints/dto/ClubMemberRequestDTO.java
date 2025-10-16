@@ -4,9 +4,11 @@ package com.bowlingpoints.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@NoArgsConstructor
 @Data
 public class ClubMemberRequestDTO {
     @NotNull private Integer clubId;

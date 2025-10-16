@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class TournamentDTO {
     private Integer tournamentId;
     private String name;

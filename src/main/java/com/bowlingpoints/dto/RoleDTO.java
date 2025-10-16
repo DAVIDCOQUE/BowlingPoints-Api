@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder // <-- necesaria para usar RoleDTO.builder()
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class RoleDTO {
     private Integer roleId;
     private String description;

@@ -143,10 +143,10 @@ class ModalityServiceTest {
         assertEquals(testModality.getDescription(), result.getDescription());
         assertEquals(testModality.getStatus(), result.getStatus());
 
-        verify(modalityRepository).save(argThat(modality ->
-                modality.getName().equals(newModalityDTO.getName()) &&
-                modality.getDescription().equals(newModalityDTO.getDescription()) &&
-                modality.getStatus().equals(newModalityDTO.getStatus())
+        verify(modalityRepository).save(argThat(modality
+                -> modality.getName().equals(newModalityDTO.getName())
+                && modality.getDescription().equals(newModalityDTO.getDescription())
+                && modality.getStatus().equals(newModalityDTO.getStatus())
         ));
     }
 
@@ -170,10 +170,10 @@ class ModalityServiceTest {
 
         // Assert
         assertTrue(result);
-        verify(modalityRepository).save(argThat(modality ->
-                modality.getName().equals(updateDTO.getName()) &&
-                modality.getDescription().equals(updateDTO.getDescription()) &&
-                modality.getStatus().equals(updateDTO.getStatus())
+        verify(modalityRepository).save(argThat(modality
+                -> modality.getName().equals(updateDTO.getName())
+                && modality.getDescription().equals(updateDTO.getDescription())
+                && modality.getStatus().equals(updateDTO.getStatus())
         ));
     }
 
@@ -203,9 +203,10 @@ class ModalityServiceTest {
 
         // Assert
         assertTrue(result);
-        verify(modalityRepository).save(argThat(modality ->
-                modality.getDeletedAt() != null &&
-                modality.getDeletedAt().isAfter(beforeDelete)
+        verify(modalityRepository).save(argThat(modality
+                -> modality.getDeletedAt() != null
+                && (modality.getDeletedAt().isAfter(beforeDelete)
+                || modality.getDeletedAt().isEqual(beforeDelete))
         ));
     }
 

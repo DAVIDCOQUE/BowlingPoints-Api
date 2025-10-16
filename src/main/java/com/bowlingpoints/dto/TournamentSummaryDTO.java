@@ -5,7 +5,12 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+
 public class TournamentSummaryDTO {
     private Integer tournamentId;
     private String organizer;

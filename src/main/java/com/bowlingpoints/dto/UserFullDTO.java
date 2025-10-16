@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class UserFullDTO {
     private Integer userId;
     private Integer personId;

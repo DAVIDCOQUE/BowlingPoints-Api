@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class UserTournamentResultDTO {
     private Integer resultId;
     private Integer score;

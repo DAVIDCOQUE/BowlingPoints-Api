@@ -2,8 +2,11 @@ package com.bowlingpoints.dto;
 
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+
 public class ResponseGenericDTO<T> {
 
     private Boolean success;
