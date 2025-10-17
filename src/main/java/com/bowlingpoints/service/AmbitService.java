@@ -11,12 +11,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Servicio para operaciones CRUD sobre Ambits.
+ */
 @Service
 @RequiredArgsConstructor
 public class AmbitService {
 
     private final AmbitRepository ambitRepository;
 
+    /**
+     * Convierte entidad a DTO.
+     */
     private AmbitDTO toDTO(Ambit entity) {
         return AmbitDTO.builder()
                 .ambitId(entity.getAmbitId())
@@ -26,6 +32,9 @@ public class AmbitService {
                 .build();
     }
 
+    /**
+     * Convierte DTO a entidad nueva.
+     */
     private Ambit toEntity(AmbitDTO dto) {
         return Ambit.builder()
                 .ambitId(dto.getAmbitId())
@@ -37,31 +46,74 @@ public class AmbitService {
                 .build();
     }
 
+    /**
+     * Lista todos los ambits no eliminados.
+     */
     public ResponseGenericDTO<List<AmbitDTO>> getAll() {
-        List<AmbitDTO> result = ambitRepository.findAllByDeletedAtIsNullOrderByNameAsc().stream().map(this::toDTO).toList();
+        List<AmbitDTO> result = ambitRepository
+                .findAllByDeletedAtIsNullOrderByNameAsc()
+                .stream()
+                .map(this::toDTO)
+                .toList();
+
         return new ResponseGenericDTO<>(true, "Ámbitos cargados correctamente", result);
     }
 
+    /**
+     * Lista solo los ambits activos (status = true y no eliminados).
+     */
+    public ResponseGenericDTO<List<AmbitDTO>> getAllActives() {
+        List<AmbitDTO> result = ambitRepository
+                .findAllByDeletedAtIsNullAndStatusTrueOrderByNameAsc()
+                .stream()
+                .map(this::toDTO)
+                .toList();
+
+        return new ResponseGenericDTO<>(true, "Ámbitos activos cargados correctamente", result);
+    }
+
+    /**
+     * Lista ambits que tienen torneos asociados no eliminados.
+     */
+
+    public ResponseGenericDTO<List<AmbitDTO>> getAmbitsWithTournaments() {
+        List<AmbitDTO> result = ambitRepository.findDistinctWithTournaments();
+        return new ResponseGenericDTO<>(true, "Ámbitos con torneos cargados correctamente", result);
+    }
+
+    /**
+     * Busca un ambit por ID.
+     */
     public ResponseGenericDTO<AmbitDTO> getById(Integer id) {
         Optional<Ambit> entity = ambitRepository.findById(id);
         return entity.map(ambit -> new ResponseGenericDTO<>(true, "Ámbito encontrado", toDTO(ambit)))
                 .orElseGet(() -> new ResponseGenericDTO<>(false, "Ámbito no encontrado", null));
     }
 
+    /**
+     * Crea un nuevo ambit.
+     */
     public ResponseGenericDTO<AmbitDTO> create(AmbitDTO dto) {
         Ambit saved = ambitRepository.save(toEntity(dto));
         return new ResponseGenericDTO<>(true, "Ámbito creado correctamente", toDTO(saved));
     }
 
+    /**
+     * Actualiza un ambit existente con los datos del DTO.
+     */
     public ResponseGenericDTO<Void> update(Integer id, AmbitDTO dto) {
         Optional<Ambit> optional = ambitRepository.findById(id);
         if (optional.isPresent()) {
-            ambitRepository.save(this.validateUpdateData(optional.get(),dto));
+            Ambit entity = validateUpdateData(optional.get(), dto);
+            ambitRepository.save(entity);
             return new ResponseGenericDTO<>(true, "Ámbito actualizado correctamente", null);
         }
         return new ResponseGenericDTO<>(false, "Ámbito no encontrado", null);
     }
 
+    /**
+     * Elimina un ambit de forma suave (soft delete).
+     */
     public ResponseGenericDTO<Void> delete(Integer id) {
         Optional<Ambit> optional = ambitRepository.findById(id);
         if (optional.isPresent()) {
@@ -75,26 +127,31 @@ public class AmbitService {
         return new ResponseGenericDTO<>(false, "Ámbito no encontrado", null);
     }
 
-    private Ambit validateUpdateData(Ambit existenceAmbit, AmbitDTO newAmbit){
-        boolean haveChange = false;
-        if (newAmbit.getName() != null && !newAmbit.getName().equals(existenceAmbit.getName())) {
-            existenceAmbit.setName(newAmbit.getName());
-            haveChange = true;
+    /**
+     * Aplica solo los cambios válidos al objeto existente.
+     */
+    private Ambit validateUpdateData(Ambit existing, AmbitDTO dto) {
+        boolean changed = false;
+
+        if (dto.getName() != null && !dto.getName().equals(existing.getName())) {
+            existing.setName(dto.getName());
+            changed = true;
         }
 
-        if (newAmbit.getDescription() != null && !newAmbit.getDescription().equals(existenceAmbit.getDescription())) {
-            existenceAmbit.setDescription(newAmbit.getDescription());
-            haveChange = true;
+        if (dto.getDescription() != null && !dto.getDescription().equals(existing.getDescription())) {
+            existing.setDescription(dto.getDescription());
+            changed = true;
         }
 
-        if (newAmbit.getStatus() != null && !newAmbit.getStatus().equals(existenceAmbit.getStatus())) {
-            existenceAmbit.setStatus(newAmbit.getStatus());
-            haveChange = true;
+        if (dto.getStatus() != null && !dto.getStatus().equals(existing.getStatus())) {
+            existing.setStatus(dto.getStatus());
+            changed = true;
         }
 
-        if(haveChange){
-            existenceAmbit.setUpdatedAt(LocalDateTime.now());
+        if (changed) {
+            existing.setUpdatedAt(LocalDateTime.now());
         }
-        return existenceAmbit;
+
+        return existing;
     }
 }
