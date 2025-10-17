@@ -8,12 +8,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-@Entity
-@Builder
+/**
+ * Entidad que representa a una persona dentro del sistema (jugador, entrenador, etc).
+ */
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "person") // Quita "schema" si no lo usas
+@Builder
+@Entity
+@Table(name = "person")
 public class Person {
 
     @Id
@@ -63,12 +67,24 @@ public class Person {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    /**
+     * Relación uno a uno con el usuario.
+     */
     @OneToOne(mappedBy = "person", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private User user;
 
+    /**
+     * Relación con los clubes a los que pertenece la persona.
+     */
     @OneToMany(mappedBy = "person")
     @JsonBackReference
     private List<ClubPerson> clubPersons;
+
+    /**
+     * Relación con las categorías asociadas a la persona.
+     */
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PersonCategory> personCategories;
 
     public Person(Integer personId) {
         this.personId = personId;

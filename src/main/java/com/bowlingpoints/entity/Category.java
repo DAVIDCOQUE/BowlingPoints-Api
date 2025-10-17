@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "category")
 @Getter
@@ -52,5 +51,10 @@ public class Category {
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Constructor necesario para asignar categoría por ID
+    public Category(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 }

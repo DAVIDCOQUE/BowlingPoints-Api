@@ -20,7 +20,7 @@ public class RoleService {
 
         return roles.stream().map(role -> RoleDTO.builder()
                         .roleId(role.getId())
-                        .description(role.getDescription())
+                        .name(role.getName())
                         .build())
                 .collect(Collectors.toList());
     }

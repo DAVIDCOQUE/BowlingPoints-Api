@@ -10,19 +10,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Carga inicial de datos para la base de datos al iniciar la aplicación.
+ */
 @Configuration
 @RequiredArgsConstructor
 public class DatabaseSeeder {
 
+    /**
+     * Inicializa los datos base del sistema (roles, usuarios, categorías, clubes, torneos, etc.)
+     */
     @Bean
     CommandLineRunner initData(
             RoleRepository roleRepository,
-            PermissionRepository permissionRepository,
-            RolePermissionRepository rolePermissionRepository,
             PersonRepository personRepository,
             UserRepository userRepository,
             UserRoleRepository userRoleRepository,
@@ -44,28 +47,7 @@ public class DatabaseSeeder {
             createRoleIfMissing("ENTRENADOR", roleRepository);
             createRoleIfMissing("JUGADOR", roleRepository);
 
-            // 2. Crear permisos base
-            createPermissionIfMissing("VER_DASHBOARD", "Acceso al tablero", permissionRepository);
-            createPermissionIfMissing("VER_PERFIL", "Acceso al perfil", permissionRepository);
-            createPermissionIfMissing("VER_MIS_TORNEOS", "Consulta torneos", permissionRepository);
-            createPermissionIfMissing("GESTIONAR_CLUBES", "Administra clubes", permissionRepository);
-            createPermissionIfMissing("VER_USUARIOS", "Gestiona usuarios", permissionRepository);
-
-            // 3. Asignar permisos a ADMIN
-            Role adminRole = roleRepository.findByDescription("ADMIN")
-                    .orElseThrow(() -> new RuntimeException("❌ Rol ADMIN no encontrado"));
-
-            permissionRepository.findAll().forEach(permission -> {
-                if (!rolePermissionRepository.existsByRoleAndPermission(adminRole, permission)) {
-                    rolePermissionRepository.save(RolePermission.builder()
-                            .role(adminRole)
-                            .permission(permission)
-                            .granted(true)
-                            .build());
-                }
-            });
-
-            // 4. Crear usuarios
+            // 2. Crear usuarios iniciales
             User admin = createUserIfNotExists(
                     "1143993925", "/uploads/users/default.png", "1143993925",
                     "David Armando", "Sánchez Sánchez", LocalDate.of(1993, 4, 12),
@@ -86,7 +68,8 @@ public class DatabaseSeeder {
                     "sara@gmail.com", "Femenino", "JUGADOR",
                     passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
             );
-            // 5. Crear club
+
+            // 3. Crear club base
             if (clubRepository.count() == 0) {
                 System.out.println("📌 Creando club 'Bowling Club Central'...");
                 Clubs club = Clubs.builder()
@@ -100,7 +83,7 @@ public class DatabaseSeeder {
                         .build();
                 clubRepository.save(club);
 
-                // Agregar miembros al club
+                // Asignar entrenador y jugador al club
                 clubPersonRepository.save(ClubPerson.builder()
                         .club(club)
                         .person(entrenador.getPerson())
@@ -119,26 +102,13 @@ public class DatabaseSeeder {
                         .createdAt(LocalDateTime.now())
                         .build());
 
-                System.out.println("✅ Club creado con miembros.");
+                System.out.println("✅ Club creado con miembros asignados.");
             }
 
-            // 6. Crear categorías
+            // 4. Crear categorías
             String[] categorias = {
-                    "Masculina",
-                    "Femenina",
-                    "Mixto",
-                    "Sub 8",
-                    "Sub 10",
-                    "Sub 12",
-                    "Sub 14",
-                    "Sub 16",
-                    "Sub 18",
-                    "Sub 21",
-                    "Sub 23",
-                    "Mayores",
-                    "Sénior",
-                    "Super Sénior",
-                    "Master"
+                    "Masculina", "Femenina", "Mixto", "Sub 8", "Sub 10", "Sub 12", "Sub 14",
+                    "Sub 16", "Sub 18", "Sub 21", "Sub 23", "Mayores", "Sénior", "Super Sénior", "Master"
             };
 
             for (String nombre : categorias) {
@@ -152,16 +122,10 @@ public class DatabaseSeeder {
                 }
             }
 
-            // 7. Crear modalidades
+            // 5. Crear modalidades
             String[] modalidades = {
-                    "Individual",
-                    "Parejas",
-                    "Ternas",
-                    "Equipos (cuartetos)",
-                    "Equipos (quintetos)",
-                    "Todo Evento",
-                    "Doble Mixto",
-                    "Baker"
+                    "Individual", "Parejas", "Ternas", "Equipos (cuartetos)",
+                    "Equipos (quintetos)", "Todo Evento", "Doble Mixto", "Baker"
             };
 
             for (String nombre : modalidades) {
@@ -175,21 +139,15 @@ public class DatabaseSeeder {
                 }
             }
 
-            // 8. Crear Ámbitos
+            // 6. Crear ámbitos
             String[] ambitos = {
-                    "Internacional",
-                    "Nacional",
-                    "Departamental",
-                    "Municipal",
-                    "Empresarial",
-                    "Universitario"
+                    "Internacional", "Nacional", "Departamental",
+                    "Municipal", "Empresarial", "Universitario"
             };
+
             for (String nombre : ambitos) {
                 if (!ambitRepository.findByName(nombre).isPresent()) {
-                    // Genera el path en minúsculas, reemplaza espacios y asegúrate que coincida con el archivo
-                    String nombreArchivo = nombre + ".png"; // Respeta mayúsculas según tus archivos
-                    String url = "/uploads/tournament/" + nombreArchivo; // ← este es el path correcto
-
+                    String url = "/uploads/tournament/" + nombre + ".png";
                     ambitRepository.save(Ambit.builder()
                             .name(nombre)
                             .description("Ámbito " + nombre)
@@ -200,14 +158,11 @@ public class DatabaseSeeder {
                 }
             }
 
-            // 8. Crear torneos de ejemplo si no existen
-
-            // Buscar categorías y modalidades
+            // 7. Crear torneos de ejemplo
             List<Category> allCategories = categoryRepository.findAll();
             List<Modality> allModalities = modalityRepository.findAll();
             List<Ambit> allAmbits = ambitRepository.findAll();
 
-            // --- CREAR TORNEOS ---
             String[] nombresTorneos = {
                     "Torneo Apertura Nacional",
                     "Copa Regional Andina",
@@ -219,56 +174,54 @@ public class DatabaseSeeder {
                 if (tournamentRepository.findByName(nombreTorneo).isEmpty()) {
                     Tournament torneo = Tournament.builder()
                             .name(nombreTorneo)
-                            .ambit(allAmbits.get(i % allAmbits.size())) // Asigna un ámbito distinto
+                            .ambit(allAmbits.get(i % allAmbits.size()))
                             .imageUrl("/uploads/tournaments/" + nombreTorneo.replace(" ", "_").toLowerCase() + ".png")
                             .startDate(LocalDate.of(2025, 8 + i, 10 + i))
                             .endDate(LocalDate.of(2025, 8 + i, 15 + i))
-                            .location(i == 0 ? "Bogotá, Colombia" : (i == 1 ? "Medellín, Colombia" : "Cartagena, Colombia"))
+                            .location(i == 0 ? "Bogotá, Colombia" :
+                                    i == 1 ? "Medellín, Colombia" : "Cartagena, Colombia")
                             .stage("Programado")
                             .status(true)
                             .build();
                     tournamentRepository.save(torneo);
 
-                    // --- ASIGNAR 2-3 MODALIDADES Y CATEGORÍAS ---
-                    // Modality
-                    List<Modality> mods = allModalities.subList(0, Math.min(3, allModalities.size()));
-                    for (Modality mod : mods) {
-                        TournamentModality tm = TournamentModality.builder()
-                                .tournament(torneo)
-                                .modality(mod)
-                                .build();
-                        tournamentModalityRepository.save(tm);
-                    }
-                    // Category
-                    List<Category> cats = allCategories.subList(i, Math.min(i + 3, allCategories.size()));
-                    for (Category cat : cats) {
-                        TournamentCategory tc = TournamentCategory.builder()
-                                .tournament(torneo)
-                                .category(cat)
-                                .build();
-                        tournamentCategoryRepository.save(tc);
-                    }
+                    // Asignar modalidades
+                    allModalities.stream().limit(3).forEach(mod ->
+                            tournamentModalityRepository.save(
+                                    TournamentModality.builder()
+                                            .tournament(torneo)
+                                            .modality(mod)
+                                            .build())
+                    );
+
+                    // Asignar categorías
+                    allCategories.stream().skip(i).limit(3).forEach(cat ->
+                            tournamentCategoryRepository.save(
+                                    TournamentCategory.builder()
+                                            .tournament(torneo)
+                                            .category(cat)
+                                            .build())
+                    );
                 }
             }
 
-
-            System.out.println("✅ Torneos de ejemplo cargados");
+            System.out.println("✅ Torneos de ejemplo cargados.");
             System.out.println("🎉 [Seeder] Carga inicial completada.");
         };
     }
 
+    /**
+     * Crea un rol si no existe.
+     */
     private void createRoleIfMissing(String name, RoleRepository roleRepository) {
-        roleRepository.findByDescription(name).orElseGet(() ->
-                roleRepository.save(Role.builder().description(name).build())
+        roleRepository.findByName(name).orElseGet(() ->
+                roleRepository.save(Role.builder().name(name).build())
         );
     }
 
-    private void createPermissionIfMissing(String name, String description, PermissionRepository repository) {
-        repository.findByName(name).orElseGet(() ->
-                repository.save(Permission.builder().name(name).description(description).build())
-        );
-    }
-
+    /**
+     * Crea un usuario si no existe, con su persona y rol asociado.
+     */
     private User createUserIfNotExists(
             String nickname,
             String photoUrl,
@@ -318,7 +271,7 @@ public class DatabaseSeeder {
                 .build();
         userRepository.save(user);
 
-        Role role = roleRepository.findByDescription(roleDescription)
+        Role role = roleRepository.findByName(roleDescription)
                 .orElseThrow(() -> new RuntimeException("❌ Rol no encontrado: " + roleDescription));
 
         userRoleRepository.save(UserRole.builder()

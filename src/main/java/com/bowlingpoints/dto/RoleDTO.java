@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder // <-- necesaria para usar RoleDTO.builder()
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 
 public class RoleDTO {
     private Integer roleId;
-    private String description;
+    private String name;
 }

@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     // Obtener solo usuarios que no han sido eliminados lógicamente
     @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
-    List<User> findAllNotDeleted(); // ✅ no sobrescribe findAll()
+    List<User> findAllNotDeleted();
 
     // Obtener usuario no eliminado por ID
     @Query("SELECT u FROM User u WHERE u.userId = :id AND u.deletedAt IS NULL")

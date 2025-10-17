@@ -1,6 +1,5 @@
 package com.bowlingpoints.config.jwt;
 
-import com.bowlingpoints.entity.RolePermission;
 import com.bowlingpoints.entity.User;
 import com.bowlingpoints.entity.UserRole;
 import io.jsonwebtoken.*;
@@ -31,19 +30,11 @@ public class JwtService {
         // Roles
         List<String> roles = user.getUserRoles().stream()
                 .filter(UserRole::isGranted)
-                .map(userRole -> userRole.getRole().getDescription())
+                .map(userRole -> userRole.getRole().getName())
                 .collect(Collectors.toList());
 
-        // Permisos
-        List<String> permissions = user.getUserRoles().stream()
-                .flatMap(userRole -> userRole.getRole().getRolePermissions().stream())
-                .filter(RolePermission::getGranted)
-                .map(rp -> rp.getPermission().getName())
-                .distinct()
-                .collect(Collectors.toList());
 
         extraClaims.put("roles", roles);
-        extraClaims.put("permissions", permissions);
         extraClaims.put("correo", user.getPerson().getEmail());
 
         return Jwts.builder()
