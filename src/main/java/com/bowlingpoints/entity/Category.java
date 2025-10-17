@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "category")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -24,7 +25,7 @@ public class Category {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private Boolean status = true;
 
     @Column(name = "created_by")

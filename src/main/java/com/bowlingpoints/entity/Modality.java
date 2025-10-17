@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "modality")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -22,7 +23,7 @@ public class Modality {
 
     private String description;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private Boolean status = true;
 
     @Column(name = "created_by")

@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controlador REST para gestionar modalidades.
+ */
 @RestController
 @RequestMapping("/modalities")
 @RequiredArgsConstructor
@@ -16,38 +19,51 @@ public class ModalityController {
 
     private final ModalityService modalityService;
 
+    /**
+     * Lista todas las modalidades no eliminadas.
+     */
     @GetMapping
     public ResponseEntity<ResponseGenericDTO<List<ModalityDTO>>> getAll() {
-        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Modalidades cargadas correctamente", modalityService.getAll()));
+        return ResponseEntity.ok(modalityService.getAll());
     }
 
+    /**
+     * Lista solo las modalidades activas.
+     */
+    @GetMapping("/actives")
+    public ResponseEntity<ResponseGenericDTO<List<ModalityDTO>>> getAllActives() {
+        return ResponseEntity.ok(modalityService.getAllActives());
+    }
+
+    /**
+     * Obtiene una modalidad por ID.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ResponseGenericDTO<ModalityDTO>> getById(@PathVariable Integer id) {
-        ModalityDTO dto = modalityService.getById(id);
-        return dto != null
-                ? ResponseEntity.ok(new ResponseGenericDTO<>(true, "Modalidad encontrada", dto))
-                : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(modalityService.getById(id));
     }
 
+    /**
+     * Crea una nueva modalidad.
+     */
     @PostMapping
     public ResponseEntity<ResponseGenericDTO<ModalityDTO>> create(@RequestBody ModalityDTO dto) {
-        ModalityDTO saved = modalityService.create(dto);
-        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Modalidad creada correctamente", saved));
+        return ResponseEntity.ok(modalityService.create(dto));
     }
 
+    /**
+     * Actualiza una modalidad existente.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<ResponseGenericDTO<Void>> update(@PathVariable Integer id, @RequestBody ModalityDTO dto) {
-        boolean updated = modalityService.update(id, dto);
-        return updated
-                ? ResponseEntity.ok(new ResponseGenericDTO<>(true, "Modalidad actualizada", null))
-                : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(modalityService.update(id, dto));
     }
 
+    /**
+     * Elimina suavemente una modalidad.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseGenericDTO<Void>> delete(@PathVariable Integer id) {
-        boolean deleted = modalityService.delete(id);
-        return deleted
-                ? ResponseEntity.ok(new ResponseGenericDTO<>(true, "Modalidad eliminada", null))
-                : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(modalityService.delete(id));
     }
 }

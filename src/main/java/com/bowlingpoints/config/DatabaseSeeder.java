@@ -142,7 +142,7 @@ public class DatabaseSeeder {
             };
 
             for (String nombre : categorias) {
-                if (!categoryRepository.findByName(nombre).isPresent()) {
+                if (!categoryRepository.findByNameAndDeletedAtIsNull(nombre).isPresent()) {
                     categoryRepository.save(Category.builder()
                             .name(nombre)
                             .description("Categoría " + nombre)
@@ -165,7 +165,7 @@ public class DatabaseSeeder {
             };
 
             for (String nombre : modalidades) {
-                if (!modalityRepository.findByName(nombre).isPresent()) {
+                if (!modalityRepository.findByNameAndDeletedAtIsNull(nombre).isPresent()) {
                     modalityRepository.save(Modality.builder()
                             .name(nombre)
                             .description("Modalidad de " + nombre)
