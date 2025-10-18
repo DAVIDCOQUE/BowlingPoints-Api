@@ -2,8 +2,8 @@ package com.bowlingpoints.controller;
 
 import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.Clubs;
-import com.bowlingpoints.repository.ClubsRepository;
-import com.bowlingpoints.service.ClubMemberService;
+import com.bowlingpoints.repository.ClubRepository;
+import com.bowlingpoints.service.ClubPersonService;
 import com.bowlingpoints.service.ClubsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,9 +30,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(controllers = ClubsController.class)
+@WebMvcTest(controllers = ClubController.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class ClubsControllerTest {
+public class ClubControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,10 +41,10 @@ public class ClubsControllerTest {
     private ClubsService clubsService;
 
     @MockBean
-    private ClubMemberService clubMemberService;
+    private ClubPersonService clubPersonService;
 
     @MockBean
-    private ClubsRepository clubsRepository;
+    private ClubRepository clubRepository;
 
     // 👇 Mocks necesarios para evitar errores por seguridad
     @MockBean
@@ -58,11 +58,11 @@ public class ClubsControllerTest {
 
     private ClubsDTO clubsDTO;
     private ClubDetailsDTO clubDetailsDTO;
-    private ClubMemberDTO memberDTO;
+    private ClubPersonDTO memberDTO;
 
     @BeforeEach
     void setUp() {
-        memberDTO = ClubMemberDTO.builder()
+        memberDTO = ClubPersonDTO.builder()
                 .personId(1)
                 .photoUrl("https://photo.url")
                 .fullName("John Doe")
@@ -168,12 +168,12 @@ public class ClubsControllerTest {
 
     @Test
     void getClubMembers_ShouldReturnMemberList() throws Exception {
-        ResponseGenericDTO<List<ClubMemberDTO>> response = new ResponseGenericDTO<>();
+        ResponseGenericDTO<List<ClubPersonDTO>> response = new ResponseGenericDTO<>();
         response.setSuccess(true);
         response.setMessage("Miembros cargados");
         response.setData(List.of(memberDTO));
 
-        when(clubMemberService.getMembersByClubId(1)).thenReturn(response);
+        when(clubPersonService.getMembersByClubId(1)).thenReturn(response);
 
         mockMvc.perform(get("/clubs/1/members"))
                 .andExpect(status().isOk())

@@ -3,7 +3,7 @@ package com.bowlingpoints.service;
 import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.AmbitRepository;
-import com.bowlingpoints.repository.ClubsRepository;
+import com.bowlingpoints.repository.ClubRepository;
 import com.bowlingpoints.repository.ResultRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ class DashboardServiceTest {
     private ResultRepository resultRepository;
 
     @Mock
-    private ClubsRepository clubsRepository;
+    private ClubRepository clubRepository;
 
     @Mock
     private AmbitRepository ambitRepository;

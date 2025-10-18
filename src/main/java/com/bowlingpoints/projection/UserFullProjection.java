@@ -7,6 +7,7 @@ import java.time.LocalDate;
  */
 public interface UserFullProjection {
     Integer getUserId();
+    Boolean getStatus();
     Integer getPersonId();
     String getPhotoUrl();
     String getNickname();

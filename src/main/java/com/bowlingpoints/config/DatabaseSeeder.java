@@ -29,7 +29,7 @@ public class DatabaseSeeder {
             PersonRepository personRepository,
             UserRepository userRepository,
             UserRoleRepository userRoleRepository,
-            ClubsRepository clubRepository,
+            ClubRepository clubRepository,
             ClubPersonRepository clubPersonRepository,
             CategoryRepository categoryRepository,
             ModalityRepository modalityRepository,

@@ -52,6 +52,7 @@ public class UserFullService {
                 u.setPhone(proj.getPhone());
                 u.setGender(proj.getGender());
                 u.setPhotoUrl(proj.getPhotoUrl());
+                u.setStatus(proj.getStatus());
                 u.setRoles(new ArrayList<>());
                 u.setCategories(new ArrayList<>());
                 return u;
@@ -81,7 +82,7 @@ public class UserFullService {
             dto.setCategories(categoryDTOs);
 
             // Club (si aplica)
-            clubPersonRepository.findFirstByPersonAndStatusIsTrue(new Person(dto.getPersonId()))
+            clubPersonRepository.findFirstByPerson_PersonIdAndStatusTrue(dto.getPersonId())
                     .ifPresent(clubPerson -> dto.setClubId(clubPerson.getClub().getClubId()));
         }
 
@@ -228,6 +229,8 @@ public class UserFullService {
         }
 
         user.setNickname(newNickname);
+
+        user.setStatus(input.getStatus() != null ? input.getStatus() : user.isStatus());
 
         if (input.getPassword() != null && !input.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(input.getPassword()));

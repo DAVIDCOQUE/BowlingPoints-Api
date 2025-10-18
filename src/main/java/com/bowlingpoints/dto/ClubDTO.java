@@ -1,9 +1,6 @@
 package com.bowlingpoints.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,8 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ClubDetailsDTO {
-
+public class ClubDTO {
     private Integer clubId;
     private String name;
     private LocalDate foundationDate;
@@ -21,6 +17,5 @@ public class ClubDetailsDTO {
     private String description;
     private String imageUrl;
     private Boolean status;
-
-    private List<ClubMemberDTO> members;
+    private List<ClubPersonDTO> members; // Lista de miembros del club
 }

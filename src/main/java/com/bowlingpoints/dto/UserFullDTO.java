@@ -22,6 +22,7 @@ public class UserFullDTO {
     private Integer userId;
     private String nickname;
     private String password;
+    private Boolean status;
 
     // Datos personales (Person)
     private Integer personId;

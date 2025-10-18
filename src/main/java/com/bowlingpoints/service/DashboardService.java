@@ -5,7 +5,7 @@ import com.bowlingpoints.dto.response.CategoriesDTO;
 import com.bowlingpoints.dto.response.ModalitiesDTO;
 import com.bowlingpoints.entity.Tournament;
 import com.bowlingpoints.repository.AmbitRepository;
-import com.bowlingpoints.repository.ClubsRepository;
+import com.bowlingpoints.repository.ClubRepository;
 import com.bowlingpoints.repository.ResultRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class DashboardService {
 
     private final TournamentRepository tournamentRepository;
     private final ResultRepository resultRepository;
-    private final ClubsRepository clubRepository;
+    private final ClubRepository clubRepository;
     private final AmbitRepository ambitRepository;
 
     public DashboardDTO getDashboardData() {
