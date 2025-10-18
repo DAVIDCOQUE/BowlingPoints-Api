@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -43,6 +44,13 @@ public class UsersController {
         }
 
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Usuario obtenido correctamente", user));
+    }
+
+    // Obtener todos los usuarios activos con rol "JUGADOR"
+    @GetMapping("/jugadores")
+    public ResponseEntity<ResponseGenericDTO<List<UserFullDTO>>> getActivePlayers() {
+        List<UserFullDTO> jugadores = userFullService.getAllActivePlayers();
+        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Jugadores activos encontrados", jugadores));
     }
 
     // Obtener usuario por ID

@@ -1,14 +1,15 @@
-
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.CategoryDTO;
 import com.bowlingpoints.dto.RoleDTO;
 import com.bowlingpoints.dto.UserFullDTO;
 import com.bowlingpoints.entity.*;
+import com.bowlingpoints.projection.UserFullProjection;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -27,36 +28,51 @@ public class UserFullService {
     private final ClubPersonRepository clubPersonRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Obtiene todos los usuarios con información detallada (persona, roles, categorías, club).
+     */
     public List<UserFullDTO> getAllUsersWithDetails() {
-        return userFullRepository.findAllUserFull().stream().map(proj -> {
-            UserFullDTO dto = new UserFullDTO();
-            dto.setUserId(proj.getUserId());
-            dto.setPersonId(proj.getPersonId());
-            dto.setPhotoUrl(proj.getPhotoUrl());
-            dto.setNickname(proj.getNickname());
-            dto.setDocument(proj.getDocument());
-            dto.setEmail(proj.getEmail());
-            dto.setFullName(proj.getFullName());
-            dto.setFullSurname(proj.getFullSurname());
-            dto.setBirthDate(proj.getBirthDate());
-            dto.setPhone(proj.getPhone());
-            dto.setGender(proj.getGender());
+        Map<Integer, UserFullDTO> userMap = new LinkedHashMap<>();
+        List<UserFullProjection> projections = userFullRepository.findAllUserFull();
 
-            // Roles detallados
-            List<RoleDTO> roleDTOs = userRoleRepository
-                    .findAllByUser_UserIdAndStatusTrue(proj.getUserId())
-                    .stream()
-                    .map(userRole -> {
-                        Role role = userRole.getRole();
-                        return new RoleDTO(role.getId(), role.getName());
-                    })
-                    .collect(Collectors.toList());
-            dto.setRoles(roleDTOs);
+        // Construcción base con datos personales + roles
+        for (UserFullProjection proj : projections) {
+            Integer userId = proj.getUserId();
 
-            // Categorías detalladas
+            UserFullDTO dto = userMap.computeIfAbsent(userId, id -> {
+                UserFullDTO u = new UserFullDTO();
+                u.setUserId(id);
+                u.setPersonId(proj.getPersonId());
+                u.setNickname(proj.getNickname());
+                u.setDocument(proj.getDocument());
+                u.setEmail(proj.getEmail());
+                u.setFullName(proj.getFullName());
+                u.setFullSurname(proj.getFullSurname());
+                u.setBirthDate(proj.getBirthDate());
+                u.setPhone(proj.getPhone());
+                u.setGender(proj.getGender());
+                u.setPhotoUrl(proj.getPhotoUrl());
+                u.setRoles(new ArrayList<>());
+                u.setCategories(new ArrayList<>());
+                return u;
+            });
+
+            // Añadir roles (id + nombre)
+            Integer roleId = proj.getRoleId();
+            String roleName = proj.getRoleName();
+
+            if (roleName != null && dto.getRoles().stream().noneMatch(r -> r.getName().equals(roleName))) {
+                dto.getRoles().add(new RoleDTO(roleId, roleName));
+            }
+        }
+
+        // Cargar categorías y club
+        for (UserFullDTO dto : userMap.values()) {
+            // Categorías
             List<CategoryDTO> categoryDTOs = personCategoryRepository
-                    .findByPerson_PersonId(proj.getPersonId())
+                    .findByPerson_PersonId(dto.getPersonId())
                     .stream()
+                    .filter(PersonCategory::getStatus)
                     .map(pc -> {
                         Category c = pc.getCategory();
                         return new CategoryDTO(c.getCategoryId(), c.getName(), c.getDescription(), c.getStatus());
@@ -64,10 +80,27 @@ public class UserFullService {
                     .collect(Collectors.toList());
             dto.setCategories(categoryDTOs);
 
-            return dto;
-        }).collect(Collectors.toList());
+            // Club (si aplica)
+            clubPersonRepository.findFirstByPersonAndStatusIsTrue(new Person(dto.getPersonId()))
+                    .ifPresent(clubPerson -> dto.setClubId(clubPerson.getClub().getClubId()));
+        }
+
+        return new ArrayList<>(userMap.values());
     }
 
+    /**
+     * Obtiene todos los usuarios activos con el rol "JUGADOR".
+     */
+    public List<UserFullDTO> getAllActivePlayers() {
+        return getAllUsersWithDetails().stream()
+                .filter(user -> user.getRoles() != null &&
+                        user.getRoles().stream().anyMatch(role -> "JUGADOR".equalsIgnoreCase(role.getName())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtiene un usuario por ID, con roles, categorías y club.
+     */
     public UserFullDTO getUserById(Integer id) {
         return getAllUsersWithDetails().stream()
                 .filter(user -> user.getUserId().equals(id))
@@ -75,32 +108,42 @@ public class UserFullService {
                 .orElse(null);
     }
 
+    /**
+     * Obtiene un usuario por su nombre de usuario (nickname), con detalles completos.
+     */
     public UserFullDTO getByUsername(String username) {
-        UserFullDTO dto = getAllUsersWithDetails().stream()
+        return getAllUsersWithDetails().stream()
                 .filter(u -> u.getNickname().equals(username))
                 .findFirst()
                 .orElse(null);
-
-        if (dto != null && dto.getPersonId() != null) {
-            clubPersonRepository.findFirstByPersonAndStatusIsTrue(new Person(dto.getPersonId()))
-                    .ifPresent(clubPerson -> dto.setClubId(clubPerson.getClub().getClubId()));
-        }
-
-        return dto;
     }
 
+    /**
+     * Crea un nuevo usuario junto con su persona, roles y categorías.
+     */
+    @Transactional
     public void createUser(UserFullDTO input) {
         if (input.getPassword() == null || input.getPassword().isBlank()) {
             throw new IllegalArgumentException("La contraseña no puede estar vacía");
         }
 
-        if (input.getNickname() == null || input.getNickname().isBlank()) {
-            throw new IllegalArgumentException("El nickname no puede estar vacío");
+        String nickname = (input.getNickname() == null || input.getNickname().isBlank())
+                ? input.getDocument()
+                : input.getNickname();
+
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("Se requiere nickname o documento");
         }
 
-        // Guardar persona
+        boolean exists = userRepository.findAll().stream()
+                .anyMatch(u -> u.getNickname() != null && u.getNickname().equals(nickname) && u.isStatus());
+        if (exists) {
+            throw new IllegalArgumentException("El nickname/documento ya está en uso");
+        }
+
+        // Crear persona
         Person person = Person.builder()
-                .photoUrl(input.getPhotoUrl() != null ? input.getPhotoUrl() : "/uploads/users/default.png")
+                .photoUrl(Optional.ofNullable(input.getPhotoUrl()).orElse("/uploads/users/default.png"))
                 .document(input.getDocument())
                 .fullName(input.getFullName())
                 .fullSurname(input.getFullSurname())
@@ -112,9 +155,9 @@ public class UserFullService {
                 .build();
         personRepository.save(person);
 
-        // Guardar usuario
+        // Crear usuario
         User user = User.builder()
-                .nickname(input.getNickname())
+                .nickname(nickname)
                 .password(passwordEncoder.encode(input.getPassword()))
                 .status(true)
                 .person(person)
@@ -124,14 +167,14 @@ public class UserFullService {
         // Asignar roles
         if (input.getRoles() != null) {
             input.getRoles().forEach(roleDTO ->
-                    roleRepository.findByName(roleDTO.getName()).ifPresent(role -> {
-                        UserRole userRole = new UserRole();
-                        userRole.setUser(user);
-                        userRole.setRole(role);
-                        userRole.setStatus(true);
-                        userRoleRepository.save(userRole);
-                    })
-            );
+                    roleRepository.findById(roleDTO.getRoleId()).ifPresent(role -> {
+                        UserRole ur = UserRole.builder()
+                                .user(user)
+                                .role(role)
+                                .status(true)
+                                .build();
+                        userRoleRepository.save(ur);
+                    }));
         }
 
         // Asignar categorías
@@ -140,12 +183,18 @@ public class UserFullService {
                 PersonCategory pc = PersonCategory.builder()
                         .person(person)
                         .category(new Category(catDTO.getCategoryId()))
+                        .status(true)
+                        .createdAt(LocalDateTime.now())
                         .build();
                 personCategoryRepository.save(pc);
             });
         }
     }
 
+    /**
+     * Actualiza un usuario existente, incluyendo sus roles y categorías.
+     */
+    @Transactional
     public boolean updateUser(Integer id, UserFullDTO input) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) return false;
@@ -153,6 +202,7 @@ public class UserFullService {
         User user = userOpt.get();
         Person person = user.getPerson();
 
+        // Actualizar persona
         person.setPhotoUrl(input.getPhotoUrl());
         person.setDocument(input.getDocument());
         person.setFullName(input.getFullName());
@@ -163,32 +213,52 @@ public class UserFullService {
         person.setGender(input.getGender());
         personRepository.save(person);
 
-        user.setNickname(input.getNickname());
+        // Validar y actualizar nickname
+        String newNickname = (input.getNickname() != null && !input.getNickname().isBlank())
+                ? input.getNickname()
+                : input.getDocument();
+
+        boolean exists = userRepository.findAll().stream()
+                .anyMatch(u -> u.getNickname() != null &&
+                        u.getNickname().equals(newNickname) &&
+                        u.isStatus() &&
+                        u.getUserId() != user.getUserId());
+        if (exists) {
+            throw new IllegalArgumentException("El nickname/documento ya está en uso");
+        }
+
+        user.setNickname(newNickname);
+
         if (input.getPassword() != null && !input.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
+
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
+        // Actualizar roles
         userRoleRepository.deleteByUser_UserId(user.getUserId());
         if (input.getRoles() != null) {
             input.getRoles().forEach(roleDTO ->
-                    roleRepository.findByName(roleDTO.getName()).ifPresent(role -> {
-                        UserRole userRole = new UserRole();
-                        userRole.setUser(user);
-                        userRole.setRole(role);
-                        userRole.setStatus(true);
-                        userRoleRepository.save(userRole);
-                    })
-            );
+                    roleRepository.findById(roleDTO.getRoleId()).ifPresent(role -> {
+                        UserRole ur = UserRole.builder()
+                                .user(user)
+                                .role(role)
+                                .status(true)
+                                .build();
+                        userRoleRepository.save(ur);
+                    }));
         }
 
+        // Actualizar categorías
         personCategoryRepository.deleteAllByPerson_PersonId(person.getPersonId());
         if (input.getCategories() != null) {
             input.getCategories().forEach(catDTO -> {
                 PersonCategory pc = PersonCategory.builder()
                         .person(person)
                         .category(new Category(catDTO.getCategoryId()))
+                        .status(true)
+                        .createdAt(LocalDateTime.now())
                         .build();
                 personCategoryRepository.save(pc);
             });
@@ -197,6 +267,10 @@ public class UserFullService {
         return true;
     }
 
+    /**
+     * Desactiva lógicamente un usuario y su persona.
+     */
+    @Transactional
     public boolean deleteUser(Integer id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) return false;
@@ -205,14 +279,27 @@ public class UserFullService {
         user.setStatus(false);
         user.setUpdatedAt(LocalDateTime.now());
         user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
 
         Person person = user.getPerson();
         person.setStatus(false);
         person.setUpdatedAt(LocalDateTime.now());
         person.setDeletedAt(LocalDateTime.now());
-
-        userRepository.save(user);
         personRepository.save(person);
+
+        // Desactivar roles
+        userRoleRepository.findAllByUser_UserIdAndStatusTrue(user.getUserId())
+                .forEach(ur -> {
+                    ur.setStatus(false);
+                    userRoleRepository.save(ur);
+                });
+
+        // Desactivar categorías
+        personCategoryRepository.findByPerson_PersonId(person.getPersonId())
+                .forEach(pc -> {
+                    pc.setStatus(false);
+                    personCategoryRepository.save(pc);
+                });
 
         return true;
     }

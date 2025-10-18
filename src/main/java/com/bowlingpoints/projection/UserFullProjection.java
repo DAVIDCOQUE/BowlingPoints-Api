@@ -17,5 +17,9 @@ public interface UserFullProjection {
     LocalDate getBirthDate();
     String getPhone();
     String getGender();
+
+    // Añadir:
+    Integer getRoleId();
     String getRoleName();
 }
+
