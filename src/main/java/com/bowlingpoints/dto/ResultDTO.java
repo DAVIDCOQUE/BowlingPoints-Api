@@ -7,8 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class ResultDTO {
+
     private Integer resultId;
 
     // Persona
@@ -35,7 +35,10 @@ public class ResultDTO {
     private Integer modalityId;
     private String modalityName;
 
-    // Datos propios del resultado
+    // Rama (Masculino, Femenino, Mixto)
+    private String rama;
+
+    // Datos del resultado
     private Integer laneNumber;
     private Integer lineNumber;
     private Integer score;

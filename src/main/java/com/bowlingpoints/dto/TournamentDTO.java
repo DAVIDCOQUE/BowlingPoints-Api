@@ -12,23 +12,29 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class TournamentDTO {
-    private Integer tournamentId;         // ID del torneo
-    private String name;                  // Nombre del torneo
-    private String organizer;             // Organizador
-    private Integer ambitId;              // FK a Ambit
-    private String ambitName;             // Nombre del ámbito (opcional para respuesta)
-    private String imageUrl;              // Imagen
-    private LocalDate startDate;          // Inicio
-    private LocalDate endDate;            // Fin
-    private String location;              // Ubicación
-    private String stage;                 // Etapa
-    private Boolean status;               // Activo o inactivo
 
-    // RELACIÓN CON CATEGORÍAS
-    private List<CategoriesDTO> categories;    // Datos completos (para respuesta)
+    private Integer tournamentId;
+    private String name;
+    private String organizer;
+    private Integer ambitId;
+    private String ambitName;
+    private String imageUrl;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String location;
+    private String stage;
+    private Boolean status;
 
-    // RELACIÓN CON MODALIDADES
+    // Estos dos campos son necesarios porque el front los está enviando así
+    private List<Integer> categoryIds;
+    private List<Integer> modalityIds;
+
+    //  Estos son para mostrar los nombres ya asignados desde backend
+    private List<String> categoryNames;
+    private List<String> modalityNames;
+
+    // Estos se llenan en toDTO() para mostrar los objetos completos
+    private List<CategoriesDTO> categories;
     private List<ModalitiesDTO> modalities;
 }
