@@ -1,7 +1,5 @@
 package com.bowlingpoints.dto;
 
-import com.bowlingpoints.dto.response.CategoriesDTO;
-import com.bowlingpoints.dto.response.ModalitiesDTO;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -26,15 +24,20 @@ public class TournamentDTO {
     private String stage;
     private Boolean status;
 
-    // Estos dos campos son necesarios porque el front los está enviando así
+    //  IDs usados por el frontend
     private List<Integer> categoryIds;
     private List<Integer> modalityIds;
+    private List<Integer> branchIds;
 
-    //  Estos son para mostrar los nombres ya asignados desde backend
+    //  Nombres usados por el frontend
     private List<String> categoryNames;
     private List<String> modalityNames;
+    private List<String> branchNames;
 
-    // Estos se llenan en toDTO() para mostrar los objetos completos
-    private List<CategoriesDTO> categories;
-    private List<ModalitiesDTO> modalities;
+    //  Objetos completos desde backend
+    private List<CategoryDTO> categories;
+    private List<ModalityDTO> modalities;
+    private List<BranchDTO> branches;
+
+    private List<TournamentRegistrationDTO> tournamentRegistrations;
 }

@@ -1,9 +1,6 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.TournamentDTO;
-import com.bowlingpoints.dto.TournamentSummaryDTO;
-import com.bowlingpoints.dto.response.CategoriesDTO;
-import com.bowlingpoints.dto.response.ModalitiesDTO;
+import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +17,12 @@ public class TournamentService {
     private final AmbitRepository ambitRepository;
     private final ModalityRepository modalityRepository;
     private final CategoryRepository categoryRepository;
+    private final BranchRepository branchRepository;
     private final TournamentCategoryRepository tournamentCategoryRepository;
     private final TournamentModalityRepository tournamentModalityRepository;
+    private final TournamentBranchRepository tournamentBranchRepository;
     private final ResultRepository resultRepository;
+    private final TournamentRegistrationRepository tournamentRegistrationRepository;
 
     // Obtener todos los torneos no eliminados
     public List<TournamentDTO> getAll() {
@@ -34,7 +34,9 @@ public class TournamentService {
 
     // Obtener torneo por ID
     public TournamentDTO getById(Integer id) {
-        return tournamentRepository.findById(id).map(this::toDTO).orElse(null);
+        return tournamentRepository.findById(id)
+                .map(this::toDTO)
+                .orElse(null);
     }
 
     // Crear torneo
@@ -70,6 +72,19 @@ public class TournamentService {
             }
         }
 
+        // Guardar ramas (nuevo bloque)
+        if (dto.getBranchIds() != null) {
+            for (Integer branchId : dto.getBranchIds()) {
+                Branch branch = branchRepository.findById(branchId)
+                        .orElseThrow(() -> new RuntimeException("Rama no encontrada: " + branchId));
+                tournamentBranchRepository.save(
+                        TournamentBranch.builder()
+                                .tournament(saved)
+                                .branch(branch)
+                                .build()
+                );
+            }
+        }
         return toDTO(saved);
     }
 
@@ -99,8 +114,13 @@ public class TournamentService {
         Tournament updated = tournamentRepository.save(entity);
 
         // Eliminar categorías y modalidades antiguas
-        tournamentCategoryRepository.deleteAll(tournamentCategoryRepository.findByTournament_TournamentId(updated.getTournamentId()));
-        tournamentModalityRepository.deleteAll(tournamentModalityRepository.findByTournament_TournamentId(updated.getTournamentId()));
+        tournamentCategoryRepository.deleteAll(
+                tournamentCategoryRepository.findByTournament_TournamentId(updated.getTournamentId()));
+        tournamentModalityRepository.deleteAll(
+                tournamentModalityRepository.findByTournament_TournamentId(updated.getTournamentId()));
+        tournamentBranchRepository.deleteAll(
+                tournamentBranchRepository.findByTournament_TournamentId(updated.getTournamentId())
+        );
 
         // Guardar nuevas categorías
         if (dto.getCategoryIds() != null) {
@@ -128,6 +148,19 @@ public class TournamentService {
             }
         }
 
+        if (dto.getBranchIds() != null) {
+            for (Integer branchId : dto.getBranchIds()) {
+                Branch branch = branchRepository.findById(branchId)
+                        .orElseThrow(() -> new RuntimeException("Rama no encontrada: " + branchId));
+                tournamentBranchRepository.save(
+                        TournamentBranch.builder()
+                                .tournament(updated)
+                                .branch(branch)
+                                .build()
+                );
+            }
+        }
+
         return true;
     }
 
@@ -150,68 +183,71 @@ public class TournamentService {
                 .map(this::toDTO)
                 .toList();
     }
-
-    // Obtener resumen del torneo
-    public TournamentSummaryDTO getTournamentSummary(Integer tournamentId) {
-        Tournament t = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Torneo no encontrado"));
-
-        List<String> modalities = t.getModalities().stream()
-                .map(tm -> tm.getModality().getName())
-                .toList();
-
-        List<String> categories = t.getCategories().stream()
-                .map(tc -> tc.getCategory().getName())
-                .toList();
-
-        Object countsRaw = resultRepository.countPlayersByGenderInTournament(tournamentId);
-
-        int totalMasculino = 0;
-        int totalFemenino = 0;
-
-        if (countsRaw instanceof Object[] arr) {
-            if (arr.length == 2) {
-                totalMasculino = arr[0] != null ? ((Number) arr[0]).intValue() : 0;
-                totalFemenino = arr[1] != null ? ((Number) arr[1]).intValue() : 0;
-            } else if (arr.length == 1 && arr[0] instanceof Object[] inner) {
-                totalMasculino = inner[0] != null ? ((Number) inner[0]).intValue() : 0;
-                totalFemenino = inner[1] != null ? ((Number) inner[1]).intValue() : 0;
-            }
-        }
-
-        return TournamentSummaryDTO.builder()
-                .tournamentId(t.getTournamentId())
-                .tournamentName(t.getName())
-                .organizer(t.getOrganizer())
-                .startDate(t.getStartDate())
-                .endDate(t.getEndDate())
-                .location(t.getLocation())
-                .modalities(modalities)
-                .categories(categories)
-                .totalMasculino(totalMasculino)
-                .totalFemenino(totalFemenino)
-                .build();
-    }
-
+    
     // =============== 🔁 Mapping Helpers ===============
 
     private TournamentDTO toDTO(Tournament entity) {
-        List<CategoriesDTO> categoriesDTOS = entity.getCategories() != null
+        //  Mapeo de categorías
+        List<CategoryDTO> categoryDTOS = entity.getCategories() != null
                 ? entity.getCategories().stream()
-                .map(tc -> new CategoriesDTO(
-                        tc.getCategory().getCategoryId(),
-                        tc.getCategory().getName()))
+                .filter(tc -> tc.getCategory() != null)
+                .map(tc -> CategoryDTO.builder()
+                        .categoryId(tc.getCategory().getCategoryId())
+                        .name(tc.getCategory().getName())
+                        .description(tc.getCategory().getDescription())
+                        .status(tc.getCategory().getStatus())
+                        .build())
                 .toList()
                 : Collections.emptyList();
 
-        List<ModalitiesDTO> modalitiesDTOS = entity.getModalities() != null
+        //  Mapeo de modalidades
+        List<ModalityDTO> modalityDTOS = entity.getModalities() != null
                 ? entity.getModalities().stream()
-                .map(tm -> new ModalitiesDTO(
-                        tm.getModality().getModalityId(),
-                        tm.getModality().getName()))
+                .filter(tm -> tm.getModality() != null)
+                .map(tm -> ModalityDTO.builder()
+                        .modalityId(tm.getModality().getModalityId())
+                        .name(tm.getModality().getName())
+                        .description(tm.getModality().getDescription())
+                        .status(tm.getModality().getStatus())
+                        .build())
                 .toList()
                 : Collections.emptyList();
 
+        //  Mapeo de ramas (nueva parte)
+        List<BranchDTO> branchDTOS = entity.getBranches() != null
+                ? entity.getBranches().stream()
+                .filter(tb -> tb.getBranch() != null)
+                .map(tb -> BranchDTO.builder()
+                        .branchId(tb.getBranch().getBranchId())
+                        .name(tb.getBranch().getName())
+                        .description(tb.getBranch().getDescription())
+                        .status(tb.getBranch().getStatus())
+                        .build())
+                .toList()
+                : Collections.emptyList();
+
+        // Mapeo de jugadores registrados
+        List<TournamentRegistrationDTO> registrationDTOS = tournamentRegistrationRepository
+                .findByTournament_TournamentId(entity.getTournamentId())
+                .stream()
+                .map(reg -> TournamentRegistrationDTO.builder()
+                        .registrationId(reg.getRegistrationId())
+                        .tournamentId(reg.getTournament().getTournamentId())
+                        .personId(reg.getPerson().getPersonId())
+                        .personFullName(reg.getPerson().getFullName() + " " + reg.getPerson().getFullSurname())
+                        .categoryId(reg.getCategory().getCategoryId())
+                        .categoryName(reg.getCategory().getName())
+                        .modalityId(reg.getModality().getModalityId())
+                        .modalityName(reg.getModality().getName())
+                        .branchId(reg.getBranch().getBranchId())
+                        .branchName(reg.getBranch().getName())
+                        .teamId(reg.getTeam() != null ? reg.getTeam().getTeamId() : null)
+                        .teamName(reg.getTeam() != null ? reg.getTeam().getNameTeam() : null)
+                        .status(reg.getStatus())
+                        .build())
+                .toList();
+
+        //  Construcción del DTO final
         return TournamentDTO.builder()
                 .tournamentId(entity.getTournamentId())
                 .name(entity.getName())
@@ -224,8 +260,10 @@ public class TournamentService {
                 .location(entity.getLocation())
                 .stage(entity.getStage())
                 .status(entity.getStatus())
-                .categories(categoriesDTOS)
-                .modalities(modalitiesDTOS)
+                .categories(categoryDTOS)
+                .modalities(modalityDTOS)
+                .branches(branchDTOS)
+                .tournamentRegistrations(registrationDTOS)
                 .build();
     }
 

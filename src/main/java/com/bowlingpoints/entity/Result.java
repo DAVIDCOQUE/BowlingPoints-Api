@@ -47,9 +47,8 @@ public class Result {
     /**
      * Ronda del torneo.
      */
-    @ManyToOne
-    @JoinColumn(name = "round_id")
-    private Round round;
+    @Column(name = "round_number")
+    private Integer roundNumber;
 
     /**
      * Categoría en la que participa.
@@ -66,7 +65,7 @@ public class Result {
     private Modality modality;
 
     /**
-     * Rama (Masculina, Femenina, Mixta, etc.).
+     * Branch (Masculina, Femenina, Mixta, etc.).
      */
     @Column(name = "rama", nullable = false)
     private String rama;

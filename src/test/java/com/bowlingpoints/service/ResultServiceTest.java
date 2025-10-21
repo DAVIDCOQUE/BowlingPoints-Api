@@ -42,7 +42,6 @@ class ResultServiceTest {
     private Person testPerson;
     private Team testTeam;
     private Tournament testTournament;
-    private Round testRound;
     private Category testCategory;
     private Modality testModality;
 
@@ -296,7 +295,7 @@ class ResultServiceTest {
     @Test
     void getAllPlayersByAvgScore_ShouldReturnSortedPlayers() {
         // Arrange
-        PlayerRankingDTO ranking = PlayerRankingDTO.builder()
+        DashboardPlayerDTO ranking = DashboardPlayerDTO.builder()
                 .personId(1)
                 .fullName("John Doe")
                 .averageScore(180.0).build();
@@ -304,7 +303,7 @@ class ResultServiceTest {
             .thenReturn(List.of(ranking));
 
         // Act
-        List<PlayerRankingDTO> rankings = resultService.getAllPlayersByAvgScore();
+        List<DashboardPlayerDTO> rankings = resultService.getAllPlayersByAvgScore();
 
         // Assert
         assertEquals(1, rankings.size());

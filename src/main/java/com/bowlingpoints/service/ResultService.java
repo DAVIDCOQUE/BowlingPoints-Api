@@ -9,9 +9,6 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Servicio principal para gestión de resultados, ranking y resúmenes de torneos.
- */
 @Service
 @RequiredArgsConstructor
 public class ResultService {
@@ -20,7 +17,6 @@ public class ResultService {
     private final PersonRepository personRepository;
     private final TeamRepository teamRepository;
     private final TournamentRepository tournamentRepository;
-    private final RoundRepository roundRepository;
     private final CategoryRepository categoryRepository;
     private final ModalityRepository modalityRepository;
 
@@ -69,18 +65,24 @@ public class ResultService {
     private ResultDTO mapEntityToDto(Result r) {
         return ResultDTO.builder()
                 .resultId(r.getResultId())
+                // Persona
                 .personId(r.getPerson() != null ? r.getPerson().getPersonId() : null)
                 .personName(r.getPerson() != null ? r.getPerson().getFullName() : null)
+                // Equipo
                 .teamId(r.getTeam() != null ? r.getTeam().getTeamId() : null)
                 .teamName(r.getTeam() != null ? r.getTeam().getNameTeam() : null)
+                // Torneo
                 .tournamentId(r.getTournament() != null ? r.getTournament().getTournamentId() : null)
                 .tournamentName(r.getTournament() != null ? r.getTournament().getName() : null)
-                .roundId(r.getRound() != null ? r.getRound().getRoundId() : null)
-                .roundNumber(r.getRound() != null ? r.getRound().getRoundNumber() : null)
+                // Ronda (ahora es número directo)
+                .roundNumber(r.getRoundNumber())
+                // Categoría
                 .categoryId(r.getCategory() != null ? r.getCategory().getCategoryId() : null)
                 .categoryName(r.getCategory() != null ? r.getCategory().getName() : null)
+                // Modalidad
                 .modalityId(r.getModality() != null ? r.getModality().getModalityId() : null)
                 .modalityName(r.getModality() != null ? r.getModality().getName() : null)
+                // Datos propios
                 .laneNumber(r.getLaneNumber())
                 .lineNumber(r.getLineNumber())
                 .score(r.getScore())
@@ -89,27 +91,33 @@ public class ResultService {
     }
 
     private Result mapDtoToEntity(ResultDTO dto, Result result) {
-        // Validar exclusividad de persona o equipo
         if (dto.getPersonId() != null && dto.getTeamId() != null) {
             throw new IllegalArgumentException("No se puede asignar persona y equipo al mismo tiempo.");
         }
 
         if (dto.getPersonId() != null) {
-            result.setPerson(personRepository.findById(dto.getPersonId()).orElseThrow(() ->
-                    new RuntimeException("Persona no encontrada")));
+            result.setPerson(personRepository.findById(dto.getPersonId())
+                    .orElseThrow(() -> new RuntimeException("Persona no encontrada")));
             result.setTeam(null);
         }
 
         if (dto.getTeamId() != null) {
-            result.setTeam(teamRepository.findById(dto.getTeamId()).orElseThrow(() ->
-                    new RuntimeException("Equipo no encontrado")));
+            result.setTeam(teamRepository.findById(dto.getTeamId())
+                    .orElseThrow(() -> new RuntimeException("Equipo no encontrado")));
             result.setPerson(null);
         }
 
-        result.setTournament(tournamentRepository.findById(dto.getTournamentId()).orElseThrow());
-        result.setRound(roundRepository.findById(dto.getRoundId()).orElseThrow());
-        result.setCategory(categoryRepository.findById(dto.getCategoryId()).orElseThrow());
-        result.setModality(modalityRepository.findById(dto.getModalityId()).orElseThrow());
+        result.setTournament(tournamentRepository.findById(dto.getTournamentId())
+                .orElseThrow(() -> new RuntimeException("Torneo no encontrado")));
+
+        result.setCategory(categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada")));
+
+        result.setModality(modalityRepository.findById(dto.getModalityId())
+                .orElseThrow(() -> new RuntimeException("Modalidad no encontrada")));
+
+        // 🔁 Ronda como número (sin relación)
+        result.setRoundNumber(dto.getRoundNumber());
 
         result.setLaneNumber(dto.getLaneNumber());
         result.setLineNumber(dto.getLineNumber());
@@ -128,9 +136,9 @@ public class ResultService {
 
         Map<String, Map<Integer, List<Object[]>>> grouped = rows.stream().collect(
                 Collectors.groupingBy(
-                        row -> ((String) row[2]).toLowerCase(), // gender
+                        row -> ((String) row[2]).toLowerCase(),
                         Collectors.groupingBy(
-                                row -> ((Number) row[0]).intValue() // personId
+                                row -> ((Number) row[0]).intValue()
                         )
                 )
         );
@@ -145,11 +153,11 @@ public class ResultService {
 
                 List<PlayerModalitySummaryDTO> modalities = playerRows.stream().map(row ->
                         new PlayerModalitySummaryDTO(
-                                ((Number) row[3]).intValue(), // modalityId
-                                (String) row[4],              // modalityName
-                                ((Number) row[5]).intValue(), // total
-                                ((Number) row[6]).doubleValue(), // promedio
-                                ((Number) row[7]).intValue()  // lineas
+                                ((Number) row[3]).intValue(),
+                                (String) row[4],
+                                ((Number) row[5]).intValue(),
+                                ((Number) row[6]).doubleValue(),
+                                ((Number) row[7]).intValue()
                         )
                 ).collect(Collectors.toList());
 
@@ -203,7 +211,7 @@ public class ResultService {
         return new ArrayList<>(playerMap.values());
     }
 
-    public List<PlayerRankingDTO> getAllPlayersByAvgScore() {
+    public List<DashboardPlayerDTO> getAllPlayersByAvgScore() {
         return resultRepository.findAllPlayersByAvgScore();
     }
 }

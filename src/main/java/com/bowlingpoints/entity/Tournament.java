@@ -69,6 +69,9 @@ public class Tournament {
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentCategory> categories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TournamentBranch> branches;
+
     @PreUpdate
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();

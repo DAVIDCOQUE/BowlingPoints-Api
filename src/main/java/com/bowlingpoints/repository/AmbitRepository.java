@@ -42,6 +42,7 @@ public interface AmbitRepository extends JpaRepository<Ambit, Integer> {
                 FROM Tournament t
                 JOIN t.ambit a
                 WHERE t.deletedAt IS NULL
+                  AND t.status = true
                   AND a.deletedAt IS NULL
                   AND a.status = true
                 ORDER BY a.name ASC

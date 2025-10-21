@@ -1,9 +1,6 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.RoundDTO;
-import com.bowlingpoints.entity.Round;
 import com.bowlingpoints.entity.Tournament;
-import com.bowlingpoints.repository.RoundRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

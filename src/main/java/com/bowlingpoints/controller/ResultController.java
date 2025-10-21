@@ -81,8 +81,8 @@ public class ResultController {
     }
 
     @GetMapping("/all-player-ranking")
-    public ResponseEntity<ResponseGenericDTO<List<PlayerRankingDTO>>> getAllPlayerRanking() {
-        List<PlayerRankingDTO> ranking = resultService.getAllPlayersByAvgScore();
+    public ResponseEntity<ResponseGenericDTO<List<DashboardPlayerDTO>>> getAllPlayerRanking() {
+        List<DashboardPlayerDTO> ranking = resultService.getAllPlayersByAvgScore();
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Ranking cargado correctamente", ranking));
     }
 

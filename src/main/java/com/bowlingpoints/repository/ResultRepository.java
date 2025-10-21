@@ -1,6 +1,6 @@
 package com.bowlingpoints.repository;
 
-import com.bowlingpoints.dto.PlayerRankingDTO;
+import com.bowlingpoints.dto.DashboardPlayerDTO;
 import com.bowlingpoints.dto.TopTournamentDTO;
 import com.bowlingpoints.dto.UserStatsProjection;
 import com.bowlingpoints.entity.Result;
@@ -27,38 +27,43 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
      * Ejemplo: findTopPlayersByAvgScore(PageRequest.of(0, 10))
      */
     @Query("""
-                SELECT new com.bowlingpoints.dto.PlayerRankingDTO(
+                SELECT new com.bowlingpoints.dto.DashboardPlayerDTO(
                     r.person.personId,
                     CONCAT(p.fullName, ' ', p.fullSurname),
                     AVG(r.score),
+                    MAX(r.score),
+                    COUNT(DISTINCT t.tournamentId),
                     p.photoUrl
                 )
                 FROM Result r
                 JOIN r.person p
+                JOIN r.tournament t
                 WHERE r.deletedAt IS NULL
                 GROUP BY r.person.personId, p.fullName, p.fullSurname, p.photoUrl
                 ORDER BY AVG(r.score) DESC
             """)
-    List<PlayerRankingDTO> findTopPlayersByAvgScore(Pageable pageable);
+    List<DashboardPlayerDTO> findTopPlayersByAvgScore(Pageable pageable);
 
     /**
      * Devuelve todos los jugadores ordenados por promedio de score (¡ojo si hay miles!).
      */
     @Query("""
-                SELECT new com.bowlingpoints.dto.PlayerRankingDTO(
+                SELECT new com.bowlingpoints.dto.DashboardPlayerDTO(
                     r.person.personId,
                     CONCAT(p.fullName, ' ', p.fullSurname),
                     AVG(r.score),
+                    MAX(r.score),
+                    COUNT(DISTINCT t.tournamentId),
                     p.photoUrl
                 )
                 FROM Result r
                 JOIN r.person p
+                JOIN r.tournament t
                 WHERE r.deletedAt IS NULL
                 GROUP BY r.person.personId, p.fullName, p.fullSurname, p.photoUrl
                 ORDER BY AVG(r.score) DESC
             """)
-    List<PlayerRankingDTO> findAllPlayersByAvgScore();
-
+    List<DashboardPlayerDTO> findAllPlayersByAvgScore();
     // -------------------------------------------------------------------------
     // 2. TOP CLUBS (Ranking de clubes por puntaje total acumulado)
     // -------------------------------------------------------------------------
@@ -124,7 +129,7 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
     @Query("""
                 SELECT r FROM Result r
                 WHERE r.person.personId = :userId AND r.tournament.tournamentId = :tournamentId
-                ORDER BY r.round.roundNumber, r.lineNumber
+                ORDER BY r.roundNumber, r.lineNumber
             """)
     List<Result> findResultsByPersonAndTournament(@Param("userId") Integer userId, @Param("tournamentId") Integer tournamentId);
 
@@ -233,7 +238,7 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                     p.personId,
                     CONCAT(p.fullName, ' ', p.fullSurname),
                     cp.club.name,
-                    r.round.roundNumber,
+                    r.roundNumber,
                     r.score
                 FROM Result r
                 JOIN r.person p
@@ -243,7 +248,7 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                   AND r.deletedAt IS NULL
                   AND (cp.status = true OR cp IS NULL)
                   AND (cp.deletedAt IS NULL OR cp IS NULL)
-                ORDER BY p.personId, r.round.roundNumber
+                ORDER BY p.personId, r.roundNumber
             """)
     List<Object[]> findRawPlayerResultsForTable(
             @Param("tournamentId") Integer tournamentId,

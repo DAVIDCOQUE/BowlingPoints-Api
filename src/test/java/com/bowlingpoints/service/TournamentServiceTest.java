@@ -1,7 +1,6 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.TournamentDTO;
-import com.bowlingpoints.dto.TournamentSummaryDTO;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import org.junit.jupiter.api.BeforeEach;
