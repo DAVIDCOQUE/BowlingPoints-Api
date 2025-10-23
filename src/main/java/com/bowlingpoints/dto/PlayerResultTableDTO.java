@@ -11,6 +11,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class PlayerResultTableDTO {
     private Integer personId;
     private String playerName;

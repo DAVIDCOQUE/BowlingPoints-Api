@@ -1,49 +1,43 @@
 package com.bowlingpoints.repository;
 
-import com.bowlingpoints.dto.TournamentDTO;
 import com.bowlingpoints.entity.Tournament;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Integer> {
+
     List<Tournament> findAllByDeletedAtIsNullOrderByStartDateDesc();
 
     Optional<Tournament> findByName(String name);
 
     List<Tournament> findAllByStatusTrueAndDeletedAtIsNull();
 
+    List<Tournament> findByAmbit_AmbitIdAndDeletedAtIsNull(Integer ambitId);
 
-   /* @Query("""
-                SELECT new com.bowlingpoints.dto.TournamentDTO(
-                    t.tournamentId,
-                    t.name,
-                    t.organizer,
-                    t.ambit.ambitId,
-                    t.ambit.name,
-                    t.imageUrl,
-                    t.startDate,
-                    t.endDate,
-                    t.location,
-                    t.stage,
-                    t.status,
-                    null,
-                    null,
-                    null,
-                    null
-                )
+
+    // Torneos activos con estado PROGRAMADO o APLAZADO
+    @Query("""
+                SELECT t
                 FROM Tournament t
-                WHERE (:ambitId IS NULL OR t.ambit.ambitId = :ambitId)
-                  AND (:ambitName IS NULL OR t.ambit.name = :ambitName)
+                WHERE t.status = true
                   AND t.deletedAt IS NULL
-                  ORDER BY t.startDate DESC
+                  AND LOWER(t.stage) IN ('programado', 'aplazado')
+                ORDER BY t.startDate ASC
             """)
-    List<TournamentDTO> findTournamentsByAmbit(
-            @Param("ambitId") Integer ambitId,
-            @Param("ambitName") String ambitName
-    );*/
+    List<Tournament> findActiveScheduledOrPostponed();
 
+    // Torneos activos (status = true) con estado En curso
+    @Query("""
+                SELECT t
+                FROM Tournament t
+                WHERE t.status = true
+                  AND t.deletedAt IS NULL
+                  AND LOWER(t.stage) = 'en curso'
+                ORDER BY t.startDate ASC
+            """)
+    List<Tournament> findActiveInProgress();
 }
+

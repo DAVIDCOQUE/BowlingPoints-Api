@@ -5,8 +5,6 @@ import com.bowlingpoints.dto.UserStatsProjection;
 import com.bowlingpoints.dto.UserTournamentDTO;
 import com.bowlingpoints.dto.UserTournamentResultDTO;
 import com.bowlingpoints.entity.Result;
-import com.bowlingpoints.entity.Round;
-import com.bowlingpoints.entity.Tournament;
 import com.bowlingpoints.repository.ResultRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +20,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import com.bowlingpoints.dto.UserStatsProjection;
 
 class UserTournamentServiceTest {
 

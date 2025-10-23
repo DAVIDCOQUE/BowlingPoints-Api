@@ -1,5 +1,6 @@
 package com.bowlingpoints.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,11 +9,13 @@ import java.util.List;
 
 @Entity
 @Table(name = "ambit")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Ambit {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ambit_id")
@@ -22,10 +25,10 @@ public class Ambit {
 
     private String description;
 
-    @Column(name = "imageUrl")
+    @Column(name = "image_url")
     private String imageUrl;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private Boolean status = true;
 
     @Column(name = "created_by")
@@ -44,6 +47,7 @@ public class Ambit {
     private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "ambit")
+    @JsonIgnore
     private List<Tournament> tournaments;
 
     @PrePersist

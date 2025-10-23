@@ -20,7 +20,7 @@ public class Tournament {
     @Column(name = "tournament_id")
     private Integer tournamentId;
 
-    @Column(name = "tournament_name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ManyToOne
@@ -68,6 +68,9 @@ public class Tournament {
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentCategory> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TournamentBranch> branches;
 
     @PreUpdate
     public void onUpdate() {

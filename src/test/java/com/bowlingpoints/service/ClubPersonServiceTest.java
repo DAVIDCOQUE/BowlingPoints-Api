@@ -1,13 +1,12 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.ClubMemberDTO;
-import com.bowlingpoints.dto.ClubMemberRequestDTO;
+import com.bowlingpoints.dto.ClubPersonDTO;
 import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.entity.ClubPerson;
 import com.bowlingpoints.entity.Clubs;
 import com.bowlingpoints.entity.Person;
 import com.bowlingpoints.repository.ClubPersonRepository;
-import com.bowlingpoints.repository.ClubsRepository;
+import com.bowlingpoints.repository.ClubRepository;
 import com.bowlingpoints.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,19 +26,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ClubMemberServiceTest {
+class ClubPersonServiceTest {
 
     @Mock
     private ClubPersonRepository clubPersonRepository;
 
     @Mock
-    private ClubsRepository clubsRepository;
+    private ClubRepository clubRepository;
 
     @Mock
     private PersonRepository personRepository;
 
     @InjectMocks
-    private ClubMemberService clubMemberService;
+    private ClubPersonService clubPersonService;
 
     private Clubs testClub;
     private Person testPerson;
@@ -81,12 +80,12 @@ class ClubMemberServiceTest {
     @Test
     void getMembersByClubId_WhenClubExists_AndHasMembers_ShouldReturnMembers() {
         // Arrange
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
         when(clubPersonRepository.findByClubAndStatusIsTrue(testClub))
                 .thenReturn(Arrays.asList(testClubPerson));
 
         // Act
-        ResponseGenericDTO<List<ClubMemberDTO>> response = clubMemberService.getMembersByClubId(1);
+        ResponseGenericDTO<List<ClubPersonDTO>> response = clubPersonService.getMembersByClubId(1);
 
         // Assert
         assertTrue(response.getSuccess());
@@ -94,7 +93,7 @@ class ClubMemberServiceTest {
         assertNotNull(response.getData());
         assertEquals(1, response.getData().size());
         
-        ClubMemberDTO dto = response.getData().get(0);
+        ClubPersonDTO dto = response.getData().get(0);
         assertEquals(testPerson.getFullName() + " " + testPerson.getFullSurname(), dto.getFullName().trim());
         assertEquals(testPerson.getEmail(), dto.getEmail());
         assertEquals(testClubPerson.getRoleInClub(), dto.getRoleInClub());
@@ -103,12 +102,12 @@ class ClubMemberServiceTest {
     @Test
     void getMembersByClubId_WhenClubExists_ButHasNoMembers_ShouldReturnEmptyList() {
         // Arrange
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
         when(clubPersonRepository.findByClubAndStatusIsTrue(testClub))
                 .thenReturn(Collections.emptyList());
 
         // Act
-        ResponseGenericDTO<List<ClubMemberDTO>> response = clubMemberService.getMembersByClubId(1);
+        ResponseGenericDTO<List<ClubPersonDTO>> response = clubPersonService.getMembersByClubId(1);
 
         // Assert
         assertTrue(response.getSuccess());
@@ -119,25 +118,25 @@ class ClubMemberServiceTest {
     @Test
     void getMembersByClubId_WhenClubDoesNotExist_ShouldThrowException() {
         // Arrange
-        when(clubsRepository.findById(999)).thenReturn(Optional.empty());
+        when(clubRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(RuntimeException.class, () ->
-            clubMemberService.getMembersByClubId(999)
+            clubPersonService.getMembersByClubId(999)
         );
     }
 
     @Test
     void addMemberToClub_WhenValidRequest_ShouldAddMember() {
         // Arrange
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
         when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
         when(clubPersonRepository.findByClubAndPerson(testClub, testPerson))
                 .thenReturn(Optional.empty());
         when(clubPersonRepository.save(any(ClubPerson.class))).thenReturn(testClubPerson);
 
         // Act
-        ClubPerson result = clubMemberService.addMemberToClub(testRequest);
+        ClubPerson result = clubPersonService.addMemberToClub(testRequest);
 
         // Assert
         assertNotNull(result);
@@ -148,7 +147,7 @@ class ClubMemberServiceTest {
         assertNotNull(result.getJoinedAt());
         assertEquals(1, result.getCreatedBy());
         
-        verify(clubsRepository).findById(1);
+        verify(clubRepository).findById(1);
         verify(personRepository).findById(1);
         verify(clubPersonRepository).findByClubAndPerson(testClub, testPerson);
         verify(clubPersonRepository).save(argThat(member -> 
@@ -164,7 +163,7 @@ class ClubMemberServiceTest {
     @Test
     void addMemberToClub_WhenClubNotFound_ShouldThrowException() {
         // Arrange
-        when(clubsRepository.findById(999)).thenReturn(Optional.empty());
+        when(clubRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -172,7 +171,7 @@ class ClubMemberServiceTest {
             request.setClubId(999);
             request.setPersonId(1);
             request.setRoleInClub("MEMBER");
-            clubMemberService.addMemberToClub(request);
+            clubPersonService.addMemberToClub(request);
         });
         assertEquals("Club no encontrado con ID: 999" , exception.getMessage());
         verify(clubPersonRepository, never()).save(any());
@@ -181,7 +180,7 @@ class ClubMemberServiceTest {
     @Test
     void addMemberToClub_WhenPersonNotFound_ShouldThrowException() {
         // Arrange
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
         when(personRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -190,7 +189,7 @@ class ClubMemberServiceTest {
             request.setClubId(1);
             request.setPersonId(999);
             request.setRoleInClub("MEMBER");
-            clubMemberService.addMemberToClub(request);
+            clubPersonService.addMemberToClub(request);
         });
         assertEquals("Persona no encontrada", exception.getMessage());
         verify(clubPersonRepository, never()).save(any());
@@ -199,14 +198,14 @@ class ClubMemberServiceTest {
     @Test
     void addMemberToClub_WhenMembershipAlreadyExists_ShouldThrowException() {
         // Arrange
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
         when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
         when(clubPersonRepository.findByClubAndPerson(testClub, testPerson))
                 .thenReturn(Optional.of(testClubPerson));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-            clubMemberService.addMemberToClub(testRequest)
+            clubPersonService.addMemberToClub(testRequest)
         );
         assertEquals("El miembro ya está asignado a este club.", exception.getMessage());
         verify(clubPersonRepository, never()).save(any());

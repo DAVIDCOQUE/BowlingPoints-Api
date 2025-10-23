@@ -7,8 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ClubDashboardDTO {
-    private Integer clubId;
+public class BranchDTO {
+    private Integer branchId;
     private String name;
-    private Integer totalScore;
+    private String description;
+    private Boolean status;
 }

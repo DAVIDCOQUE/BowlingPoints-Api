@@ -9,6 +9,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class PlayerResultUploadDTO {
     private String document;
     private String fullName;

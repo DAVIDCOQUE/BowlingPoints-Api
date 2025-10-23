@@ -5,9 +5,13 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa los roles asignados a cada usuario.
+ */
 @Entity
 @Table(name = "user_role")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -46,6 +50,9 @@ public class UserRole {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Verifica si el rol está actualmente activo.
+     */
     public boolean isGranted() {
         return Boolean.TRUE.equals(status);
     }

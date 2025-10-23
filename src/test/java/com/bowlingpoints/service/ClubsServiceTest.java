@@ -1,14 +1,12 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.ClubDetailsDTO;
-import com.bowlingpoints.dto.ClubMemberDTO;
-import com.bowlingpoints.dto.ClubMemberRequestDTO;
+import com.bowlingpoints.dto.ClubPersonDTO;
 import com.bowlingpoints.dto.ClubsDTO;
 import com.bowlingpoints.entity.ClubPerson;
 import com.bowlingpoints.entity.Clubs;
 import com.bowlingpoints.entity.Person;
 import com.bowlingpoints.repository.ClubPersonRepository;
-import com.bowlingpoints.repository.ClubsRepository;
+import com.bowlingpoints.repository.ClubRepository;
 import com.bowlingpoints.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +31,7 @@ import static org.mockito.Mockito.*;
 class ClubsServiceTest {
 
     @Mock
-    private ClubsRepository clubsRepository;
+    private ClubRepository clubRepository;
 
     @Mock
     private PersonRepository personRepository;
@@ -98,7 +96,7 @@ class ClubsServiceTest {
     void createClubWithMembers_WhenValidData_ShouldCreateClubAndMembers() {
         // Arrange
         when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
-        when(clubsRepository.save(any(Clubs.class))).thenReturn(testClub);
+        when(clubRepository.save(any(Clubs.class))).thenReturn(testClub);
 
         // Act
         Clubs result = clubsService.createClubWithMembers(testClubsDTO);
@@ -113,7 +111,7 @@ class ClubsServiceTest {
         assertTrue(result.getStatus());
 
         verify(personRepository).findById(1);
-        verify(clubsRepository).save(any(Clubs.class));
+        verify(clubRepository).save(any(Clubs.class));
     }
 
     @Test
@@ -121,7 +119,7 @@ class ClubsServiceTest {
         // Arrange
         testClubsDTO.setImageUrl(null);
         when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
-        when(clubsRepository.save(any(Clubs.class))).thenAnswer(invocation -> {
+        when(clubRepository.save(any(Clubs.class))).thenAnswer(invocation -> {
             Clubs savedClub = invocation.getArgument(0);
             savedClub.setClubId(1);
             return savedClub;
@@ -144,14 +142,14 @@ class ClubsServiceTest {
             () -> clubsService.createClubWithMembers(testClubsDTO)
         );
         assertEquals("Persona no encontrada: 1", exception.getMessage());
-        verify(clubsRepository, never()).save(any());
+        verify(clubRepository, never()).save(any());
     }
 
     @Test
     void getClubDetails_WhenClubExists_ShouldReturnDetails() {
         // Arrange
         testClub.setMembers(Collections.singletonList(testClubPerson));
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
 
         // Act
         ClubDetailsDTO result = clubsService.getClubDetails(1);
@@ -167,7 +165,7 @@ class ClubsServiceTest {
         assertEquals(testClub.getStatus(), result.getStatus());
         
         assertEquals(1, result.getMembers().size());
-        ClubMemberDTO memberDTO = result.getMembers().get(0);
+        ClubPersonDTO memberDTO = result.getMembers().get(0);
         assertEquals(testPerson.getFullName() + " " + testPerson.getFullSurname(), memberDTO.getFullName().trim());
         assertEquals(testPerson.getEmail(), memberDTO.getEmail());
         assertEquals("ADMIN", memberDTO.getRoleInClub());
@@ -176,7 +174,7 @@ class ClubsServiceTest {
     @Test
     void getClubDetails_WhenClubNotFound_ShouldThrowException() {
         // Arrange
-        when(clubsRepository.findById(999)).thenReturn(Optional.empty());
+        when(clubRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class,
@@ -194,7 +192,7 @@ class ClubsServiceTest {
                 .build();
 
         testClub.setMembers(Collections.singletonList(testClubPerson));
-        when(clubsRepository.findAll()).thenReturn(Arrays.asList(testClub, inactiveClub));
+        when(clubRepository.findAll()).thenReturn(Arrays.asList(testClub, inactiveClub));
 
         // Act
         List<ClubDetailsDTO> results = clubsService.getAllClubsWithMembers();
@@ -212,7 +210,7 @@ class ClubsServiceTest {
     void updateClubWithMembers_WhenValidUpdate_ShouldUpdateClubAndMembers() {
         // Arrange
         testClub.setMembers(Collections.singletonList(testClubPerson));
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
 
         ClubsDTO updateDTO = new ClubsDTO();
         updateDTO.setName("Updated Club");
@@ -231,8 +229,8 @@ class ClubsServiceTest {
         clubsService.updateClubWithMembers(1, updateDTO);
 
         // Assert
-        verify(clubsRepository).findById(1);
-        verify(clubsRepository).save(argThat(club -> 
+        verify(clubRepository).findById(1);
+        verify(clubRepository).save(argThat(club ->
             club.getName().equals("Updated Club") &&
             club.getCity().equals("Updated City") &&
             club.getDescription().equals("Updated Description") &&
@@ -250,7 +248,7 @@ class ClubsServiceTest {
     void updateClubWithMembers_WhenAddingNewMember_ShouldCreateNewClubPerson() {
         // Arrange
         testClub.setMembers(Collections.emptyList());
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
 
         Person newPerson = Person.builder()
                 .personId(2)
@@ -296,28 +294,28 @@ class ClubsServiceTest {
     @Test
     void updateClubWithMembers_WhenClubNotFound_ShouldThrowException() {
         // Arrange
-        when(clubsRepository.findById(999)).thenReturn(Optional.empty());
+        when(clubRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class,
             () -> clubsService.updateClubWithMembers(999, testClubsDTO)
         );
         assertEquals("❌ Club no encontrado con ID 999", exception.getMessage());
-        verify(clubsRepository, never()).save(any());
+        verify(clubRepository, never()).save(any());
     }
 
     @Test
     void deleteClub_WhenClubExists_ShouldSoftDelete() {
         // Arrange
-        when(clubsRepository.findById(1)).thenReturn(Optional.of(testClub));
-        when(clubsRepository.save(any(Clubs.class))).thenReturn(testClub);
+        when(clubRepository.findById(1)).thenReturn(Optional.of(testClub));
+        when(clubRepository.save(any(Clubs.class))).thenReturn(testClub);
 
         // Act
         boolean result = clubsService.deleteClub(1);
 
         // Assert
         assertTrue(result);
-        verify(clubsRepository).save(argThat(club -> 
+        verify(clubRepository).save(argThat(club ->
             !club.getStatus() &&
             club.getDeletedAt() != null
         ));
@@ -326,13 +324,13 @@ class ClubsServiceTest {
     @Test
     void deleteClub_WhenClubNotFound_ShouldReturnFalse() {
         // Arrange
-        when(clubsRepository.findById(999)).thenReturn(Optional.empty());
+        when(clubRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act
         boolean result = clubsService.deleteClub(999);
 
         // Assert
         assertFalse(result);
-        verify(clubsRepository, never()).save(any());
+        verify(clubRepository, never()).save(any());
     }
 }

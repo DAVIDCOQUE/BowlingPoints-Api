@@ -5,9 +5,14 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa la relación muchos a muchos entre personas y categorías.
+ * Una persona puede pertenecer a múltiples categorías.
+ */
 @Entity
 @Table(name = "person_category")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -18,19 +23,33 @@ public class PersonCategory {
     @Column(name = "person_category_id")
     private Integer id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    private Integer createdBy;
-    private Integer updatedBy;
+    /**
+     * Estado lógico (soft delete).
+     */
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "status", nullable = false)
+    private Boolean status = true;
+
+    @Column(name = "created_by")
+    private Integer createdBy;
+
+    @Column(name = "updated_by")
+    private Integer updatedBy;
+
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist

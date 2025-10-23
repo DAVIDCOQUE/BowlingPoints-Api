@@ -4,14 +4,12 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class DashboardDTO {
-    private List<TournamentDTO> activeTournaments;
-    private List<PlayerRankingDTO> topPlayers;
-    private List<ClubDashboardDTO> topClubs;
+    private List<TournamentDTO> scheduledOrPostponedTournaments;
+    private List<TournamentDTO> inProgressTournaments;
+    private List<DashboardPlayerDTO> topPlayers;
     private List<AmbitDTO> ambits;
 }

@@ -1,8 +1,14 @@
 package com.bowlingpoints.dto;
 
-import lombok.Data;
+import lombok.*;
 
+/**
+ * DTO para la transferencia de datos de la entidad Category.
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CategoryDTO {
     private Integer categoryId;
     private String name;

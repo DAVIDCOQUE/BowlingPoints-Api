@@ -38,7 +38,6 @@ public class UserTournamentService {
                 .map(r -> UserTournamentResultDTO.builder()
                         .resultId(r.getResultId())
                         .score(r.getScore())
-                        .ronda(r.getRound() != null ? "Ronda " + r.getRound().getRoundNumber() : null)
                         .laneNumber(r.getLaneNumber())
                         .lineNumber(r.getLineNumber())
                         .playedAt(r.getCreatedAt())

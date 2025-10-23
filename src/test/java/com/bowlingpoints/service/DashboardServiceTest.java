@@ -3,7 +3,7 @@ package com.bowlingpoints.service;
 import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.AmbitRepository;
-import com.bowlingpoints.repository.ClubsRepository;
+import com.bowlingpoints.repository.ClubRepository;
 import com.bowlingpoints.repository.ResultRepository;
 import com.bowlingpoints.repository.TournamentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ class DashboardServiceTest {
     private ResultRepository resultRepository;
 
     @Mock
-    private ClubsRepository clubsRepository;
+    private ClubRepository clubRepository;
 
     @Mock
     private AmbitRepository ambitRepository;
@@ -97,8 +97,8 @@ class DashboardServiceTest {
         when(tournamentRepository.findAllByStatusTrueAndDeletedAtIsNull())
                 .thenReturn(Collections.singletonList(testTournament));
 
-        PlayerRankingDTO playerRanking =
-                PlayerRankingDTO.builder()
+        DashboardPlayerDTO playerRanking =
+                DashboardPlayerDTO.builder()
                         .personId(1)
                         .fullName("Test player")
                         .averageScore(180.0)
@@ -146,12 +146,6 @@ class DashboardServiceTest {
         assertEquals(playerRanking.getFullName(), result.getTopPlayers().get(0).getFullName());
         assertEquals(playerRanking.getAverageScore(), result.getTopPlayers().get(0).getAverageScore());
 
-        // Verify top clubs
-        assertEquals(1, result.getTopClubs().size());
-        assertEquals(1, result.getTopClubs().get(0).getClubId());
-        assertEquals("Test Club", result.getTopClubs().get(0).getName());
-        assertEquals(1000, result.getTopClubs().get(0).getTotalScore());
-
         // Verify ambits
         assertEquals(1, result.getAmbits().size());
         assertEquals(ambitDTO.getAmbitId(), result.getAmbits().get(0).getAmbitId());
@@ -177,7 +171,6 @@ class DashboardServiceTest {
         assertNotNull(result);
         assertTrue(result.getActiveTournaments().isEmpty());
         assertTrue(result.getTopPlayers().isEmpty());
-        assertTrue(result.getTopClubs().isEmpty());
         assertTrue(result.getAmbits().isEmpty());
     }
 
@@ -230,12 +223,5 @@ class DashboardServiceTest {
         // Act
         DashboardDTO result = dashboardService.getDashboardData();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.getTopClubs().size());
-        ClubDashboardDTO clubDTO = result.getTopClubs().get(0);
-        assertEquals(1, clubDTO.getClubId());
-        assertEquals("Test Club", clubDTO.getName());
-        assertEquals(0, clubDTO.getTotalScore()); // Should default to 0
     }
 }

@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ResultDTO {
+
     private Integer resultId;
 
     // Persona
@@ -23,7 +24,6 @@ public class ResultDTO {
     private String tournamentName;
 
     // Ronda
-    private Integer roundId;
     private Integer roundNumber;
 
     // Categoría
@@ -34,7 +34,10 @@ public class ResultDTO {
     private Integer modalityId;
     private String modalityName;
 
-    // Datos propios del resultado
+    // Branch (Masculino, Femenino, Mixto)
+    private String rama;
+
+    // Datos del resultado
     private Integer laneNumber;
     private Integer lineNumber;
     private Integer score;

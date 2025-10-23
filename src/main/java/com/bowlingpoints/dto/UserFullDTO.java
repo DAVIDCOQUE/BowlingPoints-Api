@@ -6,16 +6,28 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.bowlingpoints.dto.CategoryDTO;
+/**
+ * DTO para crear o representar un usuario completo con datos personales y roles.
+ */
+
+import com.bowlingpoints.dto.CategoryDTO;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserFullDTO {
+
+    // Datos del usuario
     private Integer userId;
+    private String nickname;
+    private String password;
+    private Boolean status;
+
+    // Datos personales (Person)
     private Integer personId;
     private Integer clubId;
     private String photoUrl;
-    private String nickname;
     private String document;
     private String fullName;
     private String fullSurname;
@@ -23,8 +35,10 @@ public class UserFullDTO {
     private String email;
     private String phone;
     private String gender;
-    private String roleDescription;
-    private String password;
 
-    private List<String> roles;
+    // Roles asociados
+    private List<RoleDTO> roles;
+
+    // Categorías completas asociadas
+    private List<CategoryDTO> categories;
 }

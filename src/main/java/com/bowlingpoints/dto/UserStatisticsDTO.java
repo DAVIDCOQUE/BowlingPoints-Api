@@ -7,6 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class UserStatisticsDTO {
     private Integer totalTournaments;
     private Integer totalStrikes;         // Chuzas totales

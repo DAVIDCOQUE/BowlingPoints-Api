@@ -21,7 +21,6 @@ public class ExcelServiceImpl implements FileService {
     private final TournamentRepository tournamentRepository;
     private final CategoryRepository categoryRepository;
     private final ModalityRepository modalityRepository;
-    private final RoundRepository roundRepository;
 
     @Override
     public List<PlayerResultUploadDTO> uploadResultsFromExcel(MultipartFile file) {
@@ -44,12 +43,12 @@ public class ExcelServiceImpl implements FileService {
                             .status(true)
                             .build()));
 
-            Modality modality = modalityRepository.findByName(modalityName)
-                    .orElseGet(() -> modalityRepository.save(Modality.builder()
-                            .name(modalityName)
-                            .build()));
+//            Modality modality = modalityRepository.findByName(modalityName)
+//                    .orElseGet(() -> modalityRepository.save(Modality.builder()
+//                            .name(modalityName)
+//                            .build()));
 
-            Category category = categoryRepository.findByName(categoryName)
+            Category category = categoryRepository.findByNameAndDeletedAtIsNull(categoryName)
                     .orElseGet(() -> categoryRepository.save(Category.builder()
                             .name(categoryName)
                             .build()));
@@ -60,30 +59,6 @@ public class ExcelServiceImpl implements FileService {
 
             Map<Integer, Integer> columnToRoundMap = new HashMap<>();
             Map<Integer, Integer> columnToLineMap = new HashMap<>();
-            Map<String, Round> roundLabelToEntity = new HashMap<>();
-
-            for (int col = 4; col < headerRow.getLastCellNum(); col++) {
-                Cell roundCell = roundRow.getCell(col);
-                Cell lineCell = headerRow.getCell(col);
-                if (roundCell == null || lineCell == null) continue;
-
-                String roundLabel = roundCell.getStringCellValue();
-                int lineNumber = (int) lineCell.getNumericCellValue();
-
-                Round round = roundLabelToEntity.computeIfAbsent(roundLabel, label -> {
-                    int roundNumber = roundLabelToEntity.size() + 1;
-                    return roundRepository.findByTournamentAndRoundNumber(tournament, roundNumber)
-                            .orElseGet(() -> {
-                                Round r = new Round();
-                                r.setTournament(tournament);
-                                r.setRoundNumber(roundNumber);
-                                return roundRepository.save(r);
-                            });
-                });
-
-                columnToRoundMap.put(col, round.getRoundId());
-                columnToLineMap.put(col, lineNumber);
-            }
 
             // Leer jugadores
             for (int rowIndex = 6; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
@@ -120,8 +95,7 @@ public class ExcelServiceImpl implements FileService {
                         result.setPerson(person);
                         result.setTournament(tournament);
                         result.setCategory(category);
-                        result.setModality(modality);
-                        result.setRound(roundRepository.findById(roundId).orElseThrow());
+//                      result.setModality(modality);
                         result.setScore(score);
                         result.setLineNumber(lineNumber);
                         result.setRama(gender);

@@ -7,11 +7,11 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PlayerRankingDTO {
+public class DashboardPlayerDTO {
     private Integer personId;
     private String fullName;
     private Double averageScore;
     private Integer bestGame;
-    private Integer titlesWon;
+    private Long titlesWon;
     private String photoUrl;
 }
