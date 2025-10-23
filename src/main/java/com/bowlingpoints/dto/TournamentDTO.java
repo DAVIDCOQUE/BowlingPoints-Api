@@ -40,4 +40,6 @@ public class TournamentDTO {
     private List<BranchDTO> branches;
 
     private List<TournamentRegistrationDTO> tournamentRegistrations;
+
+    private List<TournamentBranchPlayerCountDTO> branchPlayerCounts;
 }
