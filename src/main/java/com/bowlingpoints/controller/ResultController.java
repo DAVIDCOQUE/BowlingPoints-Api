@@ -65,19 +65,45 @@ public class ResultController {
     // Estadísticas y Agrupaciones
     // --------------------------------------------------
 
+    // Resultados filtrados por torneo, rama y ronda
+    @GetMapping("/filter")
+    public ResponseEntity<List<ResultDTO>> getFilteredResults(
+            @RequestParam Integer tournamentId,
+            @RequestParam(required = false) Integer branchId,
+            @RequestParam(required = false) Integer roundNumber
+    ) {
+        List<ResultDTO> results = resultService.getResultsByTournamentFiltered(tournamentId, branchId, roundNumber);
+        return ResponseEntity.ok(results);
+    }
+
+    // --------------------------------------------------
+    // Tabla de resultados del torneo por modalidad y ronda
+    // --------------------------------------------------
+
+    @GetMapping("/tournament-table")
+    public ResponseEntity<TournamentResultsResponseDTO> getTournamentResultsTable(
+            @RequestParam Integer tournamentId,
+            @RequestParam Integer modalityId,
+            @RequestParam(required = false) Integer roundNumber
+    ) {
+        return ResponseEntity.ok(resultService.getTournamentResultsTable(tournamentId, modalityId, roundNumber));
+    }
+
+    @GetMapping("/by-modality")
+    public ResponseEntity<TournamentResultsResponseDTO> getResultsByModality(
+            @RequestParam Integer tournamentId,
+            @RequestParam(required = false) Integer roundNumber
+    ) {
+        TournamentResultsResponseDTO response = resultService.getResultsByModality(tournamentId, roundNumber);
+        return ResponseEntity.ok(response);
+    }
+
+
     @GetMapping("/by-gender")
     public ResponseEntity<ResponseGenericDTO<Map<String, List<PlayerResultSummaryDTO>>>> getResultsByGender(
             @RequestParam Integer tournamentId) {
         Map<String, List<PlayerResultSummaryDTO>> data = resultService.getTournamentResultsByGender(tournamentId);
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Resultados agrupados por género", data));
-    }
-
-    @GetMapping("/table")
-    public ResponseEntity<ResponseGenericDTO<List<PlayerResultTableDTO>>> getResultsTable(
-            @RequestParam Integer tournamentId,
-            @RequestParam Integer modalityId) {
-        List<PlayerResultTableDTO> table = resultService.getPlayerResultsForTable(tournamentId, modalityId);
-        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Tabla de resultados", table));
     }
 
     @GetMapping("/all-player-ranking")
@@ -98,10 +124,4 @@ public class ResultController {
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Torneos cargados correctamente", data));
     }
 
-    @GetMapping("/tournament-summary")
-    public ResponseEntity<ResponseGenericDTO<TournamentSummaryDTO>> getTournamentSummary(
-            @RequestParam Integer tournamentId) {
-        TournamentSummaryDTO summary = tournamentService.getTournamentSummary(tournamentId);
-        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Resumen del torneo cargado", summary));
-    }
 }

@@ -34,9 +34,16 @@ public class TournamentService {
 
     // Obtener torneo por ID
     public TournamentDTO getById(Integer id) {
-        return tournamentRepository.findById(id)
-                .map(this::toDTO)
-                .orElse(null);
+        Optional<Tournament> tournamentOpt = tournamentRepository.findById(id);
+        if (tournamentOpt.isEmpty()) return null;
+
+        TournamentDTO dto = toDTO(tournamentOpt.get());
+
+        //0 Agregar la sumatoria de jugadores por rama desde resultados
+        List<TournamentBranchPlayerCountDTO> branchPlayerCounts = resultRepository.countPlayersByBranch(id);
+        dto.setBranchPlayerCounts(branchPlayerCounts);
+
+        return dto;
     }
 
     // Crear torneo
@@ -183,7 +190,7 @@ public class TournamentService {
                 .map(this::toDTO)
                 .toList();
     }
-    
+
     // =============== 🔁 Mapping Helpers ===============
 
     private TournamentDTO toDTO(Tournament entity) {

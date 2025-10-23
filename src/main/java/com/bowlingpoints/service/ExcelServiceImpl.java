@@ -98,7 +98,7 @@ public class ExcelServiceImpl implements FileService {
 //                      result.setModality(modality);
                         result.setScore(score);
                         result.setLineNumber(lineNumber);
-                        result.setRama(gender);
+
                         resultRepository.save(result);
                         rounds.add(roundId);
                         totalLines++;
