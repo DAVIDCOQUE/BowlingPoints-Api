@@ -17,14 +17,36 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ResponseGenericDTO<Object>> handleNotFound(NotFoundException ex, WebRequest request) {
+    public ResponseEntity<ResponseGenericDTO<Object>> handleBusinessException(
+            BusinessException ex, WebRequest request) {
         ResponseGenericDTO<Object> response = new ResponseGenericDTO<>(
                 false,
                 String.format("[%s] %s", ex.getCode(), ex.getMessage()),
                 Map.of("timestamp", LocalDateTime.now(), "path", request.getDescription(false))
         );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ResponseGenericDTO<Object>> handleBadRequest(
+            BadRequestException ex, WebRequest request) {
+        ResponseGenericDTO<Object> response = new ResponseGenericDTO<>(
+                false,
+                String.format("[%s] %s", ex.getCode(), ex.getMessage()),
+                Map.of("timestamp", LocalDateTime.now(), "path", request.getDescription(false))
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseGenericDTO<Object>> handleGenericException(
+            Exception ex, WebRequest request) {
+        ResponseGenericDTO<Object> response = new ResponseGenericDTO<>(
+                false,
+                String.format("[INTERNAL_ERROR] %s", ex.getMessage()),
+                Map.of("timestamp", LocalDateTime.now(), "path", request.getDescription(false))
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
 

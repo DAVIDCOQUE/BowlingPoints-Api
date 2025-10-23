@@ -5,12 +5,11 @@ import lombok.Getter;
 
 @Getter
 public class NotFoundException extends RuntimeException {
-
     private final String code;
 
-    public NotFoundException(ErrorsEnum error) {
-        super(error.getMessage());
-        this.code = error.getCode();
+    public NotFoundException(String code, String message) {
+        super(message);
+        this.code = code;
     }
 
 }
