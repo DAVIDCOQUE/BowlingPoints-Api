@@ -8,5 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface ClubRepository extends JpaRepository<Clubs, Integer> {
+    // Buscar un club por su nombre
     Optional<Clubs> findByName(String name);
 }

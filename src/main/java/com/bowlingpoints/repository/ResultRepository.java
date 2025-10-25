@@ -261,25 +261,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
     List<Integer> findDistinctRoundsByTournament(@Param("tournamentId") Integer tournamentId);
 
     // -------------------------------------------------------------------------
-    // 10. OBTENER PROMEDIO POR CARRIL EN UN TORNEO Y MODALIDAD
-    // -------------------------------------------------------------------------
-
-    @Query("""
-                SELECT 'L' || r.lineNumber, AVG(r.score)
-                FROM Result r
-                WHERE r.tournament.tournamentId = :tournamentId
-                  AND r.modality.modalityId = :modalityId
-                  AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
-                  AND r.deletedAt IS NULL
-                GROUP BY r.lineNumber
-            """)
-    Map<String, Double> findAvgByLine(
-            @Param("tournamentId") Integer tournamentId,
-            @Param("modalityId") Integer modalityId,
-            @Param("roundNumber") Integer roundNumber
-    );
-
-    // -------------------------------------------------------------------------
     // 11. OBTENER PROMEDIO GENERAL EN UN TORNEO Y MODALIDAD
     // -------------------------------------------------------------------------
 

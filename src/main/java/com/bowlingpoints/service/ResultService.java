@@ -208,7 +208,7 @@ public class ResultService {
             Integer round = (Integer) row[3];
             Integer score = (Integer) row[4];
 
-            // 🔍 Aquí puedes aplicar filtro adicional por roundNumber si no lo haces desde el query
+            // Aquí puedes aplicar filtro adicional por roundNumber si no lo haces desde el query
             if (roundNumber != null && !roundNumber.equals(round)) continue;
 
             PlayerResultTableDTO dto = playerMap.get(personId);
@@ -360,7 +360,7 @@ public class ResultService {
             String clubName = (String) row[2];
             String modalityName = (String) row[3];
 
-            // 👇 Conversión segura de Long a Integer
+            // Conversión segura de Long a Integer
             Long totalScoreLong = (Long) row[4];
             Long linesPlayedLong = (Long) row[5];
 

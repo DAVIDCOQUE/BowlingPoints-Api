@@ -5,8 +5,10 @@ import lombok.*;
 import java.util.List;
 
 @Builder
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class DashboardDTO {
     private List<TournamentDTO> scheduledOrPostponedTournaments;
     private List<TournamentDTO> inProgressTournaments;

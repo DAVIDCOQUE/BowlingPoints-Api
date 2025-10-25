@@ -115,7 +115,7 @@ public class TournamentService {
             }
 
             // Guardar ramas
-            savedBranches(dto.getBranches(),saved);
+            savedBranches(dto.getBranches(), saved);
 
             log.info("Torneo creado exitosamente con ID: {}", saved.getTournamentId());
             return toDTO(saved);
@@ -227,7 +227,7 @@ public class TournamentService {
                 .toList();
     }
 
-    // =============== 🔁 Mapping Helpers ===============
+    // ===============  Mapping Helpers ===============
 
     private TournamentDTO toDTO(Tournament entity) {
         //  Mapeo de categorías
@@ -355,7 +355,7 @@ public class TournamentService {
         }
     }
 
-    private void savedBranches(List<BranchDTO> listBranchDTO, Tournament tournament){
+    private void savedBranches(List<BranchDTO> listBranchDTO, Tournament tournament) {
         if (listBranchDTO != null) {
             for (BranchDTO branchDTO : listBranchDTO) {
                 Branch branch = branchRepository.findById(branchDTO.getBranchId())
@@ -369,7 +369,7 @@ public class TournamentService {
                                 .branch(branch)
                                 .build()
                 );
-                log.info("Se ha relacionado la rama ->{} con el torneo ->{}",branchDTO.getBranchId(),tournament.getTournamentId());
+                log.info("Se ha relacionado la rama ->{} con el torneo ->{}", branchDTO.getBranchId(), tournament.getTournamentId());
             }
         }
     }

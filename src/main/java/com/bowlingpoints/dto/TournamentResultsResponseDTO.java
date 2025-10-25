@@ -25,7 +25,6 @@ public class TournamentResultsResponseDTO {
     private Double avgByRound;
     private HighestLineDTO highestLine;
 
-
     @Data
     @Builder
     public static class TournamentSummary {

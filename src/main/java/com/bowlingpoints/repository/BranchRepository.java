@@ -16,5 +16,6 @@ public interface BranchRepository extends JpaRepository<Branch, Integer> {
     // Buscar una rama específica por ID si está activa
     Optional<Branch> findByBranchIdAndStatusTrue(Integer branchId);
 
+    // Buscar una rama por nombre
     Optional<Branch> findByName(String name);
 }

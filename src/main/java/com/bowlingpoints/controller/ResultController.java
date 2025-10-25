@@ -99,13 +99,6 @@ public class ResultController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/by-gender")
-    public ResponseEntity<ResponseGenericDTO<Map<String, List<PlayerResultSummaryDTO>>>> getResultsByGender(
-            @RequestParam Integer tournamentId) {
-        Map<String, List<PlayerResultSummaryDTO>> data = resultService.getTournamentResultsByGender(tournamentId);
-        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Resultados agrupados por género", data));
-    }
-
     @GetMapping("/all-player-ranking")
     public ResponseEntity<ResponseGenericDTO<List<DashboardPlayerDTO>>> getAllPlayerRanking() {
         List<DashboardPlayerDTO> ranking = resultService.getAllPlayersByAvgScore();

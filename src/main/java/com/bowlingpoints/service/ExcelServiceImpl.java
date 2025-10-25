@@ -43,11 +43,6 @@ public class ExcelServiceImpl implements FileService {
                             .status(true)
                             .build()));
 
-//            Modality modality = modalityRepository.findByName(modalityName)
-//                    .orElseGet(() -> modalityRepository.save(Modality.builder()
-//                            .name(modalityName)
-//                            .build()));
-
             Category category = categoryRepository.findByNameAndDeletedAtIsNull(categoryName)
                     .orElseGet(() -> categoryRepository.save(Category.builder()
                             .name(categoryName)
@@ -95,7 +90,6 @@ public class ExcelServiceImpl implements FileService {
                         result.setPerson(person);
                         result.setTournament(tournament);
                         result.setCategory(category);
-//                      result.setModality(modality);
                         result.setScore(score);
                         result.setLineNumber(lineNumber);
 
