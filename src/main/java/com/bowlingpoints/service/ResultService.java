@@ -317,10 +317,7 @@ public class ResultService {
                 .build();
     }
 
-    // Resúmenes por jugador/modalidad en torneo (para tablas por modalidad)
-
-    public TournamentResultsResponseDTO getResultsByModality(Integer tournamentId, Integer roundNumber) {
-
+    public TournamentResultsResponseDTO getResultsByModality(Integer tournamentId, Integer roundNumber, Integer branchId) {
         // 1. Resumen del torneo
         TournamentResultsResponseDTO.TournamentSummary tournamentSummary = tournamentRepository.findById(tournamentId)
                 .map(t -> TournamentResultsResponseDTO.TournamentSummary.builder()
@@ -351,8 +348,8 @@ public class ResultService {
         // 3. Rondas jugadas
         List<Integer> rounds = resultRepository.findDistinctRoundsByTournament(tournamentId);
 
-        // 4. Datos crudos desde la query
-        List<Object[]> rawData = resultRepository.findPlayerTotalsByModality(tournamentId, roundNumber);
+        // 4. Datos crudos desde la query (con filtro por branch)
+        List<Object[]> rawData = resultRepository.findPlayerTotalsByModalityAndBranch(tournamentId, roundNumber, branchId);
 
         // 5. Procesamiento por jugador
         Map<Integer, PlayerByModalityDTO.PlayerByModalityDTOBuilder> playerMap = new LinkedHashMap<>();
@@ -412,5 +409,7 @@ public class ResultService {
                 .resultsByModality(resultsByModality)
                 .build();
     }
+
+
 
 }

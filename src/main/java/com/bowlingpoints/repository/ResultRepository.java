@@ -336,34 +336,44 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("roundNumber") Integer roundNumber
     );
 
-
     // -------------------------------------------------------------------------
-    // 14. OBTENER TOTALES POR JUGADOR Y MODALIDAD EN UN TORNEO
+// 15. OBTENER TOTALES POR JUGADOR, MODALIDAD Y RAMA EN UN TORNEO
     // -------------------------------------------------------------------------
-
     @Query("""
                 SELECT 
                     r.person.personId,
                     CONCAT(p.fullName, ' ', p.fullSurname),
                     cp.club.name,
-                    m.name,
+                    r.modality.name,
                     SUM(r.score),
                     COUNT(r.lineNumber)
                 FROM Result r
                 JOIN r.person p
-                JOIN r.modality m
                 LEFT JOIN p.clubPersons cp
                 WHERE r.tournament.tournamentId = :tournamentId
                   AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
+                  AND (:branchId IS NULL OR r.branch.branchId = :branchId)
                   AND r.deletedAt IS NULL
-                  AND (cp IS NULL OR cp.status = true)
-                  AND (cp IS NULL OR cp.deletedAt IS NULL)
-                GROUP BY r.person.personId, p.fullName, p.fullSurname, cp.club.name, m.name
+                  AND (cp.status = true OR cp IS NULL)
+                  AND (cp.deletedAt IS NULL OR cp IS NULL)
+                GROUP BY r.person.personId, p.fullName, p.fullSurname, cp.club.name, r.modality.name
                 ORDER BY p.fullName
             """)
-    List<Object[]> findPlayerTotalsByModality(
+    List<Object[]> findPlayerTotalsByModalityAndBranch(
             @Param("tournamentId") Integer tournamentId,
-            @Param("roundNumber") Integer roundNumber
+            @Param("roundNumber") Integer roundNumber,
+            @Param("branchId") Integer branchId
     );
 
+
+    //------------------------------------------------------------------------
+    // 16. OBTENER TODOS LOS RESULTADOS DE UN USUARIO
+    //------------------------------------------------------------------------
+    @Query("""
+                SELECT r
+                FROM Result r
+                WHERE r.person.personId = :userId
+                  AND r.deletedAt IS NULL
+            """)
+    List<Result> findByPersonId(@Param("userId") Integer userId);
 }

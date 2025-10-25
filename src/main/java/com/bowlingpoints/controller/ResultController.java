@@ -92,12 +92,12 @@ public class ResultController {
     @GetMapping("/by-modality")
     public ResponseEntity<TournamentResultsResponseDTO> getResultsByModality(
             @RequestParam Integer tournamentId,
-            @RequestParam(required = false) Integer roundNumber
+            @RequestParam(required = false) Integer roundNumber,
+            @RequestParam(required = false) Integer branchId
     ) {
-        TournamentResultsResponseDTO response = resultService.getResultsByModality(tournamentId, roundNumber);
+        TournamentResultsResponseDTO response = resultService.getResultsByModality(tournamentId, roundNumber, branchId);
         return ResponseEntity.ok(response);
     }
-
 
     @GetMapping("/by-gender")
     public ResponseEntity<ResponseGenericDTO<Map<String, List<PlayerResultSummaryDTO>>>> getResultsByGender(
