@@ -9,12 +9,16 @@ import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Integer> {
 
+    // Obtener todos los torneos no eliminados ordenados por fecha de inicio descendente
     List<Tournament> findAllByDeletedAtIsNullOrderByStartDateDesc();
 
+    // Obtener todos los torneos activos no eliminados ordenados por fecha de inicio descendente
     Optional<Tournament> findByName(String name);
 
+    // Obtener todos los torneos activos no eliminados
     List<Tournament> findAllByStatusTrueAndDeletedAtIsNull();
 
+    // Obtener torneos por ID de ámbito y que no estén eliminados
     List<Tournament> findByAmbit_AmbitIdAndDeletedAtIsNull(Integer ambitId);
 
 

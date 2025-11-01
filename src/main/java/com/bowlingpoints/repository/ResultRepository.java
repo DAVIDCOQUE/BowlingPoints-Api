@@ -2,6 +2,7 @@ package com.bowlingpoints.repository;
 
 import com.bowlingpoints.dto.DashboardPlayerDTO;
 import com.bowlingpoints.dto.TopTournamentDTO;
+import com.bowlingpoints.dto.TournamentBranchPlayerCountDTO;
 import com.bowlingpoints.dto.UserStatsProjection;
 import com.bowlingpoints.entity.Result;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Repositorio para consultas complejas y personalizadas de la entidad Result.
@@ -64,30 +66,24 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                 ORDER BY AVG(r.score) DESC
             """)
     List<DashboardPlayerDTO> findAllPlayersByAvgScore();
+
     // -------------------------------------------------------------------------
-    // 2. TOP CLUBS (Ranking de clubes por puntaje total acumulado)
+    // 2. CONTAR JUGADORES POR RAMA EN UN TORNEO
     // -------------------------------------------------------------------------
 
-    /**
-     * Ranking de clubes por puntaje total. (Solo top 10)
-     * Se hace con native query por rendimiento y sumarización.
-     * Devuelve: [clubId, clubName, totalScore]
-     */
-    @Query(value = """
-                SELECT
-                    c.club_id AS clubId,
-                    c.name AS name,
-                    SUM(r.score) AS totalScore
-                FROM result r
-                JOIN person p ON r.person_id = p.person_id
-                JOIN club_person cp ON cp.person_id = p.person_id
-                JOIN clubs c ON c.club_id = cp.club_id
-                WHERE r.deleted_at IS NULL
-                GROUP BY c.club_id, c.name
-                ORDER BY totalScore DESC
-                LIMIT 10
-            """, nativeQuery = true)
-    List<Object[]> findTopClubsRaw();
+    @Query("""
+                SELECT new com.bowlingpoints.dto.TournamentBranchPlayerCountDTO(
+                    r.branch.branchId,
+                    r.branch.name,
+                    COUNT(DISTINCT r.person.personId)
+                )
+                FROM Result r
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.deletedAt IS NULL
+                  AND r.branch IS NOT NULL
+                GROUP BY r.branch.branchId, r.branch.name
+            """)
+    List<TournamentBranchPlayerCountDTO> countPlayersByBranch(@Param("tournamentId") Integer tournamentId);
 
     // -------------------------------------------------------------------------
     // 3. TORNEOS JUGADOS POR UN USUARIO
@@ -208,26 +204,9 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Object[]> findPlayerModalitySummariesByTournament(@Param("tournamentId") Integer tournamentId);
 
-    // -------------------------------------------------------------------------
-    // 8. CUENTA JUGADORES POR GÉNERO EN UN TORNEO
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve el conteo de jugadores masculino/femenino de un torneo.
-     * Útil para estadísticas rápidas de participación.
-     */
-    @Query("""
-                SELECT
-                  sum(case when p.gender = 'masculino' then 1 else 0 end),
-                  sum(case when p.gender = 'femenino' then 1 else 0 end)
-                FROM Result r
-                JOIN r.person p
-                WHERE r.tournament.tournamentId = :tournamentId AND r.deletedAt IS NULL
-            """)
-    Object[] countPlayersByGenderInTournament(@Param("tournamentId") Integer tournamentId);
 
     // -------------------------------------------------------------------------
-    // 9. DETALLE PARA TABLA DE RESULTADOS DE UN TORNEO Y MODALIDAD
+    // 8. DETALLE PARA TABLA DE RESULTADOS DE UN TORNEO Y MODALIDAD
     // -------------------------------------------------------------------------
 
     /**
@@ -255,4 +234,127 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("modalityId") Integer modalityId
     );
 
+
+    // -------------------------------------------------------------------------
+    // 9. OBTENER RONDAS DISTINTAS EN UN TORNEO
+    // -------------------------------------------------------------------------
+    @Query("""
+                SELECT DISTINCT r.roundNumber
+                FROM Result r
+                WHERE r.tournament.tournamentId = :tournamentId AND r.modality.modalityId = :modalityId AND r.deletedAt IS NULL
+                ORDER BY r.roundNumber
+            """)
+    List<Integer> findDistinctRoundsByTournamentAndModality(
+            @Param("tournamentId") Integer tournamentId,
+            @Param("modalityId") Integer modalityId
+    );
+
+    // Versión sin modalidad
+
+    @Query("""
+                SELECT DISTINCT r.roundNumber
+                FROM Result r
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.deletedAt IS NULL
+                ORDER BY r.roundNumber
+            """)
+    List<Integer> findDistinctRoundsByTournament(@Param("tournamentId") Integer tournamentId);
+
+    // -------------------------------------------------------------------------
+    // 11. OBTENER PROMEDIO GENERAL EN UN TORNEO Y MODALIDAD
+    // -------------------------------------------------------------------------
+
+    @Query("""
+                SELECT AVG(r.score)
+                FROM Result r
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.modality.modalityId = :modalityId
+                  AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
+                  AND r.deletedAt IS NULL
+            """)
+    Double findAvgByRound(
+            @Param("tournamentId") Integer tournamentId,
+            @Param("modalityId") Integer modalityId,
+            @Param("roundNumber") Integer roundNumber
+    );
+
+    // -------------------------------------------------------------------------
+    // 12. OBTENER LA MEJOR PARTIDA EN UN TORNEO Y MODALIDAD
+    // -------------------------------------------------------------------------
+
+    @Query("""
+                SELECT 'L' || r.lineNumber, AVG(r.score)
+                FROM Result r
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.modality.modalityId = :modalityId
+                  AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
+                  AND r.deletedAt IS NULL
+                GROUP BY r.lineNumber
+            """)
+    List<Object[]> findAvgByLineRaw(
+            @Param("tournamentId") Integer tournamentId,
+            @Param("modalityId") Integer modalityId,
+            @Param("roundNumber") Integer roundNumber
+    );
+
+    // -------------------------------------------------------------------------
+    // 13. OBTENER LA MEJOR PARTIDA EN UN TORNEO Y MODALIDAD
+    // -------------------------------------------------------------------------
+
+    @Query("""
+                SELECT r.score, CONCAT(p.fullName, ' ', p.fullSurname), r.lineNumber
+                FROM Result r
+                JOIN r.person p
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND r.modality.modalityId = :modalityId
+                  AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
+                  AND r.deletedAt IS NULL
+                ORDER BY r.score DESC
+            """)
+    List<Object[]> findHighestLine(
+            @Param("tournamentId") Integer tournamentId,
+            @Param("modalityId") Integer modalityId,
+            @Param("roundNumber") Integer roundNumber
+    );
+
+    // -------------------------------------------------------------------------
+// 15. OBTENER TOTALES POR JUGADOR, MODALIDAD Y RAMA EN UN TORNEO
+    // -------------------------------------------------------------------------
+    @Query("""
+                SELECT 
+                    r.person.personId,
+                    CONCAT(p.fullName, ' ', p.fullSurname),
+                    cp.club.name,
+                    r.modality.name,
+                    SUM(r.score),
+                    COUNT(r.lineNumber)
+                FROM Result r
+                JOIN r.person p
+                LEFT JOIN p.clubPersons cp
+                WHERE r.tournament.tournamentId = :tournamentId
+                  AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
+                  AND (:branchId IS NULL OR r.branch.branchId = :branchId)
+                  AND r.deletedAt IS NULL
+                  AND (cp.status = true OR cp IS NULL)
+                  AND (cp.deletedAt IS NULL OR cp IS NULL)
+                GROUP BY r.person.personId, p.fullName, p.fullSurname, cp.club.name, r.modality.name
+                ORDER BY p.fullName
+            """)
+    List<Object[]> findPlayerTotalsByModalityAndBranch(
+            @Param("tournamentId") Integer tournamentId,
+            @Param("roundNumber") Integer roundNumber,
+            @Param("branchId") Integer branchId
+    );
+
+
+    //------------------------------------------------------------------------
+    // 16. OBTENER TODOS LOS RESULTADOS DE UN USUARIO
+    //------------------------------------------------------------------------
+    @Query("""
+                SELECT r
+                FROM Result r
+                WHERE r.person.personId = :userId
+                  AND r.deletedAt IS NULL
+            """)
+    List<Result> findByPersonId(@Param("userId") Integer userId);
 }

@@ -35,7 +35,8 @@ public class ResultDTO {
     private String modalityName;
 
     // Branch (Masculino, Femenino, Mixto)
-    private String rama;
+    private Integer branchId;
+    private String branchName;
 
     // Datos del resultado
     private Integer laneNumber;

@@ -12,7 +12,9 @@ public interface ClubPersonRepository extends JpaRepository<ClubPerson, Integer>
 
     void deleteAllByClub_ClubId(Integer clubId);
 
+    // Buscar todos los ClubPerson activos (no eliminados) por clubId
     List<ClubPerson> findAllByClub_ClubIdAndDeletedAtIsNull(Integer clubId);
 
+    // Buscar un ClubPerson activo por personId
     Optional<ClubPerson> findFirstByPerson_PersonIdAndStatusTrue(Integer personId);
 }

@@ -67,8 +67,9 @@ public class Result {
     /**
      * Branch (Masculina, Femenina, Mixta, etc.).
      */
-    @Column(name = "rama", nullable = false)
-    private String rama;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
 
     /**
      * Número de carril.
