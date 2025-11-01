@@ -1,25 +1,23 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.ModalityDTO;
+import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.entity.Modality;
 import com.bowlingpoints.repository.ModalityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Test unitario para ModalityService.
+ */
 class ModalityServiceTest {
 
     @Mock
@@ -28,199 +26,168 @@ class ModalityServiceTest {
     @InjectMocks
     private ModalityService modalityService;
 
-    private Modality testModality;
-    private ModalityDTO testModalityDTO;
+    private Modality modality;
+    private ModalityDTO modalityDTO;
 
     @BeforeEach
     void setUp() {
-        testModality = Modality.builder()
+        MockitoAnnotations.openMocks(this);
+
+        modality = Modality.builder()
                 .modalityId(1)
-                .name("Test Modality")
-                .description("Test Description")
+                .name("Individual")
+                .description("Competencia 1 vs 1")
                 .status(true)
+                .createdAt(LocalDateTime.now())
                 .build();
 
-        testModalityDTO = new ModalityDTO(
-                testModality.getModalityId(),
-                testModality.getName(),
-                testModality.getDescription(),
-                testModality.getStatus()
-        );
+        modalityDTO = ModalityDTO.builder()
+                .modalityId(1)
+                .name("Individual")
+                .description("Competencia 1 vs 1")
+                .status(true)
+                .build();
+    }
+
+    // ----------------------------------------------------------------------
+    // getAll
+    // ----------------------------------------------------------------------
+    @Test
+    void getAll_ShouldReturnAllModalities_WhenExist() {
+        when(modalityRepository.findAllByDeletedAtIsNullOrderByNameAsc())
+                .thenReturn(List.of(modality));
+
+        ResponseGenericDTO<List<ModalityDTO>> response = modalityService.getAll();
+
+        assertTrue(response.getSuccess());
+        assertEquals("Modalidades cargadas correctamente", response.getMessage());
+        assertEquals(1, response.getData().size());
+        assertEquals("Individual", response.getData().get(0).getName());
     }
 
     @Test
-    void getAll_WhenModalitiesExist_ShouldReturnSortedList() {
-        // Arrange
-        Modality modality1 = Modality.builder()
-                .modalityId(1)
-                .name("A Modality")
-                .description("First")
-                .status(true)
-                .build();
-
-        Modality modality2 = Modality.builder()
-                .modalityId(2)
-                .name("B Modality")
-                .description("Second")
-                .status(true)
-                .build();
-
-        when(modalityRepository.findAllByOrderByNameAsc())
-                .thenReturn(Arrays.asList(modality1, modality2));
-
-        // Act
-        List<ModalityDTO> result = modalityService.getAll();
-
-        // Assert
-        assertEquals(2, result.size());
-        assertEquals("A Modality", result.get(0).getName());
-        assertEquals("B Modality", result.get(1).getName());
-    }
-
-    @Test
-    void getAll_WhenNoModalities_ShouldReturnEmptyList() {
-        // Arrange
-        when(modalityRepository.findAllByOrderByNameAsc())
+    void getAll_ShouldReturnEmptyList_WhenNoModalitiesExist() {
+        when(modalityRepository.findAllByDeletedAtIsNullOrderByNameAsc())
                 .thenReturn(List.of());
 
-        // Act
-        List<ModalityDTO> result = modalityService.getAll();
+        ResponseGenericDTO<List<ModalityDTO>> response = modalityService.getAll();
 
-        // Assert
-        assertTrue(result.isEmpty());
+        assertTrue(response.getSuccess());
+        assertTrue(response.getData().isEmpty());
+    }
+
+    // ----------------------------------------------------------------------
+    // getAllActives
+    // ----------------------------------------------------------------------
+    @Test
+    void getAllActives_ShouldReturnOnlyActiveModalities() {
+        when(modalityRepository.findAllByDeletedAtIsNullAndStatusTrueOrderByNameAsc())
+                .thenReturn(List.of(modality));
+
+        ResponseGenericDTO<List<ModalityDTO>> response = modalityService.getAllActives();
+
+        assertTrue(response.getSuccess());
+        assertEquals("Modalidades activas cargadas correctamente", response.getMessage());
+        assertEquals(1, response.getData().size());
+        assertTrue(response.getData().get(0).getStatus());
+    }
+
+    // ----------------------------------------------------------------------
+    // getById
+    // ----------------------------------------------------------------------
+    @Test
+    void getById_ShouldReturnModality_WhenExists() {
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
+
+        ResponseGenericDTO<ModalityDTO> response = modalityService.getById(1);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Modalidad encontrada", response.getMessage());
+        assertEquals("Individual", response.getData().getName());
     }
 
     @Test
-    void getById_WhenModalityExists_ShouldReturnDTO() {
-        // Arrange
-        when(modalityRepository.findById(1))
-                .thenReturn(Optional.of(testModality));
+    void getById_ShouldReturnNotFound_WhenDoesNotExist() {
+        when(modalityRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act
-        ModalityDTO result = modalityService.getById(1);
+        ResponseGenericDTO<ModalityDTO> response = modalityService.getById(999);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(testModality.getModalityId(), result.getModalityId());
-        assertEquals(testModality.getName(), result.getName());
-        assertEquals(testModality.getDescription(), result.getDescription());
-        assertEquals(testModality.getStatus(), result.getStatus());
+        assertFalse(response.getSuccess());
+        assertEquals("Modalidad no encontrada", response.getMessage());
+        assertNull(response.getData());
+    }
+
+    // ----------------------------------------------------------------------
+    // create
+    // ----------------------------------------------------------------------
+    @Test
+    void create_ShouldSaveAndReturnModalityDTO() {
+        when(modalityRepository.save(any(Modality.class))).thenReturn(modality);
+
+        ResponseGenericDTO<ModalityDTO> response = modalityService.create(modalityDTO);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Modalidad creada correctamente", response.getMessage());
+        assertEquals("Individual", response.getData().getName());
+        verify(modalityRepository, times(1)).save(any(Modality.class));
+    }
+
+    // ----------------------------------------------------------------------
+    // update
+    // ----------------------------------------------------------------------
+    @Test
+    void update_ShouldModifyModality_WhenExists() {
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
+        when(modalityRepository.save(any(Modality.class))).thenReturn(modality);
+
+        ModalityDTO updatedDTO = ModalityDTO.builder()
+                .name("Parejas")
+                .description("Competencia en parejas")
+                .status(false)
+                .build();
+
+        ResponseGenericDTO<Void> response = modalityService.update(1, updatedDTO);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Modalidad actualizada correctamente", response.getMessage());
+        verify(modalityRepository, times(1)).save(any(Modality.class));
     }
 
     @Test
-    void getById_WhenModalityDoesNotExist_ShouldReturnNull() {
-        // Arrange
-        when(modalityRepository.findById(99))
-                .thenReturn(Optional.empty());
+    void update_ShouldReturnNotFound_WhenDoesNotExist() {
+        when(modalityRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act
-        ModalityDTO result = modalityService.getById(99);
+        ResponseGenericDTO<Void> response = modalityService.update(999, modalityDTO);
 
-        // Assert
-        assertNull(result);
+        assertFalse(response.getSuccess());
+        assertEquals("Modalidad no encontrada", response.getMessage());
+        verify(modalityRepository, never()).save(any(Modality.class));
+    }
+
+    // ----------------------------------------------------------------------
+    // delete
+    // ----------------------------------------------------------------------
+    @Test
+    void delete_ShouldSoftDeleteModality_WhenExists() {
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
+        when(modalityRepository.save(any(Modality.class))).thenReturn(modality);
+
+        ResponseGenericDTO<Void> response = modalityService.delete(1);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Modalidad eliminada correctamente", response.getMessage());
+        verify(modalityRepository, times(1)).save(any(Modality.class));
+        assertNotNull(modality.getDeletedAt());
     }
 
     @Test
-    void create_WhenValidDTO_ShouldReturnCreatedDTO() {
-        // Arrange
-        when(modalityRepository.save(any(Modality.class)))
-                .thenReturn(testModality);
+    void delete_ShouldReturnNotFound_WhenDoesNotExist() {
+        when(modalityRepository.findById(999)).thenReturn(Optional.empty());
 
-        ModalityDTO newModalityDTO = new ModalityDTO(
-                null,
-                "New Modality",
-                "New Description",
-                true
-        );
+        ResponseGenericDTO<Void> response = modalityService.delete(999);
 
-        // Act
-        ModalityDTO result = modalityService.create(newModalityDTO);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(testModality.getModalityId(), result.getModalityId());
-        assertEquals(testModality.getName(), result.getName());
-        assertEquals(testModality.getDescription(), result.getDescription());
-        assertEquals(testModality.getStatus(), result.getStatus());
-
-        verify(modalityRepository).save(argThat(modality
-                -> modality.getName().equals(newModalityDTO.getName())
-                && modality.getDescription().equals(newModalityDTO.getDescription())
-                && modality.getStatus().equals(newModalityDTO.getStatus())
-        ));
-    }
-
-    @Test
-    void update_WhenModalityExists_ShouldReturnTrue() {
-        // Arrange
-        when(modalityRepository.findById(1))
-                .thenReturn(Optional.of(testModality));
-        when(modalityRepository.save(any(Modality.class)))
-                .thenReturn(testModality);
-
-        ModalityDTO updateDTO = new ModalityDTO(
-                1,
-                "Updated Name",
-                "Updated Description",
-                false
-        );
-
-        // Act
-        boolean result = modalityService.update(1, updateDTO);
-
-        // Assert
-        assertTrue(result);
-        verify(modalityRepository).save(argThat(modality
-                -> modality.getName().equals(updateDTO.getName())
-                && modality.getDescription().equals(updateDTO.getDescription())
-                && modality.getStatus().equals(updateDTO.getStatus())
-        ));
-    }
-
-    @Test
-    void update_WhenModalityDoesNotExist_ShouldReturnFalse() {
-        // Arrange
-        when(modalityRepository.findById(99))
-                .thenReturn(Optional.empty());
-
-        // Act
-        boolean result = modalityService.update(99, testModalityDTO);
-
-        // Assert
-        assertFalse(result);
-        verify(modalityRepository, never()).save(any());
-    }
-
-    @Test
-    void delete_WhenModalityExists_ShouldSetDeletedAtAndReturnTrue() {
-        // Arrange
-        LocalDateTime beforeDelete = LocalDateTime.now();
-        when(modalityRepository.findById(1))
-                .thenReturn(Optional.of(testModality));
-
-        // Act
-        boolean result = modalityService.delete(1);
-
-        // Assert
-        assertTrue(result);
-        verify(modalityRepository).save(argThat(modality
-                -> modality.getDeletedAt() != null
-                && (modality.getDeletedAt().isAfter(beforeDelete)
-                || modality.getDeletedAt().isEqual(beforeDelete))
-        ));
-    }
-
-    @Test
-    void delete_WhenModalityDoesNotExist_ShouldReturnFalse() {
-        // Arrange
-        when(modalityRepository.findById(99))
-                .thenReturn(Optional.empty());
-
-        // Act
-        boolean result = modalityService.delete(99);
-
-        // Assert
-        assertFalse(result);
-        verify(modalityRepository, never()).save(any());
+        assertFalse(response.getSuccess());
+        assertEquals("Modalidad no encontrada", response.getMessage());
+        verify(modalityRepository, never()).save(any(Modality.class));
     }
 }

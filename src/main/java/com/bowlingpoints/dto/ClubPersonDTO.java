@@ -11,8 +11,6 @@ public class ClubPersonDTO {
     private Integer clubId;
     private Integer personId;      // Persona asociada
     private String roleInClub;     // Rol del miembro en el club
-
-    // Info básica de la persona (puede expandirse según necesidad)
     private String fullName;
     private String fullSurname;
     private String document;

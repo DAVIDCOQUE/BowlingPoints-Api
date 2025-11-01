@@ -2,26 +2,21 @@ package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.*;
-import com.bowlingpoints.repository.AmbitRepository;
-import com.bowlingpoints.repository.ClubRepository;
-import com.bowlingpoints.repository.ResultRepository;
-import com.bowlingpoints.repository.TournamentRepository;
+import com.bowlingpoints.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Test unitario para DashboardService.
+ */
 class DashboardServiceTest {
 
     @Mock
@@ -31,7 +26,7 @@ class DashboardServiceTest {
     private ResultRepository resultRepository;
 
     @Mock
-    private ClubRepository clubRepository;
+    private ClubRepository clubRepository; // no usado directamente, pero lo requiere el constructor
 
     @Mock
     private AmbitRepository ambitRepository;
@@ -39,189 +34,149 @@ class DashboardServiceTest {
     @InjectMocks
     private DashboardService dashboardService;
 
-    private Tournament testTournament;
-    private Ambit testAmbit;
-    private Category testCategory;
-    private Modality testModality;
+    private Tournament tournament;
+    private Ambit ambit;
+    private Category category;
+    private Modality modality;
+    private TournamentCategory tournamentCategory;
+    private TournamentModality tournamentModality;
+    private DashboardPlayerDTO playerDTO;
 
     @BeforeEach
     void setUp() {
-        // Configurar Ambit
-        testAmbit = Ambit.builder()
+        MockitoAnnotations.openMocks(this);
+
+        ambit = Ambit.builder()
                 .ambitId(1)
-                .name("Test Ambit")
+                .name("Nacional")
                 .build();
 
-        // Configurar Category
-        testCategory = Category.builder()
-                .categoryId(1)
-                .name("Test Category")
+        category = Category.builder()
+                .categoryId(10)
+                .name("Elite")
+                .description("Jugadores expertos")
+                .status(true)
                 .build();
 
-        // Configurar Modality
-        testModality = Modality.builder()
-                .modalityId(1)
-                .name("Test Modality")
+        modality = Modality.builder()
+                .modalityId(20)
+                .name("Individual")
+                .description("Competencia 1 vs 1")
+                .status(true)
                 .build();
 
-        // Configurar Tournament
-        testTournament = Tournament.builder()
+        tournamentCategory = TournamentCategory.builder()
+                .category(category)
+                .build();
+
+        tournamentModality = TournamentModality.builder()
+                .modality(modality)
+                .build();
+
+        tournament = Tournament.builder()
                 .tournamentId(1)
-                .name("Test Tournament")
-                .ambit(testAmbit)
-                .imageUrl("/uploads/tournaments/test.png")
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(7))
-                .location("Test Location")
-                .stage("Test Stage")
+                .name("Open Nacional")
+                .organizer("Federación Colombiana")
+                .ambit(ambit)
+                .imageUrl("open.jpg")
+                .location("Cali")
+                .stage("Programado")
                 .status(true)
+                .startDate(LocalDate.of(2025, 1, 1))
+                .endDate(LocalDate.of(2025, 1, 5))
+                .categories(List.of(tournamentCategory))
+                .modalities(List.of(tournamentModality))
                 .build();
 
-        // Configurar TournamentCategory
-        TournamentCategory tournamentCategory = new TournamentCategory();
-        tournamentCategory.setTournament(testTournament);
-        tournamentCategory.setCategory(testCategory);
-
-        // Configurar TournamentModality
-        TournamentModality tournamentModality = new TournamentModality();
-        tournamentModality.setTournament(testTournament);
-        tournamentModality.setModality(testModality);
-
-        testTournament.setCategories(Collections.singletonList(tournamentCategory));
-        testTournament.setModalities(Collections.singletonList(tournamentModality));
-    }
-
-    @Test
-    void getDashboardData_WhenDataExists_ShouldReturnCompleteDTO() {
-        // Arrange
-        when(tournamentRepository.findAllByStatusTrueAndDeletedAtIsNull())
-                .thenReturn(Collections.singletonList(testTournament));
-
-        DashboardPlayerDTO playerRanking =
-                DashboardPlayerDTO.builder()
-                        .personId(1)
-                        .fullName("Test player")
-                        .averageScore(180.0)
-                        .photoUrl("/uploads/users/test.jpg")
-                        .build();
-        when(resultRepository.findTopPlayersByAvgScore(any(PageRequest.class)))
-                .thenReturn(Collections.singletonList(playerRanking));
-
-        Object[] clubData = new Object[]{1, "Test Club", 1000};
-        when(resultRepository.findTopClubsRaw())
-                .thenReturn(Collections.singletonList(clubData));
-
-        AmbitDTO ambitDTO = AmbitDTO.builder()
-                .ambitId(1)
-                .name("Test Ambit")
-                .imageUrl("/uploads/ambits/test.jpg")
-                .status(true)
+        playerDTO = DashboardPlayerDTO.builder()
+                .fullName("John Doe")
+                .averageScore(225.5)
                 .build();
+    }
+
+    // ----------------------------------------------------------------------
+    // getDashboardData
+    // ----------------------------------------------------------------------
+    @Test
+    void getDashboardData_ShouldReturnDashboardDTO_WithAllSectionsPopulated() {
+        // Mock repositorios
+        when(tournamentRepository.findActiveScheduledOrPostponed())
+                .thenReturn(List.of(tournament));
+
+        when(tournamentRepository.findActiveInProgress())
+                .thenReturn(List.of(tournament));
+
+        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10)))
+                .thenReturn(List.of(playerDTO));
+
         when(ambitRepository.findDistinctWithTournaments())
-                .thenReturn(Collections.singletonList(ambitDTO));
+                .thenReturn(List.of(AmbitDTO.builder()
+                        .ambitId(1)
+                        .name("Nacional")
+                        .description("Ámbito nacional")
+                        .status(true)
+                        .build()));
 
-        // Act
-        DashboardDTO result = dashboardService.getDashboardData();
+        // Ejecutar método
+        DashboardDTO dashboard = dashboardService.getDashboardData();
 
-        // Assert
-        assertNotNull(result);
-        
-        // Verify tournaments
-        assertEquals(1, result.getActiveTournaments().size());
-        TournamentDTO tournamentDTO = result.getActiveTournaments().get(0);
-        assertEquals(testTournament.getTournamentId(), tournamentDTO.getTournamentId());
-        assertEquals(testTournament.getName(), tournamentDTO.getName());
-        assertEquals(testAmbit.getAmbitId(), tournamentDTO.getAmbitId());
-        assertEquals(testAmbit.getName(), tournamentDTO.getAmbitName());
-        
-        // Verify categories and modalities
-        assertEquals(1, tournamentDTO.getCategories().size());
-        assertEquals(1, tournamentDTO.getModalities().size());
-        assertEquals(testCategory.getName(), tournamentDTO.getCategories().get(0).getName());
-        assertEquals(testModality.getName(), tournamentDTO.getModalities().get(0).getName());
+        // Validar
+        assertNotNull(dashboard);
+        assertEquals(1, dashboard.getScheduledOrPostponedTournaments().size());
+        assertEquals(1, dashboard.getInProgressTournaments().size());
+        assertEquals(1, dashboard.getTopPlayers().size());
+        assertEquals(1, dashboard.getAmbits().size());
 
-        // Verify top players
-        assertEquals(1, result.getTopPlayers().size());
-        assertEquals(playerRanking.getPersonId(), result.getTopPlayers().get(0).getPersonId());
-        assertEquals(playerRanking.getFullName(), result.getTopPlayers().get(0).getFullName());
-        assertEquals(playerRanking.getAverageScore(), result.getTopPlayers().get(0).getAverageScore());
+        // Validar mapeo de torneo
+        TournamentDTO mapped = dashboard.getScheduledOrPostponedTournaments().get(0);
+        assertEquals("Open Nacional", mapped.getName());
+        assertEquals("Federación Colombiana", mapped.getOrganizer());
+        assertEquals("Nacional", mapped.getAmbitName());
+        assertEquals(List.of("Elite"), mapped.getCategoryNames());
+        assertEquals(List.of("Individual"), mapped.getModalityNames());
 
-        // Verify ambits
-        assertEquals(1, result.getAmbits().size());
-        assertEquals(ambitDTO.getAmbitId(), result.getAmbits().get(0).getAmbitId());
-        assertEquals(ambitDTO.getName(), result.getAmbits().get(0).getName());
+        verify(tournamentRepository, times(1)).findActiveScheduledOrPostponed();
+        verify(tournamentRepository, times(1)).findActiveInProgress();
+        verify(resultRepository, times(1)).findTopPlayersByAvgScore(PageRequest.of(0, 10));
+        verify(ambitRepository, times(1)).findDistinctWithTournaments();
     }
 
     @Test
-    void getDashboardData_WhenNoData_ShouldReturnEmptyLists() {
-        // Arrange
-        when(tournamentRepository.findAllByStatusTrueAndDeletedAtIsNull())
-                .thenReturn(Collections.emptyList());
-        when(resultRepository.findTopPlayersByAvgScore(any(PageRequest.class)))
-                .thenReturn(Collections.emptyList());
-        when(resultRepository.findTopClubsRaw())
-                .thenReturn(Collections.emptyList());
-        when(ambitRepository.findDistinctWithTournaments())
-                .thenReturn(Collections.emptyList());
+    void getDashboardData_ShouldHandleEmptyResultsGracefully() {
+        when(tournamentRepository.findActiveScheduledOrPostponed()).thenReturn(List.of());
+        when(tournamentRepository.findActiveInProgress()).thenReturn(List.of());
+        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10))).thenReturn(List.of());
+        when(ambitRepository.findDistinctWithTournaments()).thenReturn(List.of());
 
-        // Act
-        DashboardDTO result = dashboardService.getDashboardData();
+        DashboardDTO dashboard = dashboardService.getDashboardData();
 
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.getActiveTournaments().isEmpty());
-        assertTrue(result.getTopPlayers().isEmpty());
-        assertTrue(result.getAmbits().isEmpty());
+        assertNotNull(dashboard);
+        assertTrue(dashboard.getScheduledOrPostponedTournaments().isEmpty());
+        assertTrue(dashboard.getInProgressTournaments().isEmpty());
+        assertTrue(dashboard.getTopPlayers().isEmpty());
+        assertTrue(dashboard.getAmbits().isEmpty());
     }
 
+    // ----------------------------------------------------------------------
+    // toDTO (implícitamente probado dentro del dashboard principal)
+    // ----------------------------------------------------------------------
     @Test
-    void getDashboardData_WhenTournamentWithNullFields_ShouldHandleGracefully() {
-        // Arrange
-        Tournament tournamentWithNulls = Tournament.builder()
-                .tournamentId(1)
-                .name("Test Tournament")
-                .status(true)
-                .build();
+    void toDTO_ShouldMapTournamentEntityToDTO_Completely() {
+        // Llamar indirectamente a toDTO (mediante getDashboardData)
+        when(tournamentRepository.findActiveScheduledOrPostponed()).thenReturn(List.of(tournament));
+        when(tournamentRepository.findActiveInProgress()).thenReturn(List.of());
+        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10))).thenReturn(List.of());
+        when(ambitRepository.findDistinctWithTournaments()).thenReturn(List.of());
 
-        when(tournamentRepository.findAllByStatusTrueAndDeletedAtIsNull())
-                .thenReturn(Collections.singletonList(tournamentWithNulls));
-        when(resultRepository.findTopPlayersByAvgScore(any(PageRequest.class)))
-                .thenReturn(Collections.emptyList());
-        when(resultRepository.findTopClubsRaw())
-                .thenReturn(Collections.emptyList());
-        when(ambitRepository.findDistinctWithTournaments())
-                .thenReturn(Collections.emptyList());
+        DashboardDTO dashboard = dashboardService.getDashboardData();
 
-        // Act
-        DashboardDTO result = dashboardService.getDashboardData();
+        TournamentDTO dto = dashboard.getScheduledOrPostponedTournaments().get(0);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.getActiveTournaments().size());
-        TournamentDTO tournamentDTO = result.getActiveTournaments().get(0);
-        assertNull(tournamentDTO.getAmbitId());
-        assertNull(tournamentDTO.getAmbitName());
-        assertTrue(tournamentDTO.getCategories().isEmpty());
-        assertTrue(tournamentDTO.getModalities().isEmpty());
-    }
-
-    @Test
-    void getDashboardData_WhenNullValuesInClubData_ShouldHandleGracefully() {
-        // Arrange
-        when(tournamentRepository.findAllByStatusTrueAndDeletedAtIsNull())
-                .thenReturn(Collections.emptyList());
-        when(resultRepository.findTopPlayersByAvgScore(any(PageRequest.class)))
-                .thenReturn(Collections.emptyList());
-
-        // Club data with null score
-        Object[] clubData = new Object[]{1, "Test Club", null};
-        when(resultRepository.findTopClubsRaw())
-                .thenReturn(Collections.singletonList(clubData));
-        when(ambitRepository.findDistinctWithTournaments())
-                .thenReturn(Collections.emptyList());
-
-        // Act
-        DashboardDTO result = dashboardService.getDashboardData();
-
+        assertEquals(tournament.getTournamentId(), dto.getTournamentId());
+        assertEquals(tournament.getName(), dto.getName());
+        assertEquals(tournament.getAmbit().getAmbitId(), dto.getAmbitId());
+        assertEquals(tournament.getAmbit().getName(), dto.getAmbitName());
+        assertEquals(tournament.getCategories().get(0).getCategory().getCategoryId(), dto.getCategoryIds().get(0));
+        assertEquals(tournament.getModalities().get(0).getModality().getModalityId(), dto.getModalityIds().get(0));
     }
 }

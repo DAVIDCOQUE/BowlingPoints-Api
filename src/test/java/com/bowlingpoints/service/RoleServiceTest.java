@@ -5,19 +5,16 @@ import com.bowlingpoints.entity.Role;
 import com.bowlingpoints.repository.RoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Test unitario para RoleService.
+ */
 class RoleServiceTest {
 
     @Mock
@@ -26,75 +23,47 @@ class RoleServiceTest {
     @InjectMocks
     private RoleService roleService;
 
-    private Role adminRole;
-    private Role userRole;
+    private Role roleAdmin;
+    private Role roleUser;
 
     @BeforeEach
     void setUp() {
-        adminRole = Role.builder()
+        MockitoAnnotations.openMocks(this);
+
+        roleAdmin = Role.builder()
                 .id(1)
-                .description("ROLE_ADMIN")
+                .name("ADMIN")
                 .build();
 
-        userRole = Role.builder()
+        roleUser = Role.builder()
                 .id(2)
-                .description("ROLE_USER")
+                .name("USER")
                 .build();
     }
 
+    // ----------------------------------------------------------------------
+    // getAllRoles
+    // ----------------------------------------------------------------------
     @Test
-    void getAllRoles_WhenRolesExist_ShouldReturnAllRoles() {
-        // Arrange
-        when(roleRepository.findAll())
-                .thenReturn(Arrays.asList(adminRole, userRole));
+    void getAllRoles_ShouldReturnMappedRoleDTOs_WhenRolesExist() {
+        when(roleRepository.findAll()).thenReturn(List.of(roleAdmin, roleUser));
 
-        // Act
         List<RoleDTO> result = roleService.getAllRoles();
 
-        // Assert
         assertEquals(2, result.size());
-        
-        RoleDTO firstRole = result.get(0);
-        assertEquals(adminRole.getId(), firstRole.getRoleId());
-        assertEquals(adminRole.getDescription(), firstRole.getDescription());
-        
-        RoleDTO secondRole = result.get(1);
-        assertEquals(userRole.getId(), secondRole.getRoleId());
-        assertEquals(userRole.getDescription(), secondRole.getDescription());
+        assertEquals("ADMIN", result.get(0).getName());
+        assertEquals("USER", result.get(1).getName());
+        verify(roleRepository, times(1)).findAll();
     }
 
     @Test
-    void getAllRoles_WhenNoRolesExist_ShouldReturnEmptyList() {
-        // Arrange
-        when(roleRepository.findAll())
-                .thenReturn(Collections.emptyList());
+    void getAllRoles_ShouldReturnEmptyList_WhenNoRolesExist() {
+        when(roleRepository.findAll()).thenReturn(List.of());
 
-        // Act
         List<RoleDTO> result = roleService.getAllRoles();
 
-        // Assert
+        assertNotNull(result);
         assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getAllRoles_ShouldMapAllFieldsCorrectly() {
-        // Arrange
-        Role complexRole = Role.builder()
-                .id(3)
-                .description("ROLE_SUPER_ADMIN")
-                .build();
-
-        when(roleRepository.findAll())
-                .thenReturn(Collections.singletonList(complexRole));
-
-        // Act
-        List<RoleDTO> result = roleService.getAllRoles();
-
-        // Assert
-        assertEquals(1, result.size());
-        RoleDTO roleDTO = result.get(0);
-        
-        assertEquals(complexRole.getId(), roleDTO.getRoleId());
-        assertEquals(complexRole.getDescription(), roleDTO.getDescription());
+        verify(roleRepository, times(1)).findAll();
     }
 }
