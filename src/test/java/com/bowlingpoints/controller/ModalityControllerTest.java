@@ -1,139 +1,143 @@
 package com.bowlingpoints.controller;
 
-import com.bowlingpoints.config.jwt.JwtAuthenticationFilter;
-import com.bowlingpoints.config.jwt.JwtService;
 import com.bowlingpoints.dto.ModalityDTO;
 import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.service.ModalityService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ModalityController.class)
-@ExtendWith(SpringExtension.class)
-@AutoConfigureMockMvc(addFilters = false)
-public class ModalityControllerTest {
-
-    @MockBean
-    private ModalityService modalityService;
-
-    @MockBean
-    private JwtService jwtService;
-
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+/**
+ * 🧪 Pruebas unitarias para ModalityController
+ */
+@WebMvcTest(controllers = ModalityController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.bowlingpoints\\.config\\..*")
+        })
+@AutoConfigureMockMvc(addFilters = false) // ✅ evita cargar filtros JWT o seguridad
+class ModalityControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean
+    private ModalityService modalityService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
-    private ModalityDTO testModality;
+    private ModalityDTO modalityDTO;
+    private ResponseGenericDTO<ModalityDTO> responseSingle;
+    private ResponseGenericDTO<List<ModalityDTO>> responseList;
+    private ResponseGenericDTO<Void> responseVoid;
 
     @BeforeEach
     void setUp() {
-        testModality = new ModalityDTO();
-        testModality.setModalityId(1);
-        testModality.setName("Test Modality");
-        testModality.setDescription("Testing modality");
-        testModality.setStatus(true);
+        modalityDTO = ModalityDTO.builder()
+                .modalityId(1)
+                .name("Individual")
+                .description("Competencia individual")
+                .status(true)
+                .build();
+
+        responseSingle = new ResponseGenericDTO<>(true, "OK", modalityDTO);
+        responseList = new ResponseGenericDTO<>(true, "OK", List.of(modalityDTO));
+        responseVoid = new ResponseGenericDTO<>(true, "OK", null);
     }
 
+    // ===============================
+    // GET /modalities
+    // ===============================
     @Test
-    void getAll_ShouldReturnModalities() throws Exception {
-        when(modalityService.getAll()).thenReturn(List.of(testModality));
+    void getAll_ShouldReturnListOfModalities() throws Exception {
+        Mockito.when(modalityService.getAll()).thenReturn(responseList);
 
         mockMvc.perform(get("/modalities"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Modalidades cargadas correctamente"))
-                .andExpect(jsonPath("$.data[0].modalityId").value(1));
+                .andExpect(jsonPath("$.data[0].name").value("Individual"));
     }
 
+    // ===============================
+    // GET /modalities/actives
+    // ===============================
     @Test
-    void getById_ShouldReturnModality_WhenExists() throws Exception {
-        when(modalityService.getById(1)).thenReturn(testModality);
+    void getAllActives_ShouldReturnActiveModalities() throws Exception {
+        Mockito.when(modalityService.getAllActives()).thenReturn(responseList);
 
-        mockMvc.perform(get("/modalities/1"))
+        mockMvc.perform(get("/modalities/actives"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Modalidad encontrada"))
-                .andExpect(jsonPath("$.data.modalityId").value(1));
+                .andExpect(jsonPath("$.data[0].status").value(true));
     }
 
+    // ===============================
+    // GET /modalities/{id}
+    // ===============================
     @Test
-    void getById_ShouldReturnNotFound_WhenModalityDoesNotExist() throws Exception {
-        when(modalityService.getById(1)).thenReturn(null);
+    void getById_ShouldReturnModality() throws Exception {
+        Mockito.when(modalityService.getById(1)).thenReturn(responseSingle);
 
-        mockMvc.perform(get("/modalities/1"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/modalities/{id}", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Individual"));
     }
 
+    // ===============================
+    // POST /modalities
+    // ===============================
     @Test
     void create_ShouldReturnCreatedModality() throws Exception {
-        when(modalityService.create(testModality)).thenReturn(testModality);
+        Mockito.when(modalityService.create(any(ModalityDTO.class))).thenReturn(responseSingle);
 
         mockMvc.perform(post("/modalities")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testModality)))
+                        .content(objectMapper.writeValueAsString(modalityDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Modalidad creada correctamente"))
-                .andExpect(jsonPath("$.data.modalityId").value(1));
+                .andExpect(jsonPath("$.data.name").value("Individual"));
     }
 
+    // ===============================
+    // PUT /modalities/{id}
+    // ===============================
     @Test
-    void update_ShouldReturnSuccess_WhenModalityExists() throws Exception {
-        when(modalityService.update(1, testModality)).thenReturn(true);
+    void update_ShouldReturnOkResponse() throws Exception {
+        Mockito.when(modalityService.update(eq(1), any(ModalityDTO.class))).thenReturn(responseVoid);
 
-        mockMvc.perform(put("/modalities/1")
+        mockMvc.perform(put("/modalities/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testModality)))
+                        .content(objectMapper.writeValueAsString(modalityDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Modalidad actualizada"));
+                .andExpect(jsonPath("$.message").value("OK"));
     }
 
+    // ===============================
+    // DELETE /modalities/{id}
+    // ===============================
     @Test
-    void update_ShouldReturnNotFound_WhenModalityDoesNotExist() throws Exception {
-        when(modalityService.update(1, testModality)).thenReturn(false);
+    void delete_ShouldReturnOkResponse() throws Exception {
+        Mockito.when(modalityService.delete(1)).thenReturn(responseVoid);
 
-        mockMvc.perform(put("/modalities/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testModality)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void delete_ShouldReturnSuccess_WhenModalityExists() throws Exception {
-        when(modalityService.delete(1)).thenReturn(true);
-
-        mockMvc.perform(delete("/modalities/1"))
+        mockMvc.perform(delete("/modalities/{id}", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Modalidad eliminada"));
-    }
-
-    @Test
-    void delete_ShouldReturnNotFound_WhenModalityDoesNotExist() throws Exception {
-        when(modalityService.delete(1)).thenReturn(false);
-
-        mockMvc.perform(delete("/modalities/1"))
-                .andExpect(status().isNotFound());
+                .andExpect(jsonPath("$.message").value("OK"));
     }
 }

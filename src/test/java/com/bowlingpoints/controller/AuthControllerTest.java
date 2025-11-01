@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 pattern = "com\\.bowlingpoints\\.config\\.jwt\\..*"
         )
 )
-@AutoConfigureMockMvc(addFilters = false) // 🔓 Desactiva filtros de seguridad
+@AutoConfigureMockMvc(addFilters = false)
 public class AuthControllerTest {
 
     @Autowired

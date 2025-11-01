@@ -31,7 +31,7 @@ public class ClubController {
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Clubes obtenidos correctamente", clubs));
     }
 
-    @GetMapping("/activos")
+    @GetMapping("/active")
     @Operation(summary = "Obtener todos los clubes activos (no eliminados)")
     public ResponseEntity<ResponseGenericDTO<List<ClubDTO>>> getActiveClubs() {
         List<ClubDTO> clubs = clubService.getAllActiveClubs();

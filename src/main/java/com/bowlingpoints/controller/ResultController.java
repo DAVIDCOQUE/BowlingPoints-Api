@@ -98,10 +98,10 @@ public class ResultController {
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Torneos cargados correctamente", data));
     }
 
-    @GetMapping("/tournament-summary")
+   /* @GetMapping("/tournament-summary")
     public ResponseEntity<ResponseGenericDTO<TournamentSummaryDTO>> getTournamentSummary(
             @RequestParam Integer tournamentId) {
         TournamentSummaryDTO summary = tournamentService.getTournamentSummary(tournamentId);
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Resumen del torneo cargado", summary));
-    }
+    }*/
 }

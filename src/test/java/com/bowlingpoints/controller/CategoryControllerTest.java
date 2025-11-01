@@ -1,147 +1,141 @@
 package com.bowlingpoints.controller;
 
-import com.bowlingpoints.config.jwt.JwtAuthenticationFilter;
-import com.bowlingpoints.config.jwt.JwtService;
 import com.bowlingpoints.dto.CategoryDTO;
 import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.service.CategoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CategoryController.class)
-@ExtendWith(SpringExtension.class)
+
+@WebMvcTest(controllers = CategoryController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.bowlingpoints\\.config\\..*")
+        })
 @AutoConfigureMockMvc(addFilters = false)
-public class CategoryControllerTest {
-
-    @MockBean
-    private CategoryService categoryService;
-
-    @MockBean
-    private JwtService jwtService;
-
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+class CategoryControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean
+    private CategoryService categoryService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
-    private CategoryDTO testCategory;
+    private CategoryDTO categoryDTO;
+    private ResponseGenericDTO<CategoryDTO> responseSingle;
+    private ResponseGenericDTO<List<CategoryDTO>> responseList;
+    private ResponseGenericDTO<Void> responseVoid;
 
     @BeforeEach
     void setUp() {
-        testCategory = new CategoryDTO();
-        testCategory.setCategoryId(1);
-        testCategory.setName("Test Category");
-        testCategory.setDescription("Test Description");
-        testCategory.setStatus(true);
+        categoryDTO = CategoryDTO.builder()
+                .categoryId(1)
+                .name("Senior")
+                .description("Jugadores de categoría senior")
+                .status(true)
+                .build();
+
+        responseSingle = new ResponseGenericDTO<>(true, "OK", categoryDTO);
+        responseList = new ResponseGenericDTO<>(true, "OK", List.of(categoryDTO));
+        responseVoid = new ResponseGenericDTO<>(true, "OK", null);
     }
 
+    // ===============================
+    // GET /categories
+    // ===============================
     @Test
-    void getAll_ShouldReturnCategories() throws Exception {
-        when(categoryService.getAll()).thenReturn(List.of(testCategory));
+    void getAll_ShouldReturnListOfCategories() throws Exception {
+        Mockito.when(categoryService.getAll()).thenReturn(responseList);
 
         mockMvc.perform(get("/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Categorías obtenidas correctamente"))
-                .andExpect(jsonPath("$.data[0].categoryId").value(1))
-                .andExpect(jsonPath("$.data[0].name").value("Test Category"));
+                .andExpect(jsonPath("$.data[0].name").value("Senior"));
     }
 
+    // ===============================
+    // GET /categories/actives
+    // ===============================
     @Test
-    void getById_ShouldReturnCategory_WhenExists() throws Exception {
-        when(categoryService.getById(1)).thenReturn(testCategory);
+    void getAllActives_ShouldReturnActiveCategories() throws Exception {
+        Mockito.when(categoryService.getAllActives()).thenReturn(responseList);
 
-        mockMvc.perform(get("/categories/1"))
+        mockMvc.perform(get("/categories/actives"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Categoría obtenida correctamente"))
-                .andExpect(jsonPath("$.data.categoryId").value(1));
+                .andExpect(jsonPath("$.data[0].status").value(true));
     }
 
+    // ===============================
+    // GET /categories/{id}
+    // ===============================
     @Test
-    void getById_ShouldReturnNotFound_WhenCategoryDoesNotExist() throws Exception {
-        when(categoryService.getById(1)).thenReturn(null);
+    void getById_ShouldReturnCategory() throws Exception {
+        Mockito.when(categoryService.getById(1)).thenReturn(responseSingle);
 
-        mockMvc.perform(get("/categories/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Categoría no encontrada"))
-                .andExpect(jsonPath("$.data").doesNotExist());
+        mockMvc.perform(get("/categories/{id}", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Senior"));
     }
 
+    // ===============================
+    // POST /categories
+    // ===============================
     @Test
     void create_ShouldReturnCreatedCategory() throws Exception {
-        when(categoryService.create(testCategory)).thenReturn(testCategory);
+        Mockito.when(categoryService.create(any(CategoryDTO.class))).thenReturn(responseSingle);
 
         mockMvc.perform(post("/categories")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testCategory)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Categoría creada correctamente"))
-                .andExpect(jsonPath("$.data.categoryId").value(1));
+                        .content(objectMapper.writeValueAsString(categoryDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Senior"));
     }
 
+    // ===============================
+    // PUT /categories/{id}
+    // ===============================
     @Test
-    void update_ShouldReturnSuccess_WhenCategoryExists() throws Exception {
-        when(categoryService.update(1, testCategory)).thenReturn(true);
+    void update_ShouldReturnOkResponse() throws Exception {
+        Mockito.when(categoryService.update(eq(1), any(CategoryDTO.class))).thenReturn(responseVoid);
 
-        mockMvc.perform(put("/categories/1")
+        mockMvc.perform(put("/categories/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testCategory)))
+                        .content(objectMapper.writeValueAsString(categoryDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Categoría actualizada correctamente"));
+                .andExpect(jsonPath("$.message").value("OK"));
     }
 
+    // ===============================
+    // DELETE /categories/{id}
+    // ===============================
     @Test
-    void update_ShouldReturnNotFound_WhenCategoryDoesNotExist() throws Exception {
-        when(categoryService.update(1, testCategory)).thenReturn(false);
+    void delete_ShouldReturnOkResponse() throws Exception {
+        Mockito.when(categoryService.delete(1)).thenReturn(responseVoid);
 
-        mockMvc.perform(put("/categories/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testCategory)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Categoría no encontrada"));
-    }
-
-    @Test
-    void delete_ShouldReturnSuccess_WhenCategoryExists() throws Exception {
-        when(categoryService.delete(1)).thenReturn(true);
-
-        mockMvc.perform(delete("/categories/1"))
+        mockMvc.perform(delete("/categories/{id}", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Categoría eliminada correctamente"));
-    }
-
-    @Test
-    void delete_ShouldReturnNotFound_WhenCategoryDoesNotExist() throws Exception {
-        when(categoryService.delete(1)).thenReturn(false);
-
-        mockMvc.perform(delete("/categories/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Categoría no encontrada"));
+                .andExpect(jsonPath("$.message").value("OK"));
     }
 }

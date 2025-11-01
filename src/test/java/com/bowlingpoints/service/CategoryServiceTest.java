@@ -1,26 +1,21 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.CategoryDTO;
+import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.entity.Category;
 import com.bowlingpoints.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.mockito.*;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Test unitario para CategoryService.
+ */
 class CategoryServiceTest {
 
     @Mock
@@ -29,200 +24,170 @@ class CategoryServiceTest {
     @InjectMocks
     private CategoryService categoryService;
 
-    private Category testCategory;
-    private CategoryDTO testCategoryDTO;
+    private Category category;
+    private CategoryDTO categoryDTO;
 
     @BeforeEach
     void setUp() {
-        testCategory = Category.builder()
+        MockitoAnnotations.openMocks(this);
+
+        category = Category.builder()
                 .categoryId(1)
-                .name("Test Category")
-                .description("Test Description")
+                .name("Elite")
+                .description("Categoría para jugadores profesionales")
                 .status(true)
                 .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
-        testCategoryDTO = new CategoryDTO();
-        testCategoryDTO.setCategoryId(1);
-        testCategoryDTO.setName("Test Category");
-        testCategoryDTO.setDescription("Test Description");
-        testCategoryDTO.setStatus(true);
-    }
-
-    @Test
-    void getAll_ShouldReturnAllCategories() {
-        // Arrange
-        List<Category> categories = Arrays.asList(
-            testCategory,
-            Category.builder()
-                .categoryId(2)
-                .name("Test Category 2")
-                .description("Test Description 2")
-                .status(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build()
-        );
-        when(categoryRepository.findAllByDeletedAtIsNullOrderByNameAsc()).thenReturn(categories);
-
-        // Act
-        List<CategoryDTO> result = categoryService.getAll();
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("Test Category", result.get(0).getName());
-        assertEquals("Test Category 2", result.get(1).getName());
-    }
-
-    @Test
-    void getAll_WhenNoCategories_ShouldReturnEmptyList() {
-        // Arrange
-        when(categoryRepository.findAllByDeletedAtIsNullOrderByNameAsc()).thenReturn(Collections.emptyList());
-
-        // Act
-        List<CategoryDTO> result = categoryService.getAll();
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getById_WhenCategoryExists_ShouldReturnCategory() {
-        // Arrange
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
-
-        // Act
-        CategoryDTO result = categoryService.getById(1);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(testCategory.getName(), result.getName());
-        assertEquals(testCategory.getDescription(), result.getDescription());
-        assertEquals(testCategory.getStatus(), result.getStatus());
-    }
-
-    @Test
-    void getById_WhenCategoryDoesNotExist_ShouldReturnNull() {
-        // Arrange
-        when(categoryRepository.findById(999)).thenReturn(Optional.empty());
-
-        // Act
-        CategoryDTO result = categoryService.getById(999);
-
-        // Assert
-        assertNull(result);
-    }
-
-    @Test
-    void getById_WhenCategoryIsDeleted_ShouldReturnNull() {
-        // Arrange
-        Category deletedCategory = Category.builder()
+        categoryDTO = CategoryDTO.builder()
                 .categoryId(1)
-                .name("Deleted Category")
-                .deletedAt(LocalDateTime.now())
+                .name("Elite")
+                .description("Categoría para jugadores profesionales")
+                .status(true)
                 .build();
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(deletedCategory));
+    }
 
-        // Act
-        CategoryDTO result = categoryService.getById(1);
+    // ----------------------------------------------------------------------
+    // getAll
+    // ----------------------------------------------------------------------
+    @Test
+    void getAll_ShouldReturnCategories_WhenExist() {
+        when(categoryRepository.findAllByDeletedAtIsNullOrderByNameAsc())
+                .thenReturn(List.of(category));
 
-        // Assert
-        assertNull(result);
+        ResponseGenericDTO<List<CategoryDTO>> response = categoryService.getAll();
+
+        assertTrue(response.getSuccess());
+        assertEquals("Categorías cargadas correctamente", response.getMessage());
+        assertEquals(1, response.getData().size());
+        assertEquals("Elite", response.getData().get(0).getName());
+    }
+
+    // ----------------------------------------------------------------------
+    // getAllActives
+    // ----------------------------------------------------------------------
+    @Test
+    void getAllActives_ShouldReturnActiveCategories_WhenExist() {
+        when(categoryRepository.findAllByDeletedAtIsNullAndStatusTrueOrderByNameAsc())
+                .thenReturn(List.of(category));
+
+        ResponseGenericDTO<List<CategoryDTO>> response = categoryService.getAllActives();
+
+        assertTrue(response.getSuccess());
+        assertEquals("Categorías activas cargadas correctamente", response.getMessage());
+        assertEquals(1, response.getData().size());
+        assertTrue(response.getData().get(0).getStatus());
+    }
+
+    // ----------------------------------------------------------------------
+    // getById
+    // ----------------------------------------------------------------------
+    @Test
+    void getById_ShouldReturnCategory_WhenExistsAndNotDeleted() {
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+
+        ResponseGenericDTO<CategoryDTO> response = categoryService.getById(1);
+
+        assertTrue(response.getSuccess());
+        assertNotNull(response.getData());
+        assertEquals("Elite", response.getData().getName());
+        assertEquals("Categoría encontrada", response.getMessage());
     }
 
     @Test
-    void create_ShouldSaveAndReturnNewCategory() {
-        // Arrange
-        CategoryDTO newCategoryDTO = new CategoryDTO();
-        newCategoryDTO.setName("New Category");
-        newCategoryDTO.setDescription("New Description");
-        newCategoryDTO.setStatus(true);
+    void getById_ShouldReturnNotFound_WhenCategoryDeleted() {
+        category.setDeletedAt(LocalDateTime.now());
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
 
-        when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> {
-            Category saved = invocation.getArgument(0);
-            saved.setCategoryId(1);
-            return saved;
-        });
+        ResponseGenericDTO<CategoryDTO> response = categoryService.getById(1);
 
-        // Act
-        CategoryDTO result = categoryService.create(newCategoryDTO);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(newCategoryDTO.getName(), result.getName());
-        assertEquals(newCategoryDTO.getDescription(), result.getDescription());
-        assertEquals(newCategoryDTO.getStatus(), result.getStatus());
-        verify(categoryRepository).save(any(Category.class));
+        assertFalse(response.getSuccess());
+        assertNull(response.getData());
+        assertEquals("Categoría no encontrada", response.getMessage());
     }
 
     @Test
-    void update_WhenCategoryExists_ShouldUpdateAndReturnTrue() {
-        // Arrange
-        CategoryDTO updateDTO = new CategoryDTO();
-        updateDTO.setName("Updated Name");
-        updateDTO.setDescription("Updated Description");
-        updateDTO.setStatus(false);
-
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
-        when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
-
-        // Act
-        boolean result = categoryService.update(1, updateDTO);
-
-        // Assert
-        assertTrue(result);
-        verify(categoryRepository).save(argThat(category -> 
-            category.getName().equals("Updated Name") &&
-            category.getDescription().equals("Updated Description") &&
-            !category.getStatus() &&
-            category.getUpdatedAt() != null
-        ));
-    }
-
-    @Test
-    void update_WhenCategoryDoesNotExist_ShouldReturnFalse() {
-        // Arrange
-        CategoryDTO updateDTO = new CategoryDTO();
-        updateDTO.setName("Updated Name");
+    void getById_ShouldReturnNotFound_WhenDoesNotExist() {
         when(categoryRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act
-        boolean result = categoryService.update(999, updateDTO);
+        ResponseGenericDTO<CategoryDTO> response = categoryService.getById(999);
 
-        // Assert
-        assertFalse(result);
-        verify(categoryRepository, never()).save(any());
+        assertFalse(response.getSuccess());
+        assertNull(response.getData());
+        assertEquals("Categoría no encontrada", response.getMessage());
+    }
+
+    // ----------------------------------------------------------------------
+    // create
+    // ----------------------------------------------------------------------
+    @Test
+    void create_ShouldSaveAndReturnCategoryDTO() {
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
+
+        ResponseGenericDTO<CategoryDTO> response = categoryService.create(categoryDTO);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Categoría creada correctamente", response.getMessage());
+        assertEquals("Elite", response.getData().getName());
+        verify(categoryRepository, times(1)).save(any(Category.class));
+    }
+
+    // ----------------------------------------------------------------------
+    // update
+    // ----------------------------------------------------------------------
+    @Test
+    void update_ShouldModifyCategory_WhenExists() {
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
+
+        CategoryDTO updatedDTO = CategoryDTO.builder()
+                .name("Junior")
+                .description("Nueva descripción")
+                .status(false)
+                .build();
+
+        ResponseGenericDTO<Void> response = categoryService.update(1, updatedDTO);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Categoría actualizada correctamente", response.getMessage());
+        verify(categoryRepository, times(1)).save(any(Category.class));
     }
 
     @Test
-    void delete_WhenCategoryExists_ShouldSoftDeleteAndReturnTrue() {
-        // Arrange
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
-        when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+    void update_ShouldReturnNotFound_WhenCategoryDoesNotExist() {
+        when(categoryRepository.findById(99)).thenReturn(Optional.empty());
 
-        // Act
-        boolean result = categoryService.delete(1);
+        ResponseGenericDTO<Void> response = categoryService.update(99, categoryDTO);
 
-        // Assert
-        assertTrue(result);
-        verify(categoryRepository).save(argThat(category -> 
-            category.getDeletedAt() != null
-        ));
+        assertFalse(response.getSuccess());
+        assertEquals("Categoría no encontrada", response.getMessage());
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    // ----------------------------------------------------------------------
+    // delete
+    // ----------------------------------------------------------------------
+    @Test
+    void delete_ShouldSoftDeleteCategory_WhenExists() {
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
+
+        ResponseGenericDTO<Void> response = categoryService.delete(1);
+
+        assertTrue(response.getSuccess());
+        assertEquals("Categoría eliminada correctamente", response.getMessage());
+        verify(categoryRepository, times(1)).save(any(Category.class));
+        assertNotNull(category.getDeletedAt());
     }
 
     @Test
-    void delete_WhenCategoryDoesNotExist_ShouldReturnFalse() {
-        // Arrange
+    void delete_ShouldReturnNotFound_WhenCategoryDoesNotExist() {
         when(categoryRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act
-        boolean result = categoryService.delete(999);
+        ResponseGenericDTO<Void> response = categoryService.delete(999);
 
-        // Assert
-        assertFalse(result);
-        verify(categoryRepository, never()).save(any());
+        assertFalse(response.getSuccess());
+        assertEquals("Categoría no encontrada", response.getMessage());
+        verify(categoryRepository, never()).save(any(Category.class));
     }
 }

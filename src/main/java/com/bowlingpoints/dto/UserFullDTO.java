@@ -1,6 +1,7 @@
 package com.bowlingpoints.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,6 +17,7 @@ import com.bowlingpoints.dto.CategoryDTO;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserFullDTO {
 
     // Datos del usuario

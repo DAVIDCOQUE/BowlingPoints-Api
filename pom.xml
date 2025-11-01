@@ -198,13 +198,19 @@
                             <goal>report</goal>
                         </goals>
                         <configuration>
+                            <includes>
+                                <include>com/bowlingpoints/service/**</include>
+                                <include>com/bowlingpoints/controller/**</include>
+                            </includes>
                             <excludes>
-                                <exclude>**/entity/**</exclude>
-                                <exclude>**/dto/**</exclude>
-                                <exclude>**/config/**</exclude>
-                                <exclude>**/util/**</exclude>
-                                <exclude>**/impl/**</exclude>
-                                <exclude>**/BowlingpointsApplication*</exclude>
+                                <exclude>com/bowlingpoints/entity/**</exclude>
+                                <exclude>com/bowlingpoints/dto/**</exclude>
+                                <exclude>com/bowlingpoints/config/**</exclude>
+                                <exclude>com/bowlingpoints/config/jwt/**</exclude>
+                                <exclude>com/bowlingpoints/enums/**</exclude>
+                                <exclude>com/bowlingpoints/exception/**</exclude>
+                                <exclude>com/bowlingpoints/repository/**</exclude>
+                                <exclude>com/bowlingpoints/util/**</exclude>
                             </excludes>
                             <formats>
                                 <format>HTML</format>

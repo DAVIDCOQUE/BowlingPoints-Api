@@ -291,4 +291,81 @@ class AmbitServiceTest {
         assertEquals("Ámbito no encontrado", response.getMessage());
         verify(ambitRepository, never()).save(any());
     }
+
+    @Test
+    void getAmbitsWithTournaments_ShouldReturnListOfAmbits() {
+        // Arrange
+        AmbitDTO ambit1 = AmbitDTO.builder()
+                .name("Regional Norte")
+                .description("Ámbito del norte")
+                .status(Boolean.FALSE)
+                .build();
+
+        AmbitDTO ambit2 = AmbitDTO.builder()
+                .name("Regional Sur")
+                .description("Ámbito del sur")
+                .status(Boolean.TRUE)
+                .build();
+        List<AmbitDTO> ambitList = List.of(ambit1, ambit2);
+
+        when(ambitRepository.findDistinctWithTournaments()).thenReturn(ambitList);
+
+        // Act
+        ResponseGenericDTO<List<AmbitDTO>> response = ambitService.getAmbitsWithTournaments();
+
+        // Assert
+        assertTrue(response.getSuccess());
+        assertEquals("Ámbitos con torneos cargados correctamente", response.getMessage());
+        assertNotNull(response.getData());
+        assertEquals(2, response.getData().size());
+        assertEquals("Regional Norte", response.getData().get(0).getName());
+        assertEquals(Boolean.FALSE, response.getData().get(0).getStatus());
+
+        // Verify interaction
+        verify(ambitRepository, times(1)).findDistinctWithTournaments();
+    }
+
+    @Test
+    void getAllActives_ShouldReturnActiveAmbits() {
+        // Arrange
+        Ambit ambit1 = new Ambit();
+        ambit1.setAmbitId(1);
+        ambit1.setName("Regional Norte");
+        ambit1.setDescription("Ámbito del norte");
+        ambit1.setStatus(true);
+        ambit1.setDeletedAt(null);
+
+        Ambit ambit2 = new Ambit();
+        ambit2.setAmbitId(2);
+        ambit2.setName("Regional Sur");
+        ambit2.setDescription("Ámbito del sur");
+        ambit2.setStatus(true);
+        ambit2.setDeletedAt(null);
+
+        List<Ambit> ambits = List.of(ambit1, ambit2);
+
+        when(ambitRepository.findAllByDeletedAtIsNullAndStatusTrueOrderByNameAsc())
+                .thenReturn(ambits);
+
+        // Act
+        ResponseGenericDTO<List<AmbitDTO>> response = ambitService.getAllActives();
+
+        // Assert
+        assertNotNull(response);
+        assertTrue(response.getSuccess());
+        assertEquals("Ámbitos activos cargados correctamente", response.getMessage());
+        assertNotNull(response.getData());
+        assertEquals(2, response.getData().size());
+
+        AmbitDTO dto1 = response.getData().get(0);
+        AmbitDTO dto2 = response.getData().get(1);
+
+        assertEquals("Regional Norte", dto1.getName());
+        assertEquals("Ámbito del norte", dto1.getDescription());
+        assertEquals("Regional Sur", dto2.getName());
+        assertEquals("Ámbito del sur", dto2.getDescription());
+
+        verify(ambitRepository, times(1))
+                .findAllByDeletedAtIsNullAndStatusTrueOrderByNameAsc();
+    }
 }
