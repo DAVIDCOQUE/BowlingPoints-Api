@@ -86,7 +86,7 @@ jobs:
 
       # 📥 1.5. Descargar el JAR compilado desde el job anterior
       - name: Download JAR artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@f093f21ca4cfa7c75ccbbc2be54da76a0c7e1f05
         with:
           name: bowlingpoints-jar
           path: target/
@@ -94,7 +94,7 @@ jobs:
       # 🐳 2. Login a Docker Hub
       - name: Log in to Docker Hub
         # NOTA: Reemplazo tu SHA por el tag estable para evitar futuros fallos.
-        uses: docker/login-action@v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASS }}
