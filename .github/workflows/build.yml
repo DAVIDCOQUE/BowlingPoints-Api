@@ -67,6 +67,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           scanMetadataReportFile: target/sonar/report-task.txt
+      # ✅ 7. Subir el JAR como artefacto
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bowlingpoints-jar
+          path: target/*.jar # Sube el archivo JAR generado por Maven
 
   docker-deploy:
     name: Build and Deploy Docker
@@ -78,9 +84,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 📥 1.5. Descargar el JAR compilado desde el job anterior
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bowlingpoints-jar
+          path: target/
+
       # 🐳 2. Login a Docker Hub
       - name: Log in to Docker Hub
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+        # NOTA: Reemplazo tu SHA por el tag estable para evitar futuros fallos.
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASS }}
