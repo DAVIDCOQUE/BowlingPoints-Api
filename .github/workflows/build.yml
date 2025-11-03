@@ -80,7 +80,7 @@ jobs:
 
       # 🐳 2. Login a Docker Hub
       - name: Log in to Docker Hub
-        uses: docker/login-action@a984b3800d3bba5431f5e5d734f88e9f3f5f28fa
+        uses: docker/login-action@9c426e2e25d212b184206c88825832eb51821814
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
