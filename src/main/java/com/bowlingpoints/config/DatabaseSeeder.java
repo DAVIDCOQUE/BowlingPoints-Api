@@ -411,9 +411,11 @@ public class DatabaseSeeder {
                 .document(document)
                 .build());
 
+        String defaultPassword = System.getenv().getOrDefault("DEFAULT_ADMIN_PASSWORD", "admin");
+
         User user = userRepository.save(User.builder()
                 .nickname(nickname)
-                .password(passwordEncoder.encode("admin"))
+                .password(passwordEncoder.encode(defaultPassword))
                 .status(true)
                 .attemptsLogin(0)
                 .lastLoginAt(LocalDateTime.now())
