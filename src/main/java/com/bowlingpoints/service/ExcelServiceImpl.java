@@ -30,53 +30,64 @@ public class ExcelServiceImpl implements FileService {
             Workbook workbook = WorkbookFactory.create(is);
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Leer metadata
+            // 🧾 Leer metadata
             String tournamentName = sheet.getRow(0).getCell(0).getStringCellValue().trim();
             String modalityName = sheet.getRow(1).getCell(0).getStringCellValue().trim();
             String gender = sheet.getRow(2).getCell(0).getStringCellValue().trim();
             String categoryName = sheet.getRow(3).getCell(0).getStringCellValue().trim();
 
-            // Obtener o crear entidades base
+            // 🏆 Obtener o crear torneo
             Tournament tournament = tournamentRepository.findByName(tournamentName)
                     .orElseGet(() -> tournamentRepository.save(Tournament.builder()
                             .name(tournamentName)
                             .status(true)
                             .build()));
 
+            // 🎯 Obtener o crear categoría
             Category category = categoryRepository.findByNameAndDeletedAtIsNull(categoryName)
                     .orElseGet(() -> categoryRepository.save(Category.builder()
                             .name(categoryName)
                             .build()));
 
-            // Leer encabezados
-            Row roundRow = sheet.getRow(4);
+            // 📊 Leer encabezados
             Row headerRow = sheet.getRow(5);
+            if (headerRow == null) return uploadedResults;
 
+            // ✅ Rellenar mapas (asegura que no estén vacíos)
             Map<Integer, Integer> columnToRoundMap = new HashMap<>();
             Map<Integer, Integer> columnToLineMap = new HashMap<>();
+            for (int col = 4; col < headerRow.getLastCellNum(); col++) {
+                columnToRoundMap.put(col, 1); // todos en la ronda 1
+                columnToLineMap.put(col, col - 3); // línea = índice de columna - 3
+            }
 
-            // Leer jugadores
+            // 👥 Leer jugadores
             for (int rowIndex = 6; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
-                if (row == null || row.getCell(1) == null) continue;
+                if (row == null) continue;
 
-                String document = row.getCell(0) != null ? row.getCell(0).getStringCellValue().trim() : null;
-                String fullName = row.getCell(1).getStringCellValue().trim();
-                String surname = row.getCell(2).getStringCellValue().trim();
-                String club = row.getCell(3) != null ? row.getCell(3).getStringCellValue().trim() : null;
+                String document = getCellValueAsString(row.getCell(0));
+                String firstName = getCellValueAsString(row.getCell(1));
+                String lastName = getCellValueAsString(row.getCell(2));
+                String club = getCellValueAsString(row.getCell(3));
 
-                Person person;
-                if (document != null && !document.isEmpty()) {
-                    person = personRepository.findByDocument(document)
-                            .orElseGet(() -> createPerson(document, fullName, surname));
-                } else {
-                    person = personRepository.findByFullNameAndFullSurname(fullName, surname)
-                            .orElseGet(() -> createPerson(null, fullName, surname));
-                }
+                if (firstName.isEmpty() && lastName.isEmpty()) continue;
+
+                // 🔍 Buscar o crear persona
+                Person person = personRepository.findByDocument(document)
+                        .orElseGet(() -> {
+                            Person p = new Person();
+                            p.setDocument(document);
+                            p.setFullName(firstName);
+                            p.setFullSurname(lastName);
+                            p.setEmail(firstName.toLowerCase() + "@mail.com");
+                            return personRepository.save(p);
+                        });
 
                 Set<Integer> rounds = new HashSet<>();
                 int totalLines = 0;
 
+                // 🎳 Leer puntajes
                 for (int col = 4; col < headerRow.getLastCellNum(); col++) {
                     Cell cell = row.getCell(col);
                     if (cell == null || cell.getCellType() != CellType.NUMERIC) continue;
@@ -93,6 +104,7 @@ public class ExcelServiceImpl implements FileService {
                         result.setScore(score);
                         result.setLineNumber(lineNumber);
 
+                        // ✅ Este save() ahora se ejecuta realmente
                         resultRepository.save(result);
                         rounds.add(roundId);
                         totalLines++;
@@ -101,7 +113,7 @@ public class ExcelServiceImpl implements FileService {
 
                 uploadedResults.add(new PlayerResultUploadDTO(
                         document,
-                        fullName + " " + surname,
+                        firstName + " " + lastName,
                         club,
                         rounds,
                         totalLines
@@ -109,20 +121,17 @@ public class ExcelServiceImpl implements FileService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("❌ Error leyendo Excel: " + e.getMessage());
         }
 
         return uploadedResults;
     }
 
-    private Person createPerson(String document, String fullName, String surname) {
-        Person p = new Person();
-        p.setDocument(document);
-        p.setFullName(fullName);
-        p.setFullSurname(surname);
-        String safeEmail = (document != null ? document : UUID.randomUUID().toString()) + "@bowlingpoints.com";
-        p.setEmail(safeEmail);
-        p.setStatus(true);
-        return personRepository.save(p);
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+        if (cell.getCellType() == CellType.STRING) return cell.getStringCellValue().trim();
+        if (cell.getCellType() == CellType.NUMERIC) return String.valueOf((int) cell.getNumericCellValue());
+        return "";
     }
+
 }
