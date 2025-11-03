@@ -195,4 +195,54 @@ class TournamentRegistrationServiceTest {
         when(registrationRepository.findById(99)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> service.getById(99));
     }
+
+    // ----------------------------------------------------------------------
+// Cobertura de ramas faltantes (null en helpers y relaciones null en toDTO)
+// ----------------------------------------------------------------------
+    @Test
+    void getOptionalMethods_ShouldReturnNull_WhenIdIsNull() throws Exception {
+        // accedemos por reflexión para probar métodos privados
+        var catMethod = TournamentRegistrationService.class.getDeclaredMethod("getOptionalCategory", Integer.class);
+        var modMethod = TournamentRegistrationService.class.getDeclaredMethod("getOptionalModality", Integer.class);
+        var branchMethod = TournamentRegistrationService.class.getDeclaredMethod("getOptionalBranch", Integer.class);
+        var teamMethod = TournamentRegistrationService.class.getDeclaredMethod("getOptionalTeam", Integer.class);
+
+        catMethod.setAccessible(true);
+        modMethod.setAccessible(true);
+        branchMethod.setAccessible(true);
+        teamMethod.setAccessible(true);
+
+        assertNull(catMethod.invoke(service, (Object) null));
+        assertNull(modMethod.invoke(service, (Object) null));
+        assertNull(branchMethod.invoke(service, (Object) null));
+        assertNull(teamMethod.invoke(service, (Object) null));
+    }
+
+    @Test
+    void toDTO_ShouldHandleNullRelationsGracefully() throws Exception {
+        TournamentRegistration regWithNulls = TournamentRegistration.builder()
+                .registrationId(200)
+                .tournament(Tournament.builder().tournamentId(1).name("Open Medellín").build())
+                .person(Person.builder().personId(20).fullName("Jane Smith").build())
+                .category(null)
+                .modality(null)
+                .branch(null)
+                .team(null)
+                .status(true)
+                .build();
+
+        var method = TournamentRegistrationService.class.getDeclaredMethod("toDTO", TournamentRegistration.class);
+        method.setAccessible(true);
+        var dtoResult = (TournamentRegistrationDTO) method.invoke(service, regWithNulls);
+
+        assertNotNull(dtoResult);
+        assertEquals(1, dtoResult.getTournamentId());
+        assertEquals("Jane Smith", dtoResult.getPersonFullName());
+        assertNull(dtoResult.getCategoryId());
+        assertNull(dtoResult.getModalityId());
+        assertNull(dtoResult.getBranchId());
+        assertNull(dtoResult.getTeamId());
+    }
+
+
 }

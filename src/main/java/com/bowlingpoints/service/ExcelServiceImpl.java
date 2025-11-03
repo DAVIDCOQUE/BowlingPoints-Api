@@ -127,7 +127,7 @@ public class ExcelServiceImpl implements FileService {
         return uploadedResults;
     }
 
-    private String getCellValueAsString(Cell cell) {
+     String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
         if (cell.getCellType() == CellType.STRING) return cell.getStringCellValue().trim();
         if (cell.getCellType() == CellType.NUMERIC) return String.valueOf((int) cell.getNumericCellValue());

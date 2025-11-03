@@ -348,4 +348,77 @@ class UserFullServiceTest {
         verify(personRepository).save(any(Person.class));
     }
 
+    // ----------------------------------------------------------------------
+// Cobertura de ramas faltantes en createUser y updateUser
+// ----------------------------------------------------------------------
+
+    @Test
+    void createUser_ShouldUseDefaultPhoto_WhenPhotoUrlIsNull() {
+        UserFullDTO input = UserFullDTO.builder()
+                .document("12345")
+                .fullName("Test")
+                .fullSurname("User")
+                .password("abc")
+                .nickname("tester")
+                .roles(null)
+                .categories(null)
+                .build();
+
+        when(passwordEncoder.encode(any())).thenReturn("encoded");
+        when(userRepository.findAll()).thenReturn(List.of());
+
+        userFullService.createUser(input);
+
+        ArgumentCaptor<Person> captor = ArgumentCaptor.forClass(Person.class);
+        verify(personRepository).save(captor.capture());
+        assertEquals("/uploads/users/default.png", captor.getValue().getPhotoUrl());
+    }
+
+    @Test
+    void createUser_ShouldWork_WhenNoRolesOrCategoriesProvided() {
+        UserFullDTO input = UserFullDTO.builder()
+                .document("99999")
+                .fullName("Simple")
+                .password("abc")
+                .nickname("simpleUser")
+                .roles(null)
+                .categories(null)
+                .build();
+
+        when(passwordEncoder.encode(any())).thenReturn("encoded");
+        when(userRepository.findAll()).thenReturn(List.of());
+
+        userFullService.createUser(input);
+
+        verify(personRepository).save(any(Person.class));
+        verify(userRepository).save(any(User.class));
+        verify(userRoleRepository, never()).save(any());
+        verify(personCategoryRepository, never()).save(any());
+    }
+
+    @Test
+    void updateUser_ShouldSkipPasswordAndNullListsGracefully() {
+        // user con persona existente
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findAll()).thenReturn(List.of(user));
+
+        // sin roles ni categorías ni password
+        UserFullDTO input = UserFullDTO.builder()
+                .userId(1)
+                .document("123")
+                .nickname("john123")
+                .password(null)
+                .roles(null)
+                .categories(null)
+                .build();
+
+        boolean result = userFullService.updateUser(1, input);
+
+        assertTrue(result);
+        verify(userRepository).save(any(User.class));
+        verify(userRoleRepository).deleteByUser_UserId(anyInt());
+        verify(personCategoryRepository).deleteAllByPerson_PersonId(anyInt());
+    }
+
+
 }

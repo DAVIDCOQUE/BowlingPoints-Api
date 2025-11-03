@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -422,7 +423,151 @@ class ResultServiceTest {
     }
 
 
+    @Test
+    void mapEntityToDto_ShouldHandleNullFieldsGracefully() {
+        Result r = new Result();
+        r.setResultId(99); // sin persona, sin equipo, etc.
 
+        // Llamar por reflexión o hacerlo público para test
+        var method = Arrays.stream(ResultService.class.getDeclaredMethods())
+                .filter(m -> m.getName().equals("mapEntityToDto"))
+                .findFirst().orElseThrow();
+        method.setAccessible(true);
 
+        ResultDTO dto = assertDoesNotThrow(() -> (ResultDTO) method.invoke(resultService, r));
+        assertEquals(99, dto.getResultId());
+        assertNull(dto.getPersonName());
+        assertNull(dto.getTeamName());
+    }
+
+    @Test
+    void mapDtoToEntity_ShouldThrow_WhenPersonAndTeamProvided() throws Exception {
+        ResultDTO dto = ResultDTO.builder()
+                .personId(1)
+                .teamId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .build();
+
+        var method = Arrays.stream(ResultService.class.getDeclaredMethods())
+                .filter(m -> m.getName().equals("mapDtoToEntity"))
+                .findFirst().orElseThrow();
+        method.setAccessible(true);
+
+        Exception ex = assertThrows(InvocationTargetException.class,
+                () -> method.invoke(resultService, dto, new Result()));
+        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+    }
+
+    @Test
+    void mapDtoToEntity_ShouldThrow_WhenTournamentNotFound() throws Exception {
+        ResultDTO dto = ResultDTO.builder()
+                .personId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .build();
+
+        when(personRepository.findById(1)).thenReturn(Optional.of(person));
+        when(tournamentRepository.findById(1)).thenReturn(Optional.empty());
+
+        var method = Arrays.stream(ResultService.class.getDeclaredMethods())
+                .filter(m -> m.getName().equals("mapDtoToEntity"))
+                .findFirst().orElseThrow();
+        method.setAccessible(true);
+
+        Exception ex = assertThrows(InvocationTargetException.class,
+                () -> method.invoke(resultService, dto, new Result()));
+        assertTrue(ex.getCause() instanceof RuntimeException);
+    }
+
+    @Test
+    void getResultsByModality_ShouldHandleEmptyRepositories() {
+        when(tournamentRepository.findById(anyInt())).thenReturn(Optional.empty());
+        when(resultRepository.findDistinctRoundsByTournament(anyInt())).thenReturn(Collections.emptyList());
+        when(resultRepository.findPlayerTotalsByModalityAndBranch(anyInt(), anyInt(), anyInt()))
+                .thenReturn(Collections.emptyList());
+
+        var result = resultService.getResultsByModality(1, 1, 1);
+
+        assertNotNull(result);
+        assertNull(result.getTournament());
+        assertTrue(result.getResultsByModality().isEmpty());
+    }
+
+    @Test
+    void getTournamentResultsTable_ShouldHandleEmptyData() {
+        when(tournamentRepository.findById(anyInt())).thenReturn(Optional.empty());
+        when(resultRepository.findRawPlayerResultsForTable(anyInt(), anyInt())).thenReturn(Collections.emptyList());
+        when(resultRepository.findDistinctRoundsByTournamentAndModality(anyInt(), anyInt()))
+                .thenReturn(Collections.emptyList());
+        when(resultRepository.findAvgByLineRaw(anyInt(), anyInt(), anyInt())).thenReturn(Collections.emptyList());
+        when(resultRepository.findHighestLine(anyInt(), anyInt(), anyInt())).thenReturn(Collections.emptyList());
+
+        var result = resultService.getTournamentResultsTable(1, 1, 1);
+        assertNotNull(result);
+        assertNull(result.getTournament());
+    }
+
+    @Test
+    void mapDtoToEntity_ShouldThrow_WhenTeamNotFound() throws Exception {
+        ResultDTO dto = ResultDTO.builder()
+                .teamId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .build();
+
+        when(teamRepository.findById(1)).thenReturn(Optional.empty());
+
+        var method = Arrays.stream(ResultService.class.getDeclaredMethods())
+                .filter(m -> m.getName().equals("mapDtoToEntity"))
+                .findFirst().orElseThrow();
+        method.setAccessible(true);
+
+        Exception ex = assertThrows(InvocationTargetException.class,
+                () -> method.invoke(resultService, dto, new Result()));
+        assertTrue(ex.getCause() instanceof RuntimeException);
+        assertTrue(ex.getCause().getMessage().contains("Equipo no encontrado"));
+    }
+
+    @Test
+    void mapDtoToEntity_ShouldThrow_WhenCategoryNotFound() throws Exception {
+        ResultDTO dto = ResultDTO.builder()
+                .personId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .build();
+
+        when(personRepository.findById(1)).thenReturn(Optional.of(person));
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
+        when(categoryRepository.findById(1)).thenReturn(Optional.empty());
+
+        var method = Arrays.stream(ResultService.class.getDeclaredMethods())
+                .filter(m -> m.getName().equals("mapDtoToEntity"))
+                .findFirst().orElseThrow();
+        method.setAccessible(true);
+
+        Exception ex = assertThrows(InvocationTargetException.class,
+                () -> method.invoke(resultService, dto, new Result()));
+        assertTrue(ex.getCause() instanceof RuntimeException);
+        assertTrue(ex.getCause().getMessage().contains("Categoría no encontrada"));
+    }
+
+    @Test
+    void getResultsByModality_ShouldHandleEmptyDataGracefully() {
+        when(tournamentRepository.findById(anyInt())).thenReturn(Optional.empty());
+        when(resultRepository.findDistinctRoundsByTournament(anyInt())).thenReturn(Collections.emptyList());
+        when(resultRepository.findPlayerTotalsByModalityAndBranch(anyInt(), anyInt(), anyInt()))
+                .thenReturn(Collections.emptyList());
+
+        var dto = resultService.getResultsByModality(1, 1, 1);
+
+        assertNotNull(dto);
+        assertNull(dto.getTournament());
+        assertTrue(dto.getResultsByModality().isEmpty());
+    }
 
 }

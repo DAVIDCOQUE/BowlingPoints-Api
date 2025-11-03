@@ -179,4 +179,36 @@ class DashboardServiceTest {
         assertEquals(tournament.getCategories().get(0).getCategory().getCategoryId(), dto.getCategoryIds().get(0));
         assertEquals(tournament.getModalities().get(0).getModality().getModalityId(), dto.getModalityIds().get(0));
     }
+
+    @Test
+    void toDTO_ShouldHandleNullAmbitCategoriesAndModalitiesGracefully() throws Exception {
+        Tournament tournamentWithNulls = Tournament.builder()
+                .tournamentId(99)
+                .name("Sin detalles")
+                .organizer("Desconocido")
+                .ambit(null)
+                .categories(null)
+                .modalities(null)
+                .status(true)
+                .build();
+
+        // acceder al método privado toDTO por reflexión
+        var method = DashboardService.class.getDeclaredMethod("toDTO", Tournament.class);
+        method.setAccessible(true);
+
+        TournamentDTO dto = (TournamentDTO) method.invoke(dashboardService, tournamentWithNulls);
+
+        // verificar que no falle y que los campos sean null o vacíos correctamente
+        assertNotNull(dto);
+        assertEquals(99, dto.getTournamentId());
+        assertNull(dto.getAmbitId());
+        assertNull(dto.getAmbitName());
+        assertNull(dto.getCategoryIds());
+        assertNull(dto.getCategoryNames());
+        assertNull(dto.getCategories());
+        assertNull(dto.getModalityIds());
+        assertNull(dto.getModalityNames());
+        assertNull(dto.getModalities());
+    }
+
 }

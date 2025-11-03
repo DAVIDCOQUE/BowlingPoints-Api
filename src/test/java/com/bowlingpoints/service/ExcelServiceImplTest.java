@@ -153,4 +153,58 @@ class ExcelServiceImplTest {
         assertThat(result).isEmpty();
         verifyNoInteractions(resultRepository);
     }
+
+    @Test
+    void shouldHandleDifferentCellTypesInGetCellValueAsString() {
+        Workbook wb = new XSSFWorkbook();
+        Sheet sheet = wb.createSheet("test");
+        Row row = sheet.createRow(0);
+
+        // STRING
+        Cell stringCell = row.createCell(0);
+        stringCell.setCellValue("Hello");
+        assertThat(excelService.getCellValueAsString(stringCell)).isEqualTo("Hello");
+
+        // NUMERIC
+        Cell numericCell = row.createCell(1);
+        numericCell.setCellValue(42);
+        assertThat(excelService.getCellValueAsString(numericCell)).isEqualTo("42");
+
+        // NULL
+        assertThat(excelService.getCellValueAsString(null)).isEqualTo("");
+
+        // BOOLEAN (no manejado explícitamente → retorna vacío)
+        Cell booleanCell = row.createCell(2);
+        booleanCell.setCellValue(true);
+        assertThat(excelService.getCellValueAsString(booleanCell)).isEqualTo("");
+    }
+
+
+    @Test
+    void shouldReturnEmptyListWhenHeaderRowIsMissing() throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("NoHeader");
+
+        // Metadata
+        sheet.createRow(0).createCell(0).setCellValue("Torneo Test");
+        sheet.createRow(1).createCell(0).setCellValue("Modality A");
+        sheet.createRow(2).createCell(0).setCellValue("Masculino");
+        sheet.createRow(3).createCell(0).setCellValue("Categoría A");
+
+        // Falta la fila 5 -> headerRow == null
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+
+        MockMultipartFile noHeaderFile = new MockMultipartFile(
+                "file", "noheader.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                out.toByteArray()
+        );
+
+        List<PlayerResultUploadDTO> result = excelService.uploadResultsFromExcel(noHeaderFile);
+        assertThat(result).isEmpty();
+    }
+
+
 }
