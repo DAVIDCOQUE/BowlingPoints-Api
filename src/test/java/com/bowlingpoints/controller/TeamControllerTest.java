@@ -1,35 +1,25 @@
 package com.bowlingpoints.controller;
 
-import com.bowlingpoints.dto.ResponseGenericDTO;
 import com.bowlingpoints.dto.TeamDTO;
 import com.bowlingpoints.service.TeamService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
-@WebMvcTest(controllers = TeamController.class,
-        excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.bowlingpoints\\.config\\..*")
-        })
+@WebMvcTest(controllers = TeamController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@ContextConfiguration(classes = {TeamController.class})
 class TeamControllerTest {
 
     @Autowired
@@ -38,119 +28,101 @@ class TeamControllerTest {
     @MockBean
     private TeamService teamService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private TeamDTO teamDTO;
-
-    @BeforeEach
-    void setUp() {
-        teamDTO = TeamDTO.builder()
-                .teamId(1)
-                .nameTeam("Los Strike Masters")
-                .status(true)
-                .build();
-    }
-
-    // ===============================
-    // GET /teams
-    // ===============================
-   /* @Test
+    // 🔹 GET /teams
+    @Test
     void getAll_ShouldReturnListOfTeams() throws Exception {
-        Mockito.when(teamService.getAll()).thenReturn(List.of(teamDTO));
+        TeamDTO t1 = new TeamDTO(1, "Team A", "111111111", true, List.of(1, 2));
+        TeamDTO t2 = new TeamDTO(2, "Team B", "222222222", true, List.of(3, 4));
 
-        mockMvc.perform(get("/teams"))
+        when(teamService.getAll()).thenReturn(List.of(t1, t2));
+
+        mockMvc.perform(get("/teams").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipos cargados correctamente"))
-                .andExpect(jsonPath("$.data[0].name").value("Los Strike Masters"));
+                .andExpect(jsonPath("$.data[0].nameTeam").value("Team A"))
+                .andExpect(jsonPath("$.data[1].nameTeam").value("Team B"));
+
+        verify(teamService, times(1)).getAll();
     }
 
-    */
-
-    // ===============================
-    // GET /teams/{id}
-    // ===============================
-   /* @Test
+    // 🔹 GET /teams/{id}
+    @Test
     void getById_ShouldReturnTeam_WhenExists() throws Exception {
-        Mockito.when(teamService.getById(1)).thenReturn(teamDTO);
+        TeamDTO team = new TeamDTO(1, "Team X", "999999999", true, List.of(10, 11));
+        when(teamService.getById(1)).thenReturn(team);
 
-        mockMvc.perform(get("/teams/{id}", 1))
+        mockMvc.perform(get("/teams/1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipo encontrado"))
-                .andExpect(jsonPath("$.data.name").value("Los Strike Masters"));
+                .andExpect(jsonPath("$.data.nameTeam").value("Team X"));
     }
 
-    */
-
     @Test
-    void getById_ShouldReturnNotFound_WhenTeamDoesNotExist() throws Exception {
-        Mockito.when(teamService.getById(99)).thenReturn(null);
+    void getById_ShouldReturnNotFound_WhenNotExists() throws Exception {
+        when(teamService.getById(99)).thenReturn(null);
 
-        mockMvc.perform(get("/teams/{id}", 99))
+        mockMvc.perform(get("/teams/99").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
-    // ===============================
-    // POST /teams
-    // ===============================
-  /*  @Test
+    // 🔹 POST /teams
+    @Test
     void create_ShouldReturnCreatedTeam() throws Exception {
-        Mockito.when(teamService.create(any(TeamDTO.class))).thenReturn(teamDTO);
+        TeamDTO input = new TeamDTO(null, "Team New", "123456789", true, List.of(5, 6));
+        TeamDTO created = new TeamDTO(5, "Team New", "123456789", true, List.of(5, 6));
+
+        when(teamService.create(any(TeamDTO.class))).thenReturn(created);
 
         mockMvc.perform(post("/teams")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(teamDTO)))
+                        .content("{\"nameTeam\":\"Team New\",\"phone\":\"123456789\",\"status\":true,\"personIds\":[5,6]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipo creado correctamente"))
-                .andExpect(jsonPath("$.data.name").value("Los Strike Masters"));
-    }*/
+                .andExpect(jsonPath("$.data.nameTeam").value("Team New"));
+    }
 
-    // ===============================
-    // PUT /teams/{id}
-    // ===============================
+    // 🔹 PUT /teams/{id}
     @Test
-    void update_ShouldReturnOk_WhenTeamExists() throws Exception {
-        Mockito.when(teamService.update(eq(1), any(TeamDTO.class))).thenReturn(true);
+    void update_ShouldReturnOk_WhenSuccessful() throws Exception {
+        when(teamService.update(eq(1), any(TeamDTO.class))).thenReturn(true);
 
-        mockMvc.perform(put("/teams/{id}", 1)
+        mockMvc.perform(put("/teams/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(teamDTO)))
+                        .content("{\"nameTeam\":\"Updated Team\",\"phone\":\"987654321\",\"status\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipo actualizado"));
     }
 
     @Test
-    void update_ShouldReturnNotFound_WhenTeamNotExists() throws Exception {
-        Mockito.when(teamService.update(eq(99), any(TeamDTO.class))).thenReturn(false);
+    void update_ShouldReturnNotFound_WhenTeamDoesNotExist() throws Exception {
+        when(teamService.update(eq(99), any(TeamDTO.class))).thenReturn(false);
 
-        mockMvc.perform(put("/teams/{id}", 99)
+        mockMvc.perform(put("/teams/99")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(teamDTO)))
+                        .content("{\"nameTeam\":\"NonExistent\"}"))
                 .andExpect(status().isNotFound());
     }
 
-    // ===============================
-    // DELETE /teams/{id}
-    // ===============================
+    // 🔹 DELETE /teams/{id}
     @Test
-    void delete_ShouldReturnOk_WhenDeletedSuccessfully() throws Exception {
-        Mockito.when(teamService.delete(1)).thenReturn(true);
+    void delete_ShouldReturnOk_WhenDeleted() throws Exception {
+        when(teamService.delete(1)).thenReturn(true);
 
-        mockMvc.perform(delete("/teams/{id}", 1))
+        mockMvc.perform(delete("/teams/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipo eliminado"));
     }
 
     @Test
-    void delete_ShouldReturnNotFound_WhenTeamNotExists() throws Exception {
-        Mockito.when(teamService.delete(99)).thenReturn(false);
+    void delete_ShouldReturnNotFound_WhenNotExists() throws Exception {
+        when(teamService.delete(99)).thenReturn(false);
 
-        mockMvc.perform(delete("/teams/{id}", 99))
+        mockMvc.perform(delete("/teams/99"))
                 .andExpect(status().isNotFound());
     }
 }

@@ -27,7 +27,6 @@ public class UserTournamentService {
                         .categoria((String) obj[5])
                         .resultados(((Number) obj[6]).intValue())
                         .imageUrl((String) obj[7])
-                        // .posicionFinal((Integer) obj[8]) // Si calculas posición
                         .build())
                 .collect(Collectors.toList());
     }
@@ -47,8 +46,12 @@ public class UserTournamentService {
 
     // Estadísticas generales para "Mis Resultados"
     public UserStatisticsDTO getUserStatistics(Integer userId) {
-        // Puedes hacer cálculos directos con JPQL, o aquí a mano
         var stats = resultRepository.findStatsByUserId(userId);
+
+        if (stats == null) {
+            return new UserStatisticsDTO(); // ✅ evita NullPointerException
+        }
+
         return UserStatisticsDTO.builder()
                 .totalTournaments(stats.getTotalTournaments())
                 .totalStrikes(stats.getTotalStrikes())

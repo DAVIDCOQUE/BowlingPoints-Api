@@ -283,4 +283,129 @@ class TeamServiceTest {
         verify(teamPersonRepository, never()).deleteAllByTeam_TeamId(any());
         verify(teamRepository, never()).deleteById(any());
     }
+
+    @Test
+    void getAll_WhenTeamHasNoMembers_ShouldHandleGracefully() {
+        // Arrange: Team sin TeamPersons
+        Team teamWithoutMembers = Team.builder()
+                .teamId(10)
+                .nameTeam("Solo Team")
+                .phone("000")
+                .status(true)
+                .teamPersons(null)
+                .build();
+
+        when(teamRepository.findAll()).thenReturn(List.of(teamWithoutMembers));
+
+        // Act
+        List<TeamDTO> result = teamService.getAll();
+
+        // Assert
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getPersonIds().isEmpty());
+    }
+
+    @Test
+    void getById_WhenTeamHasNoMembers_ShouldHandleGracefully() {
+        // Arrange: Team sin TeamPersons
+        Team teamWithoutMembers = Team.builder()
+                .teamId(11)
+                .nameTeam("Empty Team")
+                .phone("111")
+                .status(true)
+                .teamPersons(null)
+                .build();
+
+        when(teamRepository.findById(11)).thenReturn(Optional.of(teamWithoutMembers));
+
+        // Act
+        TeamDTO result = teamService.getById(11);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Empty Team", result.getNameTeam());
+        assertTrue(result.getPersonIds().isEmpty());
+    }
+
+    @Test
+    void create_WhenStatusIsNull_ShouldDefaultToTrue() {
+        // Arrange
+        TeamDTO newTeamDTO = TeamDTO.builder()
+                .nameTeam("NullStatus Team")
+                .phone("555")
+                .status(null)
+                .personIds(List.of(testPerson.getPersonId()))
+                .build();
+
+        when(teamRepository.save(any(Team.class)))
+                .thenAnswer(invocation -> {
+                    Team team = invocation.getArgument(0);
+                    team.setTeamId(99);
+                    return team;
+                });
+        when(personRepository.findById(anyInt())).thenReturn(Optional.of(testPerson));
+
+        // Act
+        TeamDTO result = teamService.create(newTeamDTO);
+
+        // Assert
+        assertNotNull(result);
+        verify(teamRepository).save(argThat(team -> Boolean.TRUE.equals(team.getStatus())));
+        verify(teamPersonRepository).saveAll(anyList());
+    }
+
+    @Test
+    void create_WhenPersonIdsEmpty_ShouldStillSaveTeamAndNotFail() {
+        // Arrange
+        TeamDTO dto = TeamDTO.builder()
+                .nameTeam("Empty Members")
+                .phone("0000")
+                .status(true)
+                .personIds(Collections.emptyList())
+                .build();
+
+        when(teamRepository.save(any(Team.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        TeamDTO result = teamService.create(dto);
+
+        // Assert
+        assertNotNull(result);
+        verify(teamRepository, times(1)).save(any(Team.class));
+        // ✅ El servicio sí invoca saveAll, pero con lista vacía
+        verify(teamPersonRepository, times(1)).saveAll(eq(Collections.emptyList()));
+    }
+
+    @Test
+    void update_WhenPersonIdsEmpty_ShouldStillUpdateTeam() {
+        // Arrange
+        when(teamRepository.findById(1)).thenReturn(Optional.of(testTeam));
+        testTeamDTO.setPersonIds(Collections.emptyList());
+
+        // Act
+        boolean result = teamService.update(1, testTeamDTO);
+
+        // Assert
+        assertTrue(result);
+        verify(teamRepository, times(1)).save(any(Team.class));
+        verify(teamPersonRepository).deleteAllByTeam_TeamId(1);
+        // ✅ También se llama con lista vacía
+        verify(teamPersonRepository, times(1)).saveAll(eq(Collections.emptyList()));
+    }
+
+    @Test
+    void delete_WhenRepositoriesDoNotThrow_ShouldStillReturnTrue() {
+        // Arrange
+        when(teamRepository.existsById(1)).thenReturn(true);
+
+        // Act
+        boolean result = teamService.delete(1);
+
+        // Assert
+        assertTrue(result);
+        verify(teamPersonRepository).deleteAllByTeam_TeamId(1);
+        verify(teamRepository).deleteById(1);
+    }
+
 }

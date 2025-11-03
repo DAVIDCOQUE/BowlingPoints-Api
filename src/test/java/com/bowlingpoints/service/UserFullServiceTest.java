@@ -257,4 +257,95 @@ class UserFullServiceTest {
         boolean result = userFullService.deleteUser(99);
         assertFalse(result);
     }
+
+    @Test
+    void createUser_ShouldThrow_WhenPasswordMissing() {
+        UserFullDTO invalid = UserFullDTO.builder()
+                .document("123")
+                .nickname("test")
+                .password("") // contraseña vacía
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> userFullService.createUser(invalid));
+    }
+
+    @Test
+    void createUser_ShouldThrow_WhenNicknameMissingAndDocumentMissing() {
+        UserFullDTO invalid = UserFullDTO.builder()
+                .password("abc")
+                .nickname("")
+                .document("")
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> userFullService.createUser(invalid));
+    }
+
+    @Test
+    void createUser_ShouldThrow_WhenDuplicateNickname() {
+        User existing = User.builder()
+                .userId(1)
+                .nickname("john123")
+                .status(true)
+                .build();
+
+        when(userRepository.findAll()).thenReturn(List.of(existing));
+
+        UserFullDTO input = UserFullDTO.builder()
+                .nickname("john123")
+                .document("999")
+                .password("12345")
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> userFullService.createUser(input));
+    }
+    @Test
+    void getAllActiveUsers_ShouldReturnOnlyActiveOnes() {
+        UserFullDTO active = UserFullDTO.builder().userId(1).status(true).build();
+        UserFullDTO inactive = UserFullDTO.builder().userId(2).status(false).build();
+
+        UserFullService spyService = Mockito.spy(userFullService);
+        doReturn(List.of(active, inactive)).when(spyService).getAllUsersWithDetails();
+
+        List<UserFullDTO> result = spyService.getAllActiveUsers();
+
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getStatus());
+    }
+
+    @Test
+    void getAllActivePlayers_ShouldReturnOnlyPlayers() {
+        UserFullDTO player = UserFullDTO.builder()
+                .userId(1)
+                .roles(List.of(new RoleDTO(1, "JUGADOR")))
+                .build();
+
+        UserFullDTO admin = UserFullDTO.builder()
+                .userId(2)
+                .roles(List.of(new RoleDTO(2, "ADMIN")))
+                .build();
+
+        UserFullService spyService = Mockito.spy(userFullService);
+        doReturn(List.of(player, admin)).when(spyService).getAllUsersWithDetails();
+
+        List<UserFullDTO> result = spyService.getAllActivePlayers();
+
+        assertEquals(1, result.size());
+        assertEquals("JUGADOR", result.get(0).getRoles().get(0).getName());
+    }
+
+    @Test
+    void deleteUser_ShouldHandleNoRolesOrCategories() {
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRoleRepository.findAllByUser_UserIdAndStatusTrue(1))
+                .thenReturn(Collections.emptyList());
+        when(personCategoryRepository.findByPerson_PersonId(10))
+                .thenReturn(Collections.emptyList());
+
+        boolean result = userFullService.deleteUser(1);
+
+        assertTrue(result);
+        verify(userRepository).save(any(User.class));
+        verify(personRepository).save(any(Person.class));
+    }
+
 }

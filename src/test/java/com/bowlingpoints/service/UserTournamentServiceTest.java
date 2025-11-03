@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Test unitario para UserTournamentService.
+ * Test unitario completo para UserTournamentService.
  */
 class UserTournamentServiceTest {
 
@@ -24,32 +24,23 @@ class UserTournamentServiceTest {
     private ResultRepository resultRepository;
 
     @Mock
-    private TournamentRepository tournamentRepository; // no se usa directamente, pero lo requiere el constructor
+    private TournamentRepository tournamentRepository;
 
     @InjectMocks
     private UserTournamentService userTournamentService;
 
     private Object[] rowData;
     private Result result;
-    private UserStatisticsDTO mockStats;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        // Datos simulados para getTournamentsPlayedByUser()
         rowData = new Object[]{
-                1,                    // tournamentId
-                "Open Nacional",      // name
-                LocalDate.of(2025, 3, 10), // date
-                "Cali",               // location
-                "Individual",         // modalidad
-                "Elite",              // categoria
-                6,                    // resultados
-                "imagen.jpg"          // imageUrl
+                1, "Open Nacional", LocalDate.of(2025, 3, 10),
+                "Cali", "Individual", "Elite", 6, "imagen.jpg"
         };
 
-        // Datos simulados para getResultsForUserAndTournament()
         result = Result.builder()
                 .resultId(100)
                 .score(220)
@@ -57,24 +48,12 @@ class UserTournamentServiceTest {
                 .lineNumber(2)
                 .createdAt(LocalDateTime.of(2025, 3, 10, 18, 0))
                 .build();
-
-        // Datos simulados para getUserStatistics()
-        mockStats = UserStatisticsDTO.builder()
-                .totalTournaments(5)
-                .totalStrikes(80)
-                .avgScore(210.5)
-                .bestGame(279)
-                .tournamentsWon(2)
-                .build();
     }
 
-    // ----------------------------------------------------------------------
-    // getTournamentsPlayedByUser
-    // ----------------------------------------------------------------------
-   /* @Test
+    @Test
     void getTournamentsPlayedByUser_ShouldReturnMappedDTOs_WhenDataExists() {
         when(resultRepository.findTournamentsByPersonId(1))
-                .thenReturn(List.of(rowData));
+                .thenReturn(List.<Object[]>of(rowData)); // ✅ tipo correcto
 
         List<UserTournamentDTO> result = userTournamentService.getTournamentsPlayedByUser(1);
 
@@ -84,23 +63,19 @@ class UserTournamentServiceTest {
         assertEquals("Cali", dto.getLocation());
         assertEquals(6, dto.getResultados());
         assertEquals("imagen.jpg", dto.getImageUrl());
-        verify(resultRepository, times(1)).findTournamentsByPersonId(1);
-    }*/
+        verify(resultRepository).findTournamentsByPersonId(1);
+    }
 
     @Test
     void getTournamentsPlayedByUser_ShouldReturnEmptyList_WhenNoData() {
-        when(resultRepository.findTournamentsByPersonId(1))
-                .thenReturn(List.of());
+        when(resultRepository.findTournamentsByPersonId(1)).thenReturn(List.of());
 
         List<UserTournamentDTO> result = userTournamentService.getTournamentsPlayedByUser(1);
 
         assertTrue(result.isEmpty());
-        verify(resultRepository, times(1)).findTournamentsByPersonId(1);
+        verify(resultRepository).findTournamentsByPersonId(1);
     }
 
-    // ----------------------------------------------------------------------
-    // getResultsForUserAndTournament
-    // ----------------------------------------------------------------------
     @Test
     void getResultsForUserAndTournament_ShouldReturnMappedResults() {
         when(resultRepository.findResultsByPersonAndTournament(1, 10))
@@ -127,37 +102,41 @@ class UserTournamentServiceTest {
                 userTournamentService.getResultsForUserAndTournament(1, 10);
 
         assertTrue(results.isEmpty());
+        verify(resultRepository).findResultsByPersonAndTournament(1, 10);
     }
 
-    // ----------------------------------------------------------------------
-    // getUserStatistics
-    // ----------------------------------------------------------------------
-    /*@Test
+    @Test
     void getUserStatistics_ShouldReturnMappedStatistics() {
-        when(resultRepository.findStatsByUserId(1))
-                .thenReturn((UserStatsProjection) mockStats);
+        UserStatsProjection stats = mock(UserStatsProjection.class); // ✅ import correcto
 
-        UserStatisticsDTO stats = userTournamentService.getUserStatistics(1);
+        when(stats.getTotalTournaments()).thenReturn(5);
+        when(stats.getTotalStrikes()).thenReturn(80);
+        when(stats.getAvgScore()).thenReturn(210.5);
+        when(stats.getBestGame()).thenReturn(279);
+        when(stats.getTournamentsWon()).thenReturn(2);
 
-        assertNotNull(stats);
-        assertEquals(5, stats.getTotalTournaments());
-        assertEquals(80, stats.getTotalStrikes());
-        assertEquals(210.5, stats.getAvgScore());
-        assertEquals(279, stats.getBestGame());
-        assertEquals(2, stats.getTournamentsWon());
+        when(resultRepository.findStatsByUserId(1)).thenReturn(stats);
+
+        UserStatisticsDTO result = userTournamentService.getUserStatistics(1);
+
+        assertNotNull(result);
+        assertEquals(5, result.getTotalTournaments());
+        assertEquals(80, result.getTotalStrikes());
+        assertEquals(210.5, result.getAvgScore());
+        assertEquals(279, result.getBestGame());
+        assertEquals(2, result.getTournamentsWon());
         verify(resultRepository).findStatsByUserId(1);
     }
 
-    /*@Test
-    void getUserStatistics_ShouldHandleNullFieldsGracefully() {
-        UserStatisticsDTO partial = UserStatisticsDTO.builder().build();
-        when(resultRepository.findStatsByUserId(2)).thenReturn((UserStatsProjection) partial);
+    @Test
+    void getUserStatistics_ShouldHandleNullProjectionGracefully() {
+        when(resultRepository.findStatsByUserId(2)).thenReturn(null);
 
-        UserStatisticsDTO stats = userTournamentService.getUserStatistics(2);
+        UserStatisticsDTO result = userTournamentService.getUserStatistics(2);
 
-        assertNotNull(stats);
-        assertNull(stats.getAvgScore());
-        assertNull(stats.getTotalTournaments());
+        assertNotNull(result);
+        assertNull(result.getTotalTournaments());
+        assertNull(result.getAvgScore());
         verify(resultRepository).findStatsByUserId(2);
-    }*/
+    }
 }
