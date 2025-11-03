@@ -122,32 +122,32 @@ jobs:
       - name: 🚀 Deploy to AWS via SSH
         uses: appleboy/ssh-action@3ca8a7c5359ac6ad91aa47f1946ece1c3b025004
         env:
-          # Aquí defines tus variables "tipo .env"
-          APP_PORTS: ${{ secrets.APP_PORTS }}
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          # ... otras vars
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+            DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+            APP_PORTS: ${{ secrets.APP_PORTS }}
+            DB_URL: ${{ secrets.DB_URL }}
+            DB_USER: ${{ secrets.DB_USER }}
+            DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ec2-user
-          key: ${{ secrets.AWS_SSH_KEY }}
+            host: ${{ secrets.AWS_HOST }}
+            username: ec2-user
+            key: ${{ secrets.AWS_SSH_KEY }}
 
-          # 💡 TRUCO: Usar el comando 'sh -c' para forzar la expansión local antes de enviar
-          script: |
-            echo "🚀 Desplegando en AWS..."
-            
-          # Aquí usamos la sintaxis de shell de Linux para expandir las variables
-          # La acción ssh-action lo interpreta y lo pasa correctamente al servidor
-            docker pull $DOCKERHUB_USERNAME/bowlingpoints:latest
-            docker stop bowlingpoints || true
-            docker rm bowlingpoints || true
-            
-          # Comando RUN con las variables expandidas localmente
-            docker run -d --name bowlingpoints -p "$APP_PORTS" \
-              -e DB_URL="$DB_URL" \
-              -e DB_USER="$DB_USER" \
-              -e DB_PASSWORD="$DB_PASSWORD" \
-              --restart always \
-              $DOCKERHUB_USERNAME/bowlingpoints:latest
+            # 💡 TRUCO: Usar el comando 'sh -c' para forzar la expansión local antes de enviar
+            script: |
+              echo "🚀 Desplegando en AWS..."
+              
+              # Aquí usamos la sintaxis de shell de Linux para expandir las variables
+              # La acción ssh-action lo interpreta y lo pasa correctamente al servidor
+              docker pull $DOCKERHUB_USERNAME/bowlingpoints:latest
+              docker stop bowlingpoints || true
+              docker rm bowlingpoints || true
+              
+              # Comando RUN con las variables expandidas localmente
+              docker run -d --name bowlingpoints -p "$APP_PORTS" \
+                -e DB_URL="$DB_URL" \
+                -e DB_USER="$DB_USER" \
+                -e DB_PASSWORD="$DB_PASSWORD" \
+                --restart always \
+                $DOCKERHUB_USERNAME/bowlingpoints:latest
