@@ -200,6 +200,7 @@ public class ResultService {
         List<Object[]> raw = resultRepository.findRawPlayerResultsForTable(tournamentId, modalityId);
 
         Map<Integer, PlayerResultTableDTO> playerMap = new LinkedHashMap<>();
+        Map<Integer, PlayerResultTableDTO> teamMap = new LinkedHashMap<>();
 
         for (Object[] row : raw) {
             Integer personId = (Integer) row[0];
@@ -207,34 +208,66 @@ public class ResultService {
             String clubName = (String) row[2];
             Integer round = (Integer) row[3];
             Integer score = (Integer) row[4];
+            Integer teamId = (Integer) row[5];           // ← Asegúrate que el query lo trae
+            String teamName = (String) row[6];           // ← Asegúrate que el query lo trae
 
-            // Aquí puedes aplicar filtro adicional por roundNumber si no lo haces desde el query
             if (roundNumber != null && !roundNumber.equals(round)) continue;
 
-            PlayerResultTableDTO dto = playerMap.get(personId);
-            if (dto == null) {
-                dto = PlayerResultTableDTO.builder()
-                        .personId(personId)
-                        .playerName(playerName)
-                        .clubName(clubName)
-                        .scores(new ArrayList<>())
-                        .total(0)
-                        .promedio(0.0)
-                        .build();
-                playerMap.put(personId, dto);
-            }
+            if (teamId == null) {
+                // Individual
+                PlayerResultTableDTO dto = playerMap.get(personId);
+                if (dto == null) {
+                    dto = PlayerResultTableDTO.builder()
+                            .personId(personId)
+                            .playerName(playerName)
+                            .clubName(clubName)
+                            .scores(new ArrayList<>())
+                            .total(0)
+                            .promedio(0.0)
+                            .build();
+                    playerMap.put(personId, dto);
+                }
 
-            dto.getScores().add(score);
-            dto.setTotal(dto.getTotal() + score);
+                dto.getScores().add(score);
+                dto.setTotal(dto.getTotal() + score);
+
+            } else {
+                // Por equipo
+                PlayerResultTableDTO dto = teamMap.get(teamId);
+                if (dto == null) {
+                    dto = PlayerResultTableDTO.builder()
+                            .teamId(teamId)
+                            .teamName(teamName)
+                            .scores(new ArrayList<>())
+                            .total(0)
+                            .promedio(0.0)
+                            .build();
+                    teamMap.put(teamId, dto);
+                }
+
+                dto.getScores().add(score);
+                dto.setTotal(dto.getTotal() + score);
+            }
         }
 
-        for (PlayerResultTableDTO dto : playerMap.values()) {
+        // Calcular promedios
+        playerMap.values().forEach(dto -> {
             if (!dto.getScores().isEmpty()) {
                 dto.setPromedio(dto.getTotal() / (double) dto.getScores().size());
             }
-        }
+        });
 
-        return new ArrayList<>(playerMap.values());
+        teamMap.values().forEach(dto -> {
+            if (!dto.getScores().isEmpty()) {
+                dto.setPromedio(dto.getTotal() / (double) dto.getScores().size());
+            }
+        });
+
+        List<PlayerResultTableDTO> allResults = new ArrayList<>();
+        allResults.addAll(playerMap.values());
+        allResults.addAll(teamMap.values());
+
+        return allResults;
     }
 
     public List<DashboardPlayerDTO> getAllPlayersByAvgScore() {

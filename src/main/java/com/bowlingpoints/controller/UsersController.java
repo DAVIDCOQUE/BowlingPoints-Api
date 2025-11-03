@@ -31,6 +31,14 @@ public class UsersController {
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Usuarios obtenidos correctamente", users));
     }
 
+    // Obtener todos los usuarios activos (sin importar rol)
+    @GetMapping("/actives")
+    @Operation(summary = "Obtener todos los usuarios activos")
+    public ResponseEntity<ResponseGenericDTO<List<UserFullDTO>>> getActiveUsers() {
+        List<UserFullDTO> activeUsers = userFullService.getAllActiveUsers();
+        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Usuarios activos obtenidos correctamente", activeUsers));
+    }
+
     //  Obtener usuario actual desde el token
     @GetMapping("/me")
     @Operation(summary = "Obtener el usuario autenticado")

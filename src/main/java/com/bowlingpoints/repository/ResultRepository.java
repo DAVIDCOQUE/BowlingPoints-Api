@@ -214,20 +214,29 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
      */
     @Query("""
                 SELECT 
-                    p.personId,
-                    CONCAT(p.fullName, ' ', p.fullSurname),
-                    cp.club.name,
+                    COALESCE(p.personId, 0),                                
+                    CASE 
+                        WHEN p.personId IS NOT NULL THEN CONCAT(p.fullName, ' ', p.fullSurname)
+                        ELSE NULL
+                    END,                                                    
+                    CASE 
+                        WHEN p.personId IS NOT NULL THEN cp.club.name 
+                        ELSE NULL
+                    END,                                                    
                     r.roundNumber,
-                    r.score
+                    r.score,
+                    t.teamId,                                              
+                    t.nameTeam                                              
                 FROM Result r
-                JOIN r.person p
+                LEFT JOIN r.person p
                 LEFT JOIN p.clubPersons cp
+                LEFT JOIN r.team t
                 WHERE r.tournament.tournamentId = :tournamentId
                   AND r.modality.modalityId = :modalityId
                   AND r.deletedAt IS NULL
                   AND (cp.status = true OR cp IS NULL)
                   AND (cp.deletedAt IS NULL OR cp IS NULL)
-                ORDER BY p.personId, r.roundNumber
+                ORDER BY COALESCE(p.personId, t.teamId), r.roundNumber
             """)
     List<Object[]> findRawPlayerResultsForTable(
             @Param("tournamentId") Integer tournamentId,

@@ -12,9 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Carga inicial de datos base del sistema (roles, usuarios, torneos, ramas y resultados).
- */
 @Configuration
 @RequiredArgsConstructor
 public class DatabaseSeeder {
@@ -36,6 +33,8 @@ public class DatabaseSeeder {
             TournamentCategoryRepository tournamentCategoryRepository,
             BranchRepository branchRepository,
             TournamentBranchRepository tournamentBranchRepository,
+            TeamRepository teamRepository,
+            TeamPersonRepository teamPersonRepository,
             ResultRepository resultRepository,
             TournamentRegistrationRepository registrationRepository
     ) {
@@ -50,15 +49,13 @@ public class DatabaseSeeder {
             // 2️⃣ Usuarios base
             User admin = createUserIfNotExists(
                     "1143993925", "/uploads/users/default.png", "1143993925",
-                    "David Armando", "Sánchez Sánchez", LocalDate.of(1993, 4, 12),
+                    "David Armando", "Sánchez", LocalDate.of(1993, 4, 12),
                     "david03sc@gmail.com", "Masculino", "ADMIN",
                     passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
             );
 
-            // Agregar también rol de JUGADOR a David
             Role jugadorRole = roleRepository.findByName("JUGADOR")
                     .orElseThrow(() -> new RuntimeException("❌ Rol no encontrado: JUGADOR"));
-
             userRoleRepository.save(UserRole.builder()
                     .user(admin)
                     .role(jugadorRole)
@@ -73,12 +70,30 @@ public class DatabaseSeeder {
                     passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
             );
 
-            User jugador = createUserIfNotExists(
-                    "11455625", "/uploads/users/default.png", "11455625",
-                    "Sara", "Arteaga", LocalDate.of(2002, 1, 7),
-                    "sara@gmail.com", "Femenino", "JUGADOR",
-                    passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
-            );
+            // ✅ Jugadores simulados (5 hombres, 5 mujeres)
+            String[][] jugadoresExtra = {
+                    {"Carlos", "Gómez", "Masculino", "1000000000"},
+                    {"Juan", "Fernández", "Masculino", "1000000001"},
+                    {"Luis", "López", "Masculino", "1000000002"},
+                    {"Pedro", "Martínez", "Masculino", "1000000003"},
+                    {"Andrés", "Rodríguez", "Masculino", "1000000004"},
+                    {"Ana", "Gómez", "Femenino", "1000000100"},
+                    {"María", "Fernández", "Femenino", "1000000101"},
+                    {"Luisa", "López", "Femenino", "1000000102"},
+                    {"Claudia", "Martínez", "Femenino", "1000000103"},
+                    {"Sofía", "Rodríguez", "Femenino", "1000000104"}
+            };
+
+            List<Person> personasSimuladas = new ArrayList<>();
+            for (String[] datos : jugadoresExtra) {
+                User usuario = createUserIfNotExists(
+                        datos[3], "/uploads/users/default.png", datos[3],
+                        datos[0], datos[1], LocalDate.of(2002, 1, 1),
+                        datos[0].toLowerCase() + "@mail.com", datos[2], "JUGADOR",
+                        passwordEncoder, personRepository, userRepository, userRoleRepository, roleRepository
+                );
+                personasSimuladas.add(usuario.getPerson());
+            }
 
             // 3️⃣ Club principal
             Clubs club = clubRepository.findByName("Bowling Club Central")
@@ -94,34 +109,19 @@ public class DatabaseSeeder {
                                     .build()
                     ));
 
-            // Asociar jugadores al club
-            if (clubPersonRepository.count() == 0) {
-                clubPersonRepository.saveAll(List.of(
-                        ClubPerson.builder()
-                                .club(club)
-                                .person(entrenador.getPerson())
-                                .roleInClub("ENTRENADOR")
-                                .joinedAt(LocalDateTime.now())
-                                .status(true)
-                                .build(),
-                        ClubPerson.builder()
-                                .club(club)
-                                .person(jugador.getPerson())
-                                .roleInClub("JUGADOR")
-                                .joinedAt(LocalDateTime.now())
-                                .status(true)
-                                .build(),
-                        ClubPerson.builder()
-                                .club(club)
-                                .person(admin.getPerson())
-                                .roleInClub("JUGADOR")
-                                .joinedAt(LocalDateTime.now())
-                                .status(true)
-                                .build()
-                ));
+            for (Person p : personasSimuladas) {
+                if (!clubPersonRepository.existsByClubAndPerson(club, p)) {
+                    clubPersonRepository.save(ClubPerson.builder()
+                            .club(club)
+                            .person(p)
+                            .roleInClub("JUGADOR")
+                            .joinedAt(LocalDateTime.now())
+                            .status(true)
+                            .build());
+                }
             }
 
-            // 4️⃣ Categorías (actualizadas)
+            // 4️⃣ Categorías
             String[] categorias = {"Primera", "Segunda", "Juvenil", "Senior"};
             for (String nombre : categorias) {
                 categoryRepository.findByNameAndDeletedAtIsNull(nombre)
@@ -133,16 +133,26 @@ public class DatabaseSeeder {
                                 .build()));
             }
 
-            // 5️⃣ Modalidades (actualizadas)
-            String[] modalidades = {"Individual", "Parejas", "Equipos"};
-            for (String nombre : modalidades) {
-                modalityRepository.findByNameAndDeletedAtIsNull(nombre)
+            // 5️⃣ Modalidades (solo masculinas y femeninas)
+            String[][] modalidadesExtendidas = {
+                    {"Sencillos Masculino", "Individual Masculino"},
+                    {"Sencillos Femenino", "Individual Femenino"},
+                    {"Dobles Masculino", "Pareja de hombres"},
+                    {"Dobles Femenino", "Pareja de mujeres"},
+                    {"Equipos Masculino", "Equipos masculinos"},
+                    {"Equipos Femenino", "Equipos femeninos"}
+            };
+
+            List<Modality> allModalities = new ArrayList<>();
+            for (String[] mod : modalidadesExtendidas) {
+                Modality m = modalityRepository.findByNameAndDeletedAtIsNull(mod[0])
                         .orElseGet(() -> modalityRepository.save(Modality.builder()
-                                .name(nombre)
-                                .description("Modalidad " + nombre)
+                                .name(mod[0])
+                                .description(mod[1])
                                 .status(true)
                                 .createdAt(LocalDateTime.now())
                                 .build()));
+                allModalities.add(m);
             }
 
             // 6️⃣ Ámbitos
@@ -152,14 +162,14 @@ public class DatabaseSeeder {
                         .orElseGet(() -> ambitRepository.save(Ambit.builder()
                                 .name(nombre)
                                 .description("Ámbito " + nombre)
-                                .imageUrl("/uploads/tournament/" + nombre + ".png")
+                                .imageUrl("/uploads/tournaments/" + nombre.toLowerCase() + ".png")
                                 .status(true)
                                 .createdAt(LocalDateTime.now())
                                 .build()));
             }
 
-            // 7️⃣ Ramas
-            String[] ramas = {"Masculino", "Femenino", "Mixto"};
+            // 7️⃣ Ramas (solo masculino y femenino)
+            String[] ramas = {"Masculino", "Femenino"};
             for (String nombre : ramas) {
                 branchRepository.findByName(nombre)
                         .orElseGet(() -> branchRepository.save(
@@ -173,70 +183,95 @@ public class DatabaseSeeder {
 
             List<Branch> allBranches = branchRepository.findAll();
             List<Category> allCategories = categoryRepository.findAll();
-            List<Modality> allModalities = modalityRepository.findAll();
             List<Ambit> allAmbits = ambitRepository.findAll();
 
             // 8️⃣ Torneos
-            String[] torneos = {"Torneo Apertura", "Copa Nacional Elite"};
-            for (int i = 0; i < torneos.length; i++) {
-                final int index = i;
-                String nombre = torneos[i];
+            Tournament torneoApertura = tournamentRepository.findByName("Torneo Apertura")
+                    .orElseGet(() -> {
+                        Tournament t = Tournament.builder()
+                                .name("Torneo Apertura")
+                                .organizer("Federación Nacional de Bowling")
+                                .ambit(allAmbits.get(0))
+                                .imageUrl("/uploads/tournaments/torneo_apertura.png")
+                                .startDate(LocalDate.of(2025, 5, 10))
+                                .endDate(LocalDate.of(2025, 5, 15))
+                                .location("Bogotá")
+                                .stage("Finalizado")
+                                .status(true)
+                                .build();
+                        Tournament saved = tournamentRepository.save(t);
 
-                tournamentRepository.findByName(nombre)
-                        .orElseGet(() -> {
-                            Tournament torneo = Tournament.builder()
-                                    .name(nombre)
-                                    .organizer("Federación Nacional de Bowling")
-                                    .ambit(allAmbits.get(index % allAmbits.size()))
-                                    .imageUrl("/uploads/tournaments/" + nombre.replace(" ", "_").toLowerCase() + ".png")
-                                    .startDate(LocalDate.of(2025, 5 + index, 10))
-                                    .endDate(LocalDate.of(2025, 5 + index, 15))
-                                    .location(index == 0 ? "Bogotá" : "Medellín")
-                                    .stage("Programado")
-                                    .status(true)
-                                    .build();
+                        allCategories.forEach(cat ->
+                                tournamentCategoryRepository.save(TournamentCategory.builder()
+                                        .tournament(saved)
+                                        .category(cat)
+                                        .build()));
 
-                            Tournament saved = tournamentRepository.save(torneo);
+                        allModalities.forEach(mod ->
+                                tournamentModalityRepository.save(TournamentModality.builder()
+                                        .tournament(saved)
+                                        .modality(mod)
+                                        .build()));
 
-                            // ✅ Asignar categorías y modalidades y ramas
-                            allCategories.stream().limit(2).forEach(cat ->
-                                    tournamentCategoryRepository.save(TournamentCategory.builder()
-                                            .tournament(saved)
-                                            .category(cat)
-                                            .build()));
+                        allBranches.forEach(branch ->
+                                tournamentBranchRepository.save(TournamentBranch.builder()
+                                        .tournament(saved)
+                                        .branch(branch)
+                                        .build()));
+                        return saved;
+                    });
 
-                            allModalities.stream().limit(2).forEach(mod ->
-                                    tournamentModalityRepository.save(TournamentModality.builder()
-                                            .tournament(saved)
-                                            .modality(mod)
-                                            .build()));
+            // 9️⃣ Equipos: 2 masculinos, 2 femeninos
+            Map<String, int[]> equiposMap = Map.of(
+                    "Equipo Masculino 1", new int[]{0, 1},
+                    "Equipo Masculino 2", new int[]{2, 3},
+                    "Equipo Femenino 1", new int[]{5, 6},
+                    "Equipo Femenino 2", new int[]{7, 8}
+            );
 
-                            allBranches.forEach(branch ->
-                                    tournamentBranchRepository.save(TournamentBranch.builder()
-                                            .tournament(saved)
-                                            .branch(branch)
-                                            .build()));
+            Map<String, Team> equiposCreados = new HashMap<>();
+            for (Map.Entry<String, int[]> entry : equiposMap.entrySet()) {
+                String teamName = entry.getKey();
+                int[] miembros = entry.getValue();
+                Team equipo = teamRepository.findByNameTeam(teamName)
+                        .orElseGet(() -> teamRepository.save(Team.builder()
+                                .nameTeam(teamName)
+                                .status(true)
+                                .createdAt(LocalDateTime.now())
+                                .build()));
+                equiposCreados.put(teamName, equipo);
 
-                            return saved;
-                        });
+                for (int idx : miembros) {
+                    Person p = personasSimuladas.get(idx);
+                    if (!teamPersonRepository.existsByTeamAndPerson(equipo, p)) {
+                        teamPersonRepository.save(TeamPerson.builder()
+                                .team(equipo)
+                                .person(p)
+                                .createdAt(LocalDateTime.now())
+                                .build());
+                    }
+                }
             }
 
-            // Obtener el torneo principal
-            Tournament torneoEjemplo = tournamentRepository.findByName("Torneo Apertura").orElseThrow();
+            // 🔟 Inscripciones individuales
+            Category categoriaBase = categoryRepository.findByNameAndDeletedAtIsNull("Primera").orElseThrow();
+            Random rand = new Random();
 
-            Branch ramaFemenina = branchRepository.findByName("Femenino").orElseThrow();
-            Branch ramaMasculina = branchRepository.findByName("Masculino").orElseThrow();
+            for (Person p : personasSimuladas) {
+                Branch rama = p.getGender().equalsIgnoreCase("Femenino") ?
+                        branchRepository.findByName("Femenino").orElseThrow() :
+                        branchRepository.findByName("Masculino").orElseThrow();
 
-            // 9️⃣ Registrar jugadores en el torneo
-            List<User> jugadoresTorneo = List.of(admin, entrenador, jugador);
-            for (User user : jugadoresTorneo) {
-                Branch rama = user.getPerson().getGender().equalsIgnoreCase("Femenino") ? ramaFemenina : ramaMasculina;
+                Modality modInd = modalityRepository.findByNameAndDeletedAtIsNull(
+                        p.getGender().equalsIgnoreCase("Femenino") ?
+                                "Sencillos Femenino" : "Sencillos Masculino"
+                ).orElseThrow();
 
                 registrationRepository.save(TournamentRegistration.builder()
-                        .person(user.getPerson())
-                        .tournament(torneoEjemplo)
-                        .category(allCategories.get(0))
-                        .modality(allModalities.get(0))
+                        .person(p)
+                        .tournament(torneoApertura)
+                        .modality(modInd)
+                        .category(categoriaBase)
                         .branch(rama)
                         .status(true)
                         .registrationDate(new Date())
@@ -245,39 +280,101 @@ public class DatabaseSeeder {
                         .build());
             }
 
-            // 🔟 Simular resultados: 3 rondas x 7 líneas por jugador
-            Random random = new Random();
-            for (User user : jugadoresTorneo) {
-                Branch rama = user.getPerson().getGender().equalsIgnoreCase("Femenino") ? ramaFemenina : ramaMasculina;
+            // 1️⃣1️⃣ Inscripciones por equipo
+            for (Map.Entry<String, Team> entry : equiposCreados.entrySet()) {
+                String name = entry.getKey();
+                Team equipo = entry.getValue();
 
-                for (int ronda = 1; ronda <= 3; ronda++) {
-                    for (int linea = 1; linea <= 7; linea++) {
-                        int score = 120 + random.nextInt(101); // puntaje entre 120 y 220
-                        int pista = 1 + random.nextInt(12);   // pista entre 1 y 12
+                Branch rama = name.contains("Femenino") ?
+                        branchRepository.findByName("Femenino").orElseThrow() :
+                        branchRepository.findByName("Masculino").orElseThrow();
 
+                String modName = name.contains("Femenino") ? "Dobles Femenino" : "Dobles Masculino";
+                Modality mod = modalityRepository.findByNameAndDeletedAtIsNull(modName).orElseThrow();
+
+                registrationRepository.save(TournamentRegistration.builder()
+                        .team(equipo)
+                        .tournament(torneoApertura)
+                        .modality(mod)
+                        .category(categoriaBase)
+                        .branch(rama)
+                        .status(true)
+                        .registrationDate(new Date())
+                        .createdAt(new Date())
+                        .createdBy("seeder")
+                        .build());
+            }
+
+            // 1️⃣2️⃣ Resultados individuales
+            for (Person p : personasSimuladas) {
+                Branch rama = p.getGender().equalsIgnoreCase("Femenino") ?
+                        branchRepository.findByName("Femenino").orElseThrow() :
+                        branchRepository.findByName("Masculino").orElseThrow();
+
+                Modality modInd = modalityRepository.findByNameAndDeletedAtIsNull(
+                        p.getGender().equalsIgnoreCase("Femenino") ?
+                                "Sencillos Femenino" : "Sencillos Masculino"
+                ).orElseThrow();
+
+                for (int ronda = 1; ronda <= 2; ronda++) {
+                    for (int linea = 1; linea <= 4; linea++) {
+                        int score = 120 + rand.nextInt(101);
+                        int pista = 1 + rand.nextInt(12);
                         resultRepository.save(Result.builder()
-                                .tournament(torneoEjemplo)
-                                .person(user.getPerson())
-                                .category(allCategories.get(0))
-                                .modality(allModalities.get(0))
+                                .person(p)
+                                .tournament(torneoApertura)
                                 .branch(rama)
+                                .modality(modInd)
+                                .category(categoriaBase)
                                 .roundNumber(ronda)
-                                .laneNumber(pista)
                                 .lineNumber(linea)
+                                .laneNumber(pista)
                                 .score(score)
                                 .createdBy(1)
+                                .createdAt(LocalDateTime.now())
                                 .build());
                     }
                 }
             }
 
-            System.out.println("✅ Seeder completado con registros de torneo, jugadores y resultados simulados.");
+            // 1️⃣3️⃣ Resultados por equipo
+            for (Map.Entry<String, Team> entry : equiposCreados.entrySet()) {
+                Team equipo = entry.getValue();
+                String name = entry.getKey();
+
+                Branch rama = name.contains("Femenino") ?
+                        branchRepository.findByName("Femenino").orElseThrow() :
+                        branchRepository.findByName("Masculino").orElseThrow();
+
+                String modName = name.contains("Femenino") ? "Dobles Femenino" : "Dobles Masculino";
+                Modality modEquipo = modalityRepository.findByNameAndDeletedAtIsNull(modName).orElseThrow();
+
+                for (int ronda = 1; ronda <= 2; ronda++) {
+                    for (int linea = 1; linea <= 3; linea++) {
+                        int score = 200 + rand.nextInt(101);
+                        int pista = 1 + rand.nextInt(12);
+                        resultRepository.save(Result.builder()
+                                .team(equipo)
+                                .tournament(torneoApertura)
+                                .branch(rama)
+                                .modality(modEquipo)
+                                .category(categoriaBase)
+                                .roundNumber(ronda)
+                                .lineNumber(linea)
+                                .laneNumber(pista)
+                                .score(score)
+                                .createdBy(1)
+                                .createdAt(LocalDateTime.now())
+                                .build());
+                    }
+                }
+            }
+
+            System.out.println("✅ Seeder completado sin rama mixta, con ramas asignadas por género.");
         };
     }
 
-    // =========================================================
     // Métodos auxiliares
-    // =========================================================
     private void createRoleIfMissing(String name, RoleRepository roleRepository) {
         roleRepository.findByName(name)
                 .orElseGet(() -> roleRepository.save(Role.builder().name(name).build()));
@@ -311,7 +408,6 @@ public class DatabaseSeeder {
                 .phone("3100000000")
                 .status(true)
                 .createdAt(LocalDateTime.now())
-                .photoUrl(photoUrl)
                 .document(document)
                 .build());
 
@@ -334,7 +430,6 @@ public class DatabaseSeeder {
                 .status(true)
                 .createdAt(LocalDateTime.now())
                 .build());
-
         return user;
     }
 }

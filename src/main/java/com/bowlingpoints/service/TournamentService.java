@@ -269,25 +269,43 @@ public class TournamentService {
                 .toList()
                 : Collections.emptyList();
 
-        // Mapeo de jugadores registrados
+        // Mapeo de jugadores / equipos registrados
         List<TournamentRegistrationDTO> registrationDTOS = tournamentRegistrationRepository
                 .findByTournament_TournamentId(entity.getTournamentId())
                 .stream()
-                .map(reg -> TournamentRegistrationDTO.builder()
-                        .registrationId(reg.getRegistrationId())
-                        .tournamentId(reg.getTournament().getTournamentId())
-                        .personId(reg.getPerson().getPersonId())
-                        .personFullName(reg.getPerson().getFullName() + " " + reg.getPerson().getFullSurname())
-                        .categoryId(reg.getCategory().getCategoryId())
-                        .categoryName(reg.getCategory().getName())
-                        .modalityId(reg.getModality().getModalityId())
-                        .modalityName(reg.getModality().getName())
-                        .branchId(reg.getBranch().getBranchId())
-                        .branchName(reg.getBranch().getName())
-                        .teamId(reg.getTeam() != null ? reg.getTeam().getTeamId() : null)
-                        .teamName(reg.getTeam() != null ? reg.getTeam().getNameTeam() : null)
-                        .status(reg.getStatus())
-                        .build())
+                .map(reg -> {
+                    // Variables seguras para persona y equipo
+                    Integer personId = null;
+                    String personFullName = null;
+                    Integer teamId = null;
+                    String teamName = null;
+
+                    if (reg.getPerson() != null) {
+                        personId = reg.getPerson().getPersonId();
+                        personFullName = reg.getPerson().getFullName() + " " + reg.getPerson().getFullSurname();
+                    }
+
+                    if (reg.getTeam() != null) {
+                        teamId = reg.getTeam().getTeamId();
+                        teamName = reg.getTeam().getNameTeam();
+                    }
+
+                    return TournamentRegistrationDTO.builder()
+                            .registrationId(reg.getRegistrationId())
+                            .tournamentId(reg.getTournament().getTournamentId())
+                            .personId(personId)
+                            .personFullName(personFullName)
+                            .teamId(teamId)
+                            .teamName(teamName)
+                            .categoryId(reg.getCategory() != null ? reg.getCategory().getCategoryId() : null)
+                            .categoryName(reg.getCategory() != null ? reg.getCategory().getName() : null)
+                            .modalityId(reg.getModality() != null ? reg.getModality().getModalityId() : null)
+                            .modalityName(reg.getModality() != null ? reg.getModality().getName() : null)
+                            .branchId(reg.getBranch() != null ? reg.getBranch().getBranchId() : null)
+                            .branchName(reg.getBranch() != null ? reg.getBranch().getName() : null)
+                            .status(reg.getStatus())
+                            .build();
+                })
                 .toList();
 
         //  Construcción del DTO final

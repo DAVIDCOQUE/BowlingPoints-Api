@@ -16,6 +16,10 @@ public class PlayerResultTableDTO {
     private Integer personId;
     private String playerName;
     private String clubName;
+
+    private Integer teamId;
+    private String teamName;
+
     private List<Integer> scores; // L1, L2, ..., Ln
     private Integer total;
     private Double promedio;

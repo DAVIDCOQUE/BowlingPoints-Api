@@ -1,6 +1,8 @@
 package com.bowlingpoints.repository;
 
 import com.bowlingpoints.entity.ClubPerson;
+import com.bowlingpoints.entity.Clubs;
+import com.bowlingpoints.entity.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +19,8 @@ public interface ClubPersonRepository extends JpaRepository<ClubPerson, Integer>
 
     // Buscar un ClubPerson activo por personId
     Optional<ClubPerson> findFirstByPerson_PersonIdAndStatusTrue(Integer personId);
+
+    // Añadir este método para que el seeder funcione
+    boolean existsByClubAndPerson(Clubs club, Person person);
 }
+

@@ -18,9 +18,9 @@ public class TournamentRegistration {
     @Column(name = "registration_id")
     private Integer registrationId;
 
-    //  Persona registrada
+    //  Persona registrada (puede ser null si la inscripción es por equipo)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "person_id", nullable = false)
+    @JoinColumn(name = "person_id", nullable = true)
     private Person person;
 
     // Torneo en el que se registra

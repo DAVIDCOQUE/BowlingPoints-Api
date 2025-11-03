@@ -89,6 +89,16 @@ public class UserFullService {
         return new ArrayList<>(userMap.values());
     }
 
+
+    /**
+     * Obtiene todos los usuarios activos (sin importar el rol).
+     */
+    public List<UserFullDTO> getAllActiveUsers() {
+        return getAllUsersWithDetails().stream()
+                .filter(user -> Boolean.TRUE.equals(user.getStatus())) // Solo usuarios con estado activo
+                .collect(Collectors.toList());
+    }
+
     /**
      * Obtiene todos los usuarios activos con el rol "JUGADOR".
      */

@@ -20,7 +20,7 @@ public class AmbitController {
     private final AmbitService ambitService;
 
     /**
-     * Obtiene todos los ambits no eliminados.
+     * Obtiene todos los ambits activos o inactivos no eliminados.
      */
     @GetMapping
     public ResponseEntity<ResponseGenericDTO<List<AmbitDTO>>> getAll() {
