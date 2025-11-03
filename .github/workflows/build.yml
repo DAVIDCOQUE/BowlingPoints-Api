@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - dev
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
   build-and-analyze:
+    # Este job se salta en 'main'
     name: Build, Test and Analyze
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' || github.event_name == 'pull_request'
 
     steps:
       # 🧩 1. Descarga el repositorio
@@ -77,12 +80,26 @@ jobs:
   docker-deploy:
     name: Build and Deploy Docker
     runs-on: ubuntu-latest
+    # Cambiamos 'needs' para que dependa del análisis (si ocurre) y sepa que puede fallar.
     needs: build-and-analyze
+
+    # 🛑 CONDICIÓN FINAL: Solo corre en la rama 'main'.
+    if: github.ref == 'refs/heads/main'
 
     steps:
       # 🧩 1. Descarga el repo para el build Docker
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Compile JAR if in main
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-java@v4 # Reconfigurar Java
+        with:
+            java-version: 17
+            distribution: 'zulu'
+      - name: Run Maven package (Only if in main)
+        run: |
+            echo "🏗️ Compilando JAR en 'main' para despliegue..."
+             mvn clean package -DskipTests
 
       # 📥 1.5. Descargar el JAR compilado desde el job anterior
       - name: Download JAR artifact
@@ -121,33 +138,25 @@ jobs:
       # ☁️ 5. Despliega en AWS EC2
       - name: 🚀 Deploy to AWS via SSH
         uses: appleboy/ssh-action@3ca8a7c5359ac6ad91aa47f1946ece1c3b025004
-        env:
-          # Aquí defines tus variables "tipo .env"
-          APP_PORTS: ${{ secrets.APP_PORTS }}
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          # ... otras vars
         with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ec2-user
-          key: ${{ secrets.AWS_SSH_KEY }}
+            host: ${{ secrets.AWS_HOST }}
+            username: ec2-user
+            key: ${{ secrets.AWS_SSH_KEY }}
 
-          # 💡 TRUCO: Usar el comando 'sh -c' para forzar la expansión local antes de enviar
-          script: |
-            echo "🚀 Desplegando en AWS..."
-            
-          # Aquí usamos la sintaxis de shell de Linux para expandir las variables
-          # La acción ssh-action lo interpreta y lo pasa correctamente al servidor
-            docker pull $DOCKERHUB_USERNAME/bowlingpoints:latest
-            docker stop bowlingpoints || true
-            docker rm bowlingpoints || true
-            
-          # Comando RUN con las variables expandidas localmente
-            docker run -d --name bowlingpoints -p "$APP_PORTS" \
-              -e DB_URL="$DB_URL" \
-              -e DB_USER="$DB_USER" \
-              -e DB_PASSWORD="$DB_PASSWORD" \
-              --restart always \
-              $DOCKERHUB_USERNAME/bowlingpoints:latest
+            # 💡 TRUCO: Usar el comando 'sh -c' para forzar la expansión local antes de enviar
+            script: |
+              echo "🚀 Desplegando en AWS..."
+              
+              # Aquí usamos la sintaxis de shell de Linux para expandir las variables
+              # La acción ssh-action lo interpreta y lo pasa correctamente al servidor
+              docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
+              docker stop bowlingpoints || true
+              docker rm bowlingpoints || true
+              
+              # Comando RUN con las variables expandidas localmente
+              docker run -d --name bowlingpoints -p ${{ secrets.APP_PORTS }} \
+                -e DB_URL="${{ secrets.DB_URL }}" \
+                -e DB_USER="${{ secrets.DB_USER }}" \
+                -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+                --restart always \
+                ${{secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
