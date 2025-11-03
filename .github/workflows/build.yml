@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - dev
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
   build-and-analyze:
+    # Este job se salta en 'main'
     name: Build, Test and Analyze
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' || github.event_name == 'pull_request'
 
     steps:
       # 🧩 1. Descarga el repositorio
@@ -77,12 +80,26 @@ jobs:
   docker-deploy:
     name: Build and Deploy Docker
     runs-on: ubuntu-latest
+    # Cambiamos 'needs' para que dependa del análisis (si ocurre) y sepa que puede fallar.
     needs: build-and-analyze
+
+    # 🛑 CONDICIÓN FINAL: Solo corre en la rama 'main'.
+    if: github.ref == 'refs/heads/main'
 
     steps:
       # 🧩 1. Descarga el repo para el build Docker
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Compile JAR if in main
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-java@v4 # Reconfigurar Java
+        with:
+            java-version: 17
+            distribution: 'zulu'
+      - name: Run Maven package (Only if in main)
+        run: |
+            echo "🏗️ Compilando JAR en 'main' para despliegue..."
+             mvn clean package -DskipTests
 
       # 📥 1.5. Descargar el JAR compilado desde el job anterior
       - name: Download JAR artifact
