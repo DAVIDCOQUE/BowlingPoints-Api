@@ -3,5 +3,13 @@ package com.bowlingpoints.repository;
 import com.bowlingpoints.entity.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PersonRepository extends JpaRepository<Person,Integer> {
+import java.util.Optional;
+
+public interface PersonRepository extends JpaRepository<Person, Integer> {
+    // Buscar una persona por su documento
+    Optional<Person> findByDocument(String document);
+
+    // Buscar una persona por su nombre completo y apellido completo
+    Optional<Person> findByFullNameAndFullSurname(String fullName, String fullSurname);
 }
+

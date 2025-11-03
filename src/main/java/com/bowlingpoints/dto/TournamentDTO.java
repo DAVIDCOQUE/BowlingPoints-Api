@@ -1,22 +1,45 @@
 package com.bowlingpoints.dto;
 
+import lombok.*;
 
-import lombok.Builder;
-import lombok.Data;
+import java.time.LocalDate;
+import java.util.List;
 
-import java.util.Date;
-
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class TournamentDTO {
 
-    String tournamentName;
-    String startDate;
-    String endDate;
-    String place;
-    String modality;
-    String category;
-    String causeStatus;
-    String status;
+    private Integer tournamentId;
+    private String name;
+    private String organizer;
+    private Integer ambitId;
+    private String ambitName;
+    private String imageUrl;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String location;
+    private String stage;
+    private Boolean status;
 
+    //  IDs usados por el frontend
+    private List<Integer> categoryIds;
+    private List<Integer> modalityIds;
+    private List<Integer> branchIds;
+
+    //  Nombres usados por el frontend
+    private List<String> categoryNames;
+    private List<String> modalityNames;
+    private List<String> branchNames;
+
+    //  Objetos completos desde backend
+    private List<CategoryDTO> categories;
+    private List<ModalityDTO> modalities;
+    private List<BranchDTO> branches;
+
+    private List<TournamentRegistrationDTO> tournamentRegistrations;
+
+    private List<TournamentBranchPlayerCountDTO> branchPlayerCounts;
 }

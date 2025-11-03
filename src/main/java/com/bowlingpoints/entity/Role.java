@@ -6,21 +6,28 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * Entidad que representa un rol del sistema (admin, user, etc.)
+ */
 @Entity
 @Table(name = "roles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
-    private int id;
+    private Integer id;
 
-    @Column(name = "description", nullable = false, unique = true)
-    private String description;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
+
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    private List<UserRole> userRoles;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -33,9 +40,6 @@ public class Role {
 
     @Column(name = "updated_by")
     private Integer updatedBy;
-
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<UserRole> userRoles;
 
     @PrePersist
     public void prePersist() {
