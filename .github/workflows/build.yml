@@ -46,15 +46,17 @@ jobs:
           mvn clean verify jacoco:report -B
 
       # 🔍 5. Ejecuta análisis SonarQube con cobertura de JaCoCo
-      - name: SonarQube analysis (with JaCoCo coverage)
+      - name: 🔍 SonarQube analysis (with JaCoCo coverage)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
+          set -e
           echo "🚀 Iniciando análisis SonarQube..."
           mvn sonar:sonar \
             -Dsonar.projectKey=DAVIDCOQUE_BowlingPoints-Api \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.java.binaries=target/classes
 
