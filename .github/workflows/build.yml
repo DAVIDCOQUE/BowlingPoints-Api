@@ -60,7 +60,7 @@ jobs:
 
       # ✅ 6. Verifica Quality Gate
       - name: Check SonarQube Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@master
+        uses: SonarSource/sonarqube-quality-gate-action@95b1cc6c02a15c8ecc00c07b1c2a75ed61a14055
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -78,36 +78,53 @@ jobs:
 
       # 🐳 2. Login a Docker Hub
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@a984b3800d3bba5431f5e5d734f88e9f3f5f28fa
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # ⚙️ 3. Construye imagen Docker
-      - name: Build Docker image
+      - name: 🐳 Build Docker image
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           echo "🐳 Construyendo imagen Docker..."
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest .
+          docker build -t $DOCKERHUB_USERNAME/bowlingpoints:latest .
 
       # 🚀 4. Publica en Docker Hub
-      - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
+      - name: 📦 Push Docker image to Docker Hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "📦 Iniciando publicación en Docker Hub..."
+          echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
+          docker push $DOCKERHUB_USERNAME/bowlingpoints:latest
+          echo "✅ Imagen publicada correctamente en Docker Hub."
 
       # ☁️ 5. Despliega en AWS EC2
-      - name: Deploy to AWS via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: 🚀 Deploy to AWS via SSH
+        uses: appleboy/ssh-action@cd2e6cd27b4b50673bf6a9a9c7e1a61f3483e9d2
+        env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+            DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+            APP_PORTS: ${{ secrets.APP_PORTS }}
+            DB_URL: ${{ secrets.DB_URL }}
+            DB_USER: ${{ secrets.DB_USER }}
+            DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ec2-user
-          key: ${{ secrets.AWS_SSH_KEY }}
-          script: |
-            echo "🚀 Desplegando en AWS..."
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
-            docker stop bowlingpoints || true
-            docker rm bowlingpoints || true
-            docker run -d --name bowlingpoints -p ${{ secrets.APP_PORTS }} \
-              -e DB_URL="${{ secrets.DB_URL }}" \
-              -e DB_USER="${{ secrets.DB_USER }}" \
-              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-              --restart always \
-              ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
+            host: ${{ secrets.AWS_HOST }}
+            username: ec2-user
+            key: ${{ secrets.AWS_SSH_KEY }}
+            script: |
+              echo "🚀 Desplegando en AWS..."
+              docker pull $DOCKERHUB_USERNAME/bowlingpoints:latest
+              docker stop bowlingpoints || true
+              docker rm bowlingpoints || true
+              docker run -d --name bowlingpoints -p $APP_PORTS \
+                -e DB_URL="$DB_URL" \
+                -e DB_USER="$DB_USER" \
+                -e DB_PASSWORD="$DB_PASSWORD" \
+                --restart always \
+                $DOCKERHUB_USERNAME/bowlingpoints:latest
