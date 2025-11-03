@@ -80,26 +80,29 @@ jobs:
   docker-deploy:
     name: Build and Deploy Docker
     runs-on: ubuntu-latest
-    # Cambiamos 'needs' para que dependa del análisis (si ocurre) y sepa que puede fallar.
-    needs: build-and-analyze
+    # ❌ ELIMINAMOS la dependencia 'needs: build-and-analyze' para evitar el salto en 'main'.
+    # Si estamos en 'dev' (donde build-and-analyze SÍ corre), la dependencia es implícita.
 
-    # 🛑 CONDICIÓN FINAL: Solo corre en la rama 'main'.
+    # ✅ CONDICIÓN: Solo corre en 'main'
     if: github.ref == 'refs/heads/main'
 
     steps:
       # 🧩 1. Descarga el repo para el build Docker
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Compile JAR if in main
-        if: github.ref == 'refs/heads/main'
-        uses: actions/setup-java@v4 # Reconfigurar Java
+
+      # ⚙️ 1.5. Compila el JAR localmente (CRÍTICO para 'main', ya que 'build-and-analyze' se saltó)
+      - name: Set up JDK 17 (for local compilation)
+        uses: actions/setup-java@v4
         with:
-            java-version: 17
-            distribution: 'zulu'
-      - name: Run Maven package (Only if in main)
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Run Maven package (for local compilation)
         run: |
-            echo "🏗️ Compilando JAR en 'main' para despliegue..."
-             mvn clean package -DskipTests
+          echo "🏗️ Compilando JAR en 'main' para despliegue..."
+          # Generamos el JAR en target/*.jar
+          mvn clean package -DskipTests
 
       # 📥 1.5. Descargar el JAR compilado desde el job anterior
       - name: Download JAR artifact
