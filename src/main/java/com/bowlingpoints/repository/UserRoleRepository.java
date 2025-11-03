@@ -21,8 +21,4 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
      */
     List<UserRole> findAllByUser_UserIdAndStatusTrue(Integer userId);
 
-    /**
-     * Verifica si el usuario tiene un rol específico activo.
-     */
-    boolean existsByUser_UserIdAndRole_NameAndStatusTrue(Integer userId, String roleName);
 }

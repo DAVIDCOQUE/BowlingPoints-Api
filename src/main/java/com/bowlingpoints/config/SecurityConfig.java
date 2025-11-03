@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/jugadores/upload").authenticated()
                         .requestMatchers("/api/dashboard").permitAll()
+                        .requestMatchers("/results/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

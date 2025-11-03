@@ -79,7 +79,7 @@ public class BranchService {
         return true;
     }
 
-    // =============== 🔁 Mapeo ===============
+    // =============== Mapeo ===============
     private BranchDTO toDTO(Branch entity) {
         return BranchDTO.builder()
                 .branchId(entity.getBranchId())

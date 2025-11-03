@@ -14,6 +14,7 @@ public class UserStatisticsDTO {
     private Double avgScore;              // Promedio por partida
     private Integer bestGame;             // Mejor partida
     private Integer tournamentsWon;       // Torneos ganados
+
     // Puedes agregar más según quieras mostrar gráficas (histograma, etc.)
 
     private Integer personId;

@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface PersonRepository extends JpaRepository<Person, Integer> {
-
+    // Buscar una persona por su documento
     Optional<Person> findByDocument(String document);
+
+    // Buscar una persona por su nombre completo y apellido completo
     Optional<Person> findByFullNameAndFullSurname(String fullName, String fullSurname);
 }
 

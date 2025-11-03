@@ -30,27 +30,27 @@ public class DashboardService {
      */
     public DashboardDTO getDashboardData() {
 
-        // ✅ Torneos activos con estado Programado o Aplazado
+        //  Torneos activos con estado Programado o Aplazado
         List<TournamentDTO> scheduledOrPostponed = tournamentRepository
                 .findActiveScheduledOrPostponed()
                 .stream()
                 .map(this::toDTO)
                 .toList();
 
-        // ✅ Torneos activos con estado En curso
+        //  Torneos activos con estado En curso
         List<TournamentDTO> inProgress = tournamentRepository
                 .findActiveInProgress()
                 .stream()
                 .map(this::toDTO)
                 .toList();
 
-        // ✅ Ámbitos que tengan al menos un torneo asociado
+        //  Ámbitos que tengan al menos un torneo asociado
         List<AmbitDTO> ambits = ambitRepository.findDistinctWithTournaments();
 
-        // ✅ Top 10 jugadores por promedio de puntaje
+        //  Top 10 jugadores por promedio de puntaje
         List<DashboardPlayerDTO> topPlayers = resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10));
 
-        // ✅ Construcción del objeto principal del Dashboard
+        //  Construcción del objeto principal del Dashboard
         return DashboardDTO.builder()
                 .scheduledOrPostponedTournaments(scheduledOrPostponed)
                 .inProgressTournaments(inProgress)
@@ -77,7 +77,7 @@ public class DashboardService {
                 .stage(tournament.getStage())
                 .status(tournament.getStatus())
 
-                // ✅ IDs de categorías
+                //  IDs de categorías
                 .categoryIds(
                         tournament.getCategories() != null
                                 ? tournament.getCategories().stream()
@@ -86,7 +86,7 @@ public class DashboardService {
                                 : null
                 )
 
-                // ✅ Nombres de categorías
+                //  Nombres de categorías
                 .categoryNames(
                         tournament.getCategories() != null
                                 ? tournament.getCategories().stream()
@@ -95,7 +95,7 @@ public class DashboardService {
                                 : null
                 )
 
-                // ✅ Objetos completos de categorías
+                //  Objetos completos de categorías
                 .categories(
                         tournament.getCategories() != null
                                 ? tournament.getCategories().stream()
@@ -109,7 +109,7 @@ public class DashboardService {
                                 : null
                 )
 
-                // ✅ IDs de modalidades
+                //  IDs de modalidades
                 .modalityIds(
                         tournament.getModalities() != null
                                 ? tournament.getModalities().stream()
@@ -118,7 +118,7 @@ public class DashboardService {
                                 : null
                 )
 
-                // ✅ Nombres de modalidades
+                //  Nombres de modalidades
                 .modalityNames(
                         tournament.getModalities() != null
                                 ? tournament.getModalities().stream()
@@ -127,7 +127,7 @@ public class DashboardService {
                                 : null
                 )
 
-                // ✅ Objetos completos de modalidades
+                //  Objetos completos de modalidades
                 .modalities(
                         tournament.getModalities() != null
                                 ? tournament.getModalities().stream()

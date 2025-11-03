@@ -14,8 +14,4 @@ public interface TournamentBranchRepository extends JpaRepository<TournamentBran
      */
     List<TournamentBranch> findByTournament_TournamentId(Integer tournamentId);
 
-    /**
-     * Elimina todas las relaciones de rama asociadas a un torneo.
-     */
-    void deleteAllByTournament_TournamentId(Integer tournamentId);
 }

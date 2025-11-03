@@ -23,7 +23,7 @@ public class TournamentRegistrationService {
     private final TeamRepository teamRepository;
 
     // ================================
-    // 🟢 CREAR INSCRIPCIÓN
+    //  CREAR INSCRIPCIÓN
     // ================================
     public TournamentRegistrationDTO create(TournamentRegistrationDTO dto) {
         // Validar duplicado
@@ -60,7 +60,7 @@ public class TournamentRegistrationService {
     }
 
     // ================================
-    // 🟡 ACTUALIZAR INSCRIPCIÓN
+    //  ACTUALIZAR INSCRIPCIÓN
     // ================================
     public TournamentRegistrationDTO update(Integer id, TournamentRegistrationDTO dto) {
         TournamentRegistration reg = registrationRepository.findById(id)
@@ -85,7 +85,7 @@ public class TournamentRegistrationService {
     }
 
     // ================================
-    // 🔴 ELIMINAR (SOFT DELETE)
+    // ELIMINAR (SOFT DELETE)
     // ================================
     public boolean delete(Integer id) {
         Optional<TournamentRegistration> opt = registrationRepository.findById(id);
@@ -101,7 +101,7 @@ public class TournamentRegistrationService {
     }
 
     // ================================
-    // 🔍 CONSULTAS
+    //  CONSULTAS
     // ================================
 
     public List<TournamentRegistrationDTO> getAll() {
@@ -130,7 +130,7 @@ public class TournamentRegistrationService {
     }
 
     // ================================
-    // ♻️ MAPPER
+    //  MAPPER
     // ================================
     private TournamentRegistrationDTO toDTO(TournamentRegistration entity) {
         return TournamentRegistrationDTO.builder()
@@ -153,7 +153,7 @@ public class TournamentRegistrationService {
     }
 
     // ================================
-    // 🔁 HELPERS (Validación de entidades opcionales)
+    // HELPERS (Validación de entidades opcionales)
     // ================================
 
     private Category getOptionalCategory(Integer id) {
