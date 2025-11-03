@@ -19,13 +19,20 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ResultServiceTest {
 
-    @Mock private ResultRepository resultRepository;
-    @Mock private PersonRepository personRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private TournamentRepository tournamentRepository;
-    @Mock private CategoryRepository categoryRepository;
-    @Mock private ModalityRepository modalityRepository;
-    @Mock private BranchRepository branchRepository;
+    @Mock
+    private ResultRepository resultRepository;
+    @Mock
+    private PersonRepository personRepository;
+    @Mock
+    private TeamRepository teamRepository;
+    @Mock
+    private TournamentRepository tournamentRepository;
+    @Mock
+    private CategoryRepository categoryRepository;
+    @Mock
+    private ModalityRepository modalityRepository;
+    @Mock
+    private BranchRepository branchRepository;
 
     @InjectMocks
     private ResultService resultService;
@@ -262,4 +269,160 @@ class ResultServiceTest {
         assertEquals(1, result.size());
         assertEquals(200, result.get(0).getTotal());
     }
+
+
+    @Test
+    void update_ShouldSkip_WhenBranchNotFound() {
+        ResultDTO dto = ResultDTO.builder()
+                .personId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .branchId(99)
+                .build();
+
+        when(resultRepository.findById(1)).thenReturn(Optional.of(sampleResult));
+        when(personRepository.findById(1)).thenReturn(Optional.of(person));
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
+        when(branchRepository.findByBranchIdAndStatusTrue(99)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> resultService.update(1, dto));
+    }
+
+
+    @Test
+    void getResultsByTournamentFiltered_ShouldApplyAllFilters() {
+        Result r1 = sampleResult;
+        Result r2 = new Result();
+        r2.setTournament(tournament);
+        Category c2 = new Category();
+        c2.setCategoryId(2);
+        r2.setCategory(c2);
+
+        when(resultRepository.findAll()).thenReturn(List.of(r1, r2));
+
+        List<ResultDTO> result = resultService.getResultsByTournamentFiltered(1, 1, null);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void getPlayerResultsForTable_ShouldHandleEmptyData() {
+        when(resultRepository.findRawPlayerResultsForTable(1, 1)).thenReturn(Collections.emptyList());
+        List<PlayerResultTableDTO> result = resultService.getPlayerResultsForTable(1, 1, null);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void delete_ShouldHandleException() {
+        when(resultRepository.existsById(1)).thenReturn(true);
+        doThrow(new RuntimeException("DB error")).when(resultRepository).deleteById(1);
+
+        assertThrows(RuntimeException.class, () -> resultService.delete(1));
+    }
+
+    @Test
+    void getResultsByModality_ShouldBuildResponseCorrectly() {
+
+        List<Object[]> rows = List.<Object[]>of(
+                new Object[]{1, "Player 1", "Club A", "Sencillos Masculino", 600L, 3L}
+        );
+
+        when(resultRepository.findPlayerTotalsByModalityAndBranch(1, 1, 1))
+                .thenReturn(rows);
+
+        Tournament tournament = new Tournament();
+        tournament.setTournamentId(1);
+        tournament.setName("Torneo Test");
+        TournamentModality tm = new TournamentModality();
+        tm.setModality(Modality.builder().modalityId(1).name("Sencillos Masculino").description("Desc").status(true).build());
+        tournament.setModalities(List.of(tm));
+
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
+        when(resultRepository.findDistinctRoundsByTournament(1)).thenReturn(List.of(1, 2));
+
+        var result = resultService.getResultsByModality(1, 1, 1);
+
+        assertNotNull(result.getTournament());
+        assertEquals("Torneo Test", result.getTournament().getTournamentName());
+        assertEquals(1, result.getResultsByModality().size());
+        assertEquals("Player 1", result.getResultsByModality().get(0).getPlayerName());
+        assertEquals(600, result.getResultsByModality().get(0).getTotal());
+    }
+
+    @Test
+    void getTournamentResultsTable_ShouldReturnCompleteSummary() {
+        List<Object[]> playerResults = List.<Object[]>of(
+                new Object[]{1, "Alice", "Club A", 1, 200, null, null}
+        );
+
+        List<Object[]> avgByLine = List.<Object[]>of(
+                new Object[]{"Alice", 200.0}
+        );
+
+        List<Object[]> highestLine = List.<Object[]>of(
+                new Object[]{210, "Alice", 3}
+        );
+
+        when(resultRepository.findRawPlayerResultsForTable(1, 1))
+                .thenReturn(playerResults);
+
+        when(resultRepository.findDistinctRoundsByTournamentAndModality(1, 1))
+                .thenReturn(List.of(1, 2));
+
+        when(resultRepository.findAvgByLineRaw(1, 1, 1))
+                .thenReturn(avgByLine);
+
+        when(resultRepository.findAvgByRound(1, 1, 1))
+                .thenReturn(190.0);
+
+        when(resultRepository.findHighestLine(1, 1, 1))
+                .thenReturn(highestLine);
+
+        Tournament t = new Tournament();
+        t.setTournamentId(1);
+        t.setName("Torneo Test");
+        TournamentModality tm = new TournamentModality();
+        tm.setModality(Modality.builder()
+                .modalityId(1)
+                .name("Sencillos")
+                .description("desc")
+                .status(true)
+                .build());
+        t.setModalities(List.of(tm));
+
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(t));
+
+        var dto = resultService.getTournamentResultsTable(1, 1, 1);
+
+        assertEquals("Torneo Test", dto.getTournament().getTournamentName());
+        assertEquals(190.0, dto.getAvgByRound());
+        assertEquals("Alice", dto.getHighestLine().getPlayerName());
+    }
+
+    @Test
+    void getTournamentResultsByGender_ShouldGroupPlayersByGender() {
+        List<Object[]> rows = List.<Object[]>of(
+                new Object[]{1, "Player 1", "Masculino", 1, "Sencillos", 500, 5, 2}
+        );
+
+        when(resultRepository.findPlayerModalitySummariesByTournament(1))
+                .thenReturn(rows);
+
+        Map<String, List<com.bowlingpoints.dto.PlayerResultSummaryDTO>> result =
+                resultService.getTournamentResultsByGender(1);
+
+        assertTrue(result.containsKey("masculino"));
+        var list = result.get("masculino");
+        assertEquals(1, list.size());
+        assertEquals("Player 1", list.get(0).getPlayerName());
+        assertEquals(500, list.get(0).getTotalGlobal());
+    }
+
+
+
+
+
 }
