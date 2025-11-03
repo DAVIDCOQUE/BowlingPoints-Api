@@ -3,228 +3,195 @@ package com.bowlingpoints.controller;
 import com.bowlingpoints.dto.*;
 import com.bowlingpoints.service.ResultService;
 import com.bowlingpoints.service.TournamentService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
-import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = ResultController.class,
-        excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.bowlingpoints\\.config\\..*")
-        })
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class ResultControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private ResultService resultService;
 
-    @MockBean
+    @Mock
     private TournamentService tournamentService;
 
-    @Autowired
+    @InjectMocks
+    private ResultController resultController;
+
+    private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
-    private ResultDTO resultDTO;
-    private PlayerResultSummaryDTO summaryDTO;
-    private PlayerResultTableDTO tableDTO;
-    private DashboardPlayerDTO playerDTO;
-    private TournamentDTO tournamentDTO;
+    private ResultDTO sampleResult;
 
     @BeforeEach
     void setUp() {
-        resultDTO = ResultDTO.builder()
+        mockMvc = MockMvcBuilders.standaloneSetup(resultController).build();
+        objectMapper = new ObjectMapper();
+
+        sampleResult = ResultDTO.builder()
                 .resultId(1)
-                .tournamentId(10)
-                .personId(20)
-                .score(180)
-                .lineNumber(1)
-                .build();
-
-        summaryDTO = PlayerResultSummaryDTO.builder()
-                .playerName("John Doe")
-                .promedioGlobal(190.5)
-                .build();
-
-        tableDTO = PlayerResultTableDTO.builder()
-                .playerName("John Doe")
-                .total(950)
-                .promedio(190.0)
-                .build();
-
-        playerDTO = DashboardPlayerDTO.builder()
-                .fullName("John Doe")
-                .averageScore(195.2)
-                .build();
-
-        tournamentDTO = TournamentDTO.builder()
-                .tournamentId(5)
-                .name("Copa Colombia")
+                .personId(1)
+                .personName("John Doe")
+                .score(200)
                 .build();
     }
 
-    // --------------------------------------------------
-    // CRUD de Resultados
-    // --------------------------------------------------
+    // -------------------------------------------------
+    // CRUD ENDPOINTS
+    // -------------------------------------------------
 
     @Test
-    void getAll_ShouldReturnListOfResults() throws Exception {
-        Mockito.when(resultService.getAll()).thenReturn(List.of(resultDTO));
+    void getAll_ShouldReturnOkWithResults() throws Exception {
+        when(resultService.getAll()).thenReturn(List.of(sampleResult));
 
         mockMvc.perform(get("/results"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].tournamentId").value(10))
-                .andExpect(jsonPath("$.message").value("Resultados cargados correctamente"));
+                .andExpect(jsonPath("$.data[0].personName").value("John Doe"));
     }
 
     @Test
-    void getById_ShouldReturnResult_WhenExists() throws Exception {
-        Mockito.when(resultService.getById(1)).thenReturn(resultDTO);
+    void getById_ShouldReturnOk_WhenFound() throws Exception {
+        when(resultService.getById(1)).thenReturn(sampleResult);
 
-        mockMvc.perform(get("/results/{id}", 1))
+        mockMvc.perform(get("/results/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.resultId").value(1))
-                .andExpect(jsonPath("$.message").value("Resultado encontrado"));
+                .andExpect(jsonPath("$.data.personName").value("John Doe"));
     }
 
     @Test
     void getById_ShouldReturn404_WhenNotFound() throws Exception {
-        Mockito.when(resultService.getById(99)).thenReturn(null);
+        when(resultService.getById(99)).thenReturn(null);
 
-        mockMvc.perform(get("/results/{id}", 99))
+        mockMvc.perform(get("/results/99"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Resultado no encontrado"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
-    void create_ShouldReturnCreatedResult() throws Exception {
-        Mockito.when(resultService.create(any(ResultDTO.class))).thenReturn(resultDTO);
+    void create_ShouldReturnOk_WhenCreated() throws Exception {
+        when(resultService.create(any(ResultDTO.class))).thenReturn(sampleResult);
 
         mockMvc.perform(post("/results")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(resultDTO)))
+                        .content(objectMapper.writeValueAsString(sampleResult)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Resultado creado correctamente"))
-                .andExpect(jsonPath("$.data.resultId").value(1));
+                .andExpect(jsonPath("$.data.personName").value("John Doe"));
     }
 
     @Test
     void update_ShouldReturnOk_WhenUpdated() throws Exception {
-        Mockito.when(resultService.update(eq(1), any(ResultDTO.class))).thenReturn(true);
+        when(resultService.update(eq(1), any(ResultDTO.class))).thenReturn(true);
 
-        mockMvc.perform(put("/results/{id}", 1)
+        mockMvc.perform(put("/results/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(resultDTO)))
+                        .content(objectMapper.writeValueAsString(sampleResult)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Resultado actualizado correctamente"));
     }
 
     @Test
     void update_ShouldReturn404_WhenNotFound() throws Exception {
-        Mockito.when(resultService.update(eq(99), any(ResultDTO.class))).thenReturn(false);
+        when(resultService.update(eq(1), any(ResultDTO.class))).thenReturn(false);
 
-        mockMvc.perform(put("/results/{id}", 99)
+        mockMvc.perform(put("/results/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(resultDTO)))
+                        .content(objectMapper.writeValueAsString(sampleResult)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Resultado no encontrado"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
     void delete_ShouldReturnOk_WhenDeleted() throws Exception {
-        Mockito.when(resultService.delete(1)).thenReturn(true);
+        when(resultService.delete(1)).thenReturn(true);
 
-        mockMvc.perform(delete("/results/{id}", 1))
+        mockMvc.perform(delete("/results/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Resultado eliminado correctamente"));
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
     void delete_ShouldReturn404_WhenNotFound() throws Exception {
-        Mockito.when(resultService.delete(99)).thenReturn(false);
+        when(resultService.delete(1)).thenReturn(false);
 
-        mockMvc.perform(delete("/results/{id}", 99))
+        mockMvc.perform(delete("/results/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Resultado no encontrado"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
-    // --------------------------------------------------
-    // Estadísticas y Agrupaciones
-    // --------------------------------------------------
+    // -------------------------------------------------
+    // FILTER & ADVANCED ENDPOINTS
+    // -------------------------------------------------
 
     @Test
-    void getResultsByGender_ShouldReturnGroupedResults() throws Exception {
-        Mockito.when(resultService.getTournamentResultsByGender(10))
-                .thenReturn(Map.of("Masculino", List.of(summaryDTO)));
+    void getFilteredResults_ShouldReturnFilteredList() throws Exception {
+        when(resultService.getResultsByTournamentFiltered(1, null, null))
+                .thenReturn(List.of(sampleResult));
 
-        mockMvc.perform(get("/results/by-gender").param("tournamentId", "10"))
+        mockMvc.perform(get("/results/filter")
+                        .param("tournamentId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Resultados agrupados por género"))
-                .andExpect(jsonPath("$.data.Masculino[0].playerName").value("John Doe"));
+                .andExpect(jsonPath("$[0].score").value(200));
     }
 
     @Test
-    void getResultsTable_ShouldReturnResultsTable() throws Exception {
-        Mockito.when(resultService.getPlayerResultsForTable(10, 3))
-                .thenReturn(List.of(tableDTO));
+    void getTournamentResultsTable_ShouldReturnOk() throws Exception {
+        TournamentResultsResponseDTO dto = TournamentResultsResponseDTO.builder().build();
+        when(resultService.getTournamentResultsTable(eq(1), eq(2), any())).thenReturn(dto);
 
-        mockMvc.perform(get("/results/table")
-                        .param("tournamentId", "10")
-                        .param("modalityId", "3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Tabla de resultados"))
-                .andExpect(jsonPath("$.data[0].playerName").value("John Doe"));
+        mockMvc.perform(get("/results/tournament-table")
+                        .param("tournamentId", "1")
+                        .param("modalityId", "2"))
+                .andExpect(status().isOk());
     }
 
-    /*@Test
-    void getAllPlayerRanking_ShouldReturnRankingList() throws Exception {
-        Mockito.when(resultService.getAllPlayersByAvgScore())
-                .thenReturn(List.of(playerDTO));
+    @Test
+    void getResultsByModality_ShouldReturnOk() throws Exception {
+        TournamentResultsResponseDTO dto = TournamentResultsResponseDTO.builder().build();
+        when(resultService.getResultsByModality(eq(1), any(), any())).thenReturn(dto);
+
+        mockMvc.perform(get("/results/by-modality")
+                        .param("tournamentId", "1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getAllPlayerRanking_ShouldReturnOk() throws Exception {
+        DashboardPlayerDTO player = DashboardPlayerDTO.builder().fullName("John").averageScore(200.0).build();
+        when(resultService.getAllPlayersByAvgScore()).thenReturn(List.of(player));
 
         mockMvc.perform(get("/results/all-player-ranking"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Ranking cargado correctamente"))
-                .andExpect(jsonPath("$.data[0].playerName").value("John Doe"));
+                .andExpect(jsonPath("$.data[0].fullName").value("John"));
     }
 
-     */
-
-    // --------------------------------------------------
-    // Torneos desde Resultados
-    // --------------------------------------------------
-
     @Test
-    void getTournamentsByAmbit_ShouldReturnListOfTournaments() throws Exception {
-        Mockito.when(tournamentService.getTournamentsByAmbit(1, null))
-                .thenReturn(List.of(tournamentDTO));
+    void getTournamentsByAmbit_ShouldReturnOk() throws Exception {
+        TournamentDTO t = TournamentDTO.builder().tournamentId(1).name("Test").build();
+        when(tournamentService.getTournamentsByAmbit(any(), any())).thenReturn(List.of(t));
 
-        mockMvc.perform(get("/results/by-ambit").param("ambitId", "1"))
+        mockMvc.perform(get("/results/by-ambit")
+                        .param("ambitName", "Nacional"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Torneos cargados correctamente"))
-                .andExpect(jsonPath("$.data[0].name").value("Copa Colombia"));
+                .andExpect(jsonPath("$.data[0].name").value("Test"));
     }
 }

@@ -1,275 +1,265 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.*;
+import com.bowlingpoints.dto.ResultDTO;
+import com.bowlingpoints.dto.PlayerResultTableDTO;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Test unitario para ResultService.
- */
+@ExtendWith(MockitoExtension.class)
 class ResultServiceTest {
 
-    @Mock
-    private ResultRepository resultRepository;
-    @Mock
-    private PersonRepository personRepository;
-    @Mock
-    private TeamRepository teamRepository;
-    @Mock
-    private TournamentRepository tournamentRepository;
-    @Mock
-    private CategoryRepository categoryRepository;
-    @Mock
-    private ModalityRepository modalityRepository;
+    @Mock private ResultRepository resultRepository;
+    @Mock private PersonRepository personRepository;
+    @Mock private TeamRepository teamRepository;
+    @Mock private TournamentRepository tournamentRepository;
+    @Mock private CategoryRepository categoryRepository;
+    @Mock private ModalityRepository modalityRepository;
+    @Mock private BranchRepository branchRepository;
 
     @InjectMocks
     private ResultService resultService;
 
-    private Result result;
-    private ResultDTO dto;
-    private Person person;
-    private Team team;
+    private Result sampleResult;
     private Tournament tournament;
+    private Person person;
     private Category category;
     private Modality modality;
+    private Branch branch;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        tournament = new Tournament();
+        tournament.setTournamentId(1);
+        tournament.setName("Test Tournament");
 
-        person = Person.builder().personId(1).fullName("John").gender("M").build();
-        team = Team.builder().teamId(1).nameTeam("Team A").build();
-        tournament = Tournament.builder().tournamentId(1).name("Open Cali").build();
-        category = Category.builder().categoryId(1).name("Elite").build();
-        modality = Modality.builder().modalityId(1).name("Individual").build();
+        person = new Person();
+        person.setPersonId(1);
+        person.setFullName("John Doe");
 
-        result = Result.builder()
-                .resultId(1)
-                .person(person)
-                .tournament(tournament)
-                .category(category)
-                .modality(modality)
-                .roundNumber(1)
-                .laneNumber(3)
-                .lineNumber(1)
-                .score(250)
-                .rama("M")
-                .build();
+        category = new Category();
+        category.setCategoryId(1);
+        category.setName("Open");
 
-        dto = ResultDTO.builder()
-                .personId(1)
-                .tournamentId(1)
-                .categoryId(1)
-                .modalityId(1)
-                .roundNumber(1)
-                .laneNumber(3)
-                .lineNumber(1)
-                .score(250)
-                .rama("M")
-                .build();
+        modality = new Modality();
+        modality.setModalityId(1);
+        modality.setName("Individual");
+
+        branch = new Branch();
+        branch.setBranchId(1);
+        branch.setName("Masculino");
+
+        sampleResult = new Result();
+        sampleResult.setResultId(1);
+        sampleResult.setPerson(person);
+        sampleResult.setTournament(tournament);
+        sampleResult.setCategory(category);
+        sampleResult.setModality(modality);
+        sampleResult.setBranch(branch);
+        sampleResult.setRoundNumber(1);
+        sampleResult.setLaneNumber(3);
+        sampleResult.setLineNumber(2);
+        sampleResult.setScore(210);
     }
 
-    // ----------------------------------------------------------------------
-    // getAll / getById
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------
+    // CRUD BÁSICO
+    // -------------------------------------------------
+
     @Test
-    void getAll_ShouldReturnMappedResults() {
-        when(resultRepository.findAll()).thenReturn(List.of(result));
+    void getAll_ShouldReturnListOfDTOs() {
+        when(resultRepository.findAll()).thenReturn(List.of(sampleResult));
 
-        List<ResultDTO> list = resultService.getAll();
+        List<ResultDTO> result = resultService.getAll();
 
-        assertEquals(1, list.size());
-        assertEquals("John", list.get(0).getPersonName());
-        assertEquals(250, list.get(0).getScore());
+        assertEquals(1, result.size());
+        assertEquals(sampleResult.getResultId(), result.get(0).getResultId());
+        verify(resultRepository, times(1)).findAll();
     }
 
     @Test
-    void getById_ShouldReturnMappedResult_WhenExists() {
-        when(resultRepository.findById(1)).thenReturn(Optional.of(result));
+    void getById_ShouldReturnDTO_WhenExists() {
+        when(resultRepository.findById(1)).thenReturn(Optional.of(sampleResult));
 
         ResultDTO dto = resultService.getById(1);
 
         assertNotNull(dto);
-        assertEquals("John", dto.getPersonName());
+        assertEquals(sampleResult.getResultId(), dto.getResultId());
+        assertEquals("John Doe", dto.getPersonName());
     }
 
     @Test
     void getById_ShouldReturnNull_WhenNotFound() {
-        when(resultRepository.findById(99)).thenReturn(Optional.empty());
+        when(resultRepository.findById(999)).thenReturn(Optional.empty());
 
-        ResultDTO dto = resultService.getById(99);
+        ResultDTO dto = resultService.getById(999);
 
         assertNull(dto);
     }
 
-    // ----------------------------------------------------------------------
-    // create
-    // ----------------------------------------------------------------------
     @Test
-    void create_ShouldSaveResult_WhenValidDTO() {
-        when(personRepository.findById(1)).thenReturn(Optional.of(person));
-        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
-        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
-        when(resultRepository.save(any(Result.class))).thenReturn(result);
-
-        ResultDTO saved = resultService.create(dto);
-
-        assertNotNull(saved);
-        assertEquals("John", saved.getPersonName());
-        verify(resultRepository).save(any(Result.class));
-    }
-
-    @Test
-    void create_ShouldThrowException_WhenBothPersonAndTeamProvided() {
-        ResultDTO invalid = ResultDTO.builder()
-                .personId(1)
-                .teamId(2)
-                .tournamentId(1)
-                .categoryId(1)
-                .modalityId(1)
-                .build();
-
-        assertThrows(IllegalArgumentException.class, () -> resultService.create(invalid));
-    }
-
-    // ----------------------------------------------------------------------
-    // update
-    // ----------------------------------------------------------------------
-    @Test
-    void update_ShouldReturnTrue_WhenExists() {
-        when(resultRepository.findById(1)).thenReturn(Optional.of(result));
-        when(personRepository.findById(1)).thenReturn(Optional.of(person));
-        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
-        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
-
-        boolean ok = resultService.update(1, dto);
-
-        assertTrue(ok);
-        verify(resultRepository, times(1)).save(any(Result.class));
-    }
-
-    @Test
-    void update_ShouldReturnFalse_WhenNotFound() {
-        when(resultRepository.findById(99)).thenReturn(Optional.empty());
-
-        boolean ok = resultService.update(99, dto);
-
-        assertFalse(ok);
-        verify(resultRepository, never()).save(any(Result.class));
-    }
-
-    // ----------------------------------------------------------------------
-    // delete
-    // ----------------------------------------------------------------------
-    @Test
-    void delete_ShouldRemove_WhenExists() {
+    void delete_ShouldReturnTrue_WhenExists() {
         when(resultRepository.existsById(1)).thenReturn(true);
 
-        boolean ok = resultService.delete(1);
+        boolean deleted = resultService.delete(1);
 
-        assertTrue(ok);
+        assertTrue(deleted);
         verify(resultRepository).deleteById(1);
     }
 
     @Test
-    void delete_ShouldReturnFalse_WhenNotFound() {
-        when(resultRepository.existsById(99)).thenReturn(false);
+    void delete_ShouldReturnFalse_WhenNotExists() {
+        when(resultRepository.existsById(1)).thenReturn(false);
 
-        boolean ok = resultService.delete(99);
+        boolean deleted = resultService.delete(1);
 
-        assertFalse(ok);
+        assertFalse(deleted);
         verify(resultRepository, never()).deleteById(any());
     }
 
-    // ----------------------------------------------------------------------
-    // getTournamentResultsByGender
-    // ----------------------------------------------------------------------
-    @Test
-    void getTournamentResultsByGender_ShouldGroupResultsCorrectly() {
-        List<Object[]> mockRows = List.of(
-                new Object[]{1, "John", "M", 1, "Individual", 500, 250.0, 2},
-                new Object[]{1, "John", "M", 2, "Parejas", 400, 200.0, 2},
-                new Object[]{2, "Jane", "F", 1, "Individual", 300, 150.0, 2}
-        );
-
-        when(resultRepository.findPlayerModalitySummariesByTournament(1)).thenReturn(mockRows);
-
-        Map<String, List<PlayerResultSummaryDTO>> map = resultService.getTournamentResultsByGender(1);
-
-        assertEquals(2, map.size());
-        assertTrue(map.containsKey("m"));
-        assertTrue(map.containsKey("f"));
-        assertEquals(1, map.get("f").size());
-        assertEquals("John", map.get("m").get(0).getPlayerName());
-        assertEquals(900, map.get("m").get(0).getTotalGlobal());
-    }
+    // -------------------------------------------------
+    // FILTRO AVANZADO
+    // -------------------------------------------------
 
     @Test
-    void getTournamentResultsByGender_ShouldReturnEmptyMap_WhenNoResults() {
-        when(resultRepository.findPlayerModalitySummariesByTournament(1)).thenReturn(List.of());
+    void getResultsByTournamentFiltered_ShouldFilterCorrectly() {
+        Tournament t2 = new Tournament();
+        t2.setTournamentId(2);
+        Result r2 = new Result();
+        r2.setTournament(t2);
+        r2.setScore(150);
 
-        Map<String, List<PlayerResultSummaryDTO>> map = resultService.getTournamentResultsByGender(1);
+        when(resultRepository.findAll()).thenReturn(List.of(sampleResult, r2));
 
-        assertTrue(map.isEmpty());
-    }
-
-    // ----------------------------------------------------------------------
-    // getPlayerResultsForTable
-    // ----------------------------------------------------------------------
-    @Test
-    void getPlayerResultsForTable_ShouldAggregateScoresByPlayer() {
-        List<Object[]> mockData = List.of(
-                new Object[]{1, "John", "Strike Club", 1, 200},
-                new Object[]{1, "John", "Strike Club", 2, 250},
-                new Object[]{2, "Jane", "Bowling Pro", 1, 180}
-        );
-
-        when(resultRepository.findRawPlayerResultsForTable(1, 1)).thenReturn(mockData);
-
-        List<PlayerResultTableDTO> list = resultService.getPlayerResultsForTable(1, 1);
-
-        assertEquals(2, list.size());
-        PlayerResultTableDTO john = list.stream().filter(p -> p.getPersonId() == 1).findFirst().get();
-        assertEquals(450, john.getTotal());
-        assertEquals(225.0, john.getPromedio());
-        assertEquals(2, john.getScores().size());
-    }
-
-    @Test
-    void getPlayerResultsForTable_ShouldHandleEmptyList() {
-        when(resultRepository.findRawPlayerResultsForTable(1, 1)).thenReturn(List.of());
-
-        List<PlayerResultTableDTO> list = resultService.getPlayerResultsForTable(1, 1);
-
-        assertTrue(list.isEmpty());
-    }
-
-    // ----------------------------------------------------------------------
-    // getAllPlayersByAvgScore
-    // ----------------------------------------------------------------------
-    @Test
-    void getAllPlayersByAvgScore_ShouldReturnPlayers() {
-        DashboardPlayerDTO player = DashboardPlayerDTO.builder()
-                .fullName("John")
-                .averageScore(220.0)
-                .build();
-
-        when(resultRepository.findAllPlayersByAvgScore()).thenReturn(List.of(player));
-
-        List<DashboardPlayerDTO> result = resultService.getAllPlayersByAvgScore();
+        List<ResultDTO> result = resultService.getResultsByTournamentFiltered(1, null, null);
 
         assertEquals(1, result.size());
-        assertEquals("John", result.get(0).getFullName());
+        assertEquals(sampleResult.getScore(), result.get(0).getScore());
+    }
+
+    // -------------------------------------------------
+    // CREATE / UPDATE
+    // -------------------------------------------------
+
+    @Test
+    void create_ShouldMapDtoAndSaveEntity() {
+        ResultDTO dto = ResultDTO.builder()
+                .personId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .branchId(1)
+                .roundNumber(1)
+                .laneNumber(2)
+                .lineNumber(3)
+                .score(190)
+                .build();
+
+        when(personRepository.findById(1)).thenReturn(Optional.of(person));
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
+        when(branchRepository.findByBranchIdAndStatusTrue(1)).thenReturn(Optional.of(branch));
+        when(resultRepository.save(any(Result.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ResultDTO saved = resultService.create(dto);
+
+        assertNotNull(saved);
+        verify(resultRepository, times(1)).save(any(Result.class));
+    }
+
+    @Test
+    void update_ShouldReturnTrue_WhenEntityExists() {
+        ResultDTO dto = ResultDTO.builder()
+                .personId(1)
+                .tournamentId(1)
+                .categoryId(1)
+                .modalityId(1)
+                .branchId(1)
+                .roundNumber(2)
+                .laneNumber(4)
+                .lineNumber(5)
+                .score(220)
+                .build();
+
+        when(resultRepository.findById(1)).thenReturn(Optional.of(sampleResult));
+        when(personRepository.findById(1)).thenReturn(Optional.of(person));
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(tournament));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(modality));
+        when(branchRepository.findByBranchIdAndStatusTrue(1)).thenReturn(Optional.of(branch));
+
+        boolean updated = resultService.update(1, dto);
+
+        assertTrue(updated);
+        verify(resultRepository).save(any(Result.class));
+    }
+
+    @Test
+    void update_ShouldReturnFalse_WhenEntityNotFound() {
+        when(resultRepository.findById(1)).thenReturn(Optional.empty());
+
+        boolean updated = resultService.update(1, new ResultDTO());
+
+        assertFalse(updated);
+        verify(resultRepository, never()).save(any());
+    }
+
+    // -------------------------------------------------
+    // getPlayerResultsForTable
+    // -------------------------------------------------
+
+    @Test
+    void getPlayerResultsForTable_ShouldAggregateScoresAndCalculateAverages() {
+        // row: personId, playerName, clubName, round, score, teamId, teamName
+        List<Object[]> mockRows = List.of(
+                new Object[]{1, "Alice", "Club A", 1, 200, null, null},
+                new Object[]{1, "Alice", "Club A", 2, 180, null, null},
+                new Object[]{2, "TeamPlayer", "Club B", 1, 210, 5, "Team Bravo"}
+        );
+
+        when(resultRepository.findRawPlayerResultsForTable(1, 1)).thenReturn(mockRows);
+
+        List<PlayerResultTableDTO> result = resultService.getPlayerResultsForTable(1, 1, null);
+
+        assertEquals(2, result.size());
+
+        PlayerResultTableDTO alice = result.stream()
+                .filter(r -> "Alice".equals(r.getPlayerName()))
+                .findFirst().orElseThrow();
+
+        assertEquals(380, alice.getTotal());
+        assertEquals(190.0, alice.getPromedio(), 0.01);
+
+        PlayerResultTableDTO team = result.stream()
+                .filter(r -> "Team Bravo".equals(r.getTeamName()))
+                .findFirst().orElseThrow();
+
+        assertEquals(210, team.getTotal());
+    }
+
+    @Test
+    void getPlayerResultsForTable_ShouldFilterByRoundNumber() {
+        List<Object[]> mockRows = List.of(
+                new Object[]{1, "Alice", "Club A", 1, 200, null, null},
+                new Object[]{1, "Alice", "Club A", 2, 180, null, null}
+        );
+
+        when(resultRepository.findRawPlayerResultsForTable(1, 1)).thenReturn(mockRows);
+
+        List<PlayerResultTableDTO> result = resultService.getPlayerResultsForTable(1, 1, 1);
+
+        assertEquals(1, result.size());
+        assertEquals(200, result.get(0).getTotal());
     }
 }

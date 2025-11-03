@@ -59,12 +59,15 @@ public class TournamentService {
     }
 
     public TournamentDTO getById(Integer id) {
-        Optional<Tournament> tournamentOpt = tournamentRepository.findById(id);
-        if (tournamentOpt.isEmpty()) return null;
+        Tournament tournament = tournamentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "TOURNAMENT_NOT_FOUND",
+                        "No se encontró el torneo con ID: " + id
+                ));
 
-        TournamentDTO dto = toDTO(tournamentOpt.get());
+        TournamentDTO dto = toDTO(tournament);
 
-        //0 Agregar la sumatoria de jugadores por rama desde resultados
+        // Agregar la sumatoria de jugadores por rama desde resultados
         List<TournamentBranchPlayerCountDTO> branchPlayerCounts = resultRepository.countPlayersByBranch(id);
         dto.setBranchPlayerCounts(branchPlayerCounts);
 

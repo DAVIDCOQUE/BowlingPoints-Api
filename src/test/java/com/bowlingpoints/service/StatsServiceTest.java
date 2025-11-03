@@ -1,12 +1,9 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.TopTournamentDTO;
-import com.bowlingpoints.dto.UserStatisticsDTO;
-import com.bowlingpoints.dto.UserStatsProjection;
-import com.bowlingpoints.entity.Clubs;
-import com.bowlingpoints.entity.ClubPerson;
-import com.bowlingpoints.entity.Person;
-import com.bowlingpoints.repository.PersonRepository;
+import com.bowlingpoints.dto.UserDashboardStatsDTO;
+import com.bowlingpoints.entity.Modality;
+import com.bowlingpoints.entity.Result;
+import com.bowlingpoints.entity.Tournament;
 import com.bowlingpoints.repository.ResultRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,13 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class StatsServiceTest {
@@ -30,204 +25,117 @@ class StatsServiceTest {
     @Mock
     private ResultRepository resultRepository;
 
-    @Mock
-    private PersonRepository personRepository;
-
     @InjectMocks
     private StatsService statsService;
 
-    private Person testPerson;
-    private UserStatsProjection testProjection;
-    private Clubs testClub;
-    private ClubPerson testClubPerson;
+    private Tournament tournament1;
+    private Tournament tournament2;
+    private Modality modalityIndividual;
+    private Modality modalityTeam;
 
     @BeforeEach
     void setUp() {
-        // Configurar Club
-        testClub = Clubs.builder()
-                .clubId(1)
-                .name("Test Club")
-                .build();
+        tournament1 = new Tournament();
+        tournament1.setTournamentId(1);
+        tournament1.setName("Torneo 1");
+        tournament1.setImageUrl("img1.png");
+        tournament1.setStartDate(LocalDate.of(2024, 10, 10));
 
-        // Configurar Person
-        testPerson = Person.builder()
-                .personId(1)
-                .fullName("John")
-                .fullSurname("Doe")
-                .birthDate(LocalDate.now().minusYears(25))
-                .photoUrl("/uploads/users/test.jpg")
-                .build();
+        tournament2 = new Tournament();
+        tournament2.setTournamentId(2);
+        tournament2.setName("Torneo 2");
+        tournament2.setImageUrl("img2.png");
+        tournament2.setStartDate(LocalDate.of(2024, 12, 5));
 
-        // Configurar ClubPerson
-        testClubPerson = ClubPerson.builder()
-                .club(testClub)
-                .person(testPerson)
-                .status(true)
-                .build();
-        testPerson.setClubPersons(Collections.singletonList(testClubPerson));
+        modalityIndividual = new Modality();
+        modalityIndividual.setName("Individual");
 
-        // Configurar UserStatsProjection mock
-        testProjection = new UserStatsProjection() {
-            @Override
-            public Integer getTotalTournaments() {
-                return 10;
-            }
-
-            @Override
-            public Integer getTotalStrikes() {
-                return 50;
-            }
-
-            @Override
-            public Double getAvgScore() {
-                return 180.5;
-            }
-
-            @Override
-            public Integer getBestGame() {
-                return 279;
-            }
-
-            @Override
-            public Integer getTournamentsWon() {
-                return 3;
-            }
-        };
+        modalityTeam = new Modality();
+        modalityTeam.setName("Parejas");
     }
 
     @Test
-    void calculateUserStats_WhenUserExistsWithCompleteData_ShouldReturnFullStats() {
-        // Arrange
-        when(resultRepository.findStatsByUserId(1)).thenReturn(testProjection);
-        when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
+    void getUserDashboardStats_WhenNoResults_ShouldReturnZerosAndEmptyLists() {
+        when(resultRepository.findByPersonId(1)).thenReturn(Collections.emptyList());
 
-        // Act
-        UserStatisticsDTO result = statsService.calculateUserStats(1);
+        UserDashboardStatsDTO stats = statsService.getUserDashboardStats(1);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(testProjection.getTotalTournaments(), result.getTotalTournaments());
-        assertEquals(testProjection.getTotalStrikes(), result.getTotalStrikes());
-        assertEquals(testProjection.getAvgScore(), result.getAvgScore());
-        assertEquals(testProjection.getBestGame(), result.getBestGame());
-        assertEquals(testProjection.getTournamentsWon(), result.getTournamentsWon());
-        assertEquals(testPerson.getPersonId(), result.getPersonId());
-        assertEquals(testPerson.getFullName() + " " + testPerson.getFullSurname(), result.getFullName());
-        assertEquals(testClub.getName(), result.getClub());
-        assertEquals("25", result.getAge());
-        assertEquals(testPerson.getPhotoUrl(), result.getPhotoUrl());
+        assertNotNull(stats);
+        assertEquals(0.0, stats.getAvgScoreGeneral());
+        assertEquals(0, stats.getBestLine());
+        assertEquals(0, stats.getTotalLines());
+        assertEquals(0, stats.getTotalTournaments());
+        assertTrue(stats.getAvgPerTournament().isEmpty());
+        assertTrue(stats.getAvgPerModality().isEmpty());
+        assertTrue(stats.getScoreDistribution().isEmpty());
     }
 
     @Test
-    void calculateUserStats_WhenUserDoesNotExist_ShouldReturnMinimalStats() {
-        // Arrange
-        when(resultRepository.findStatsByUserId(99)).thenReturn(null);
-        when(personRepository.findById(99)).thenReturn(Optional.empty());
+    void getUserDashboardStats_WhenResultsExist_ShouldReturnCalculatedStats() {
+        Result r1 = new Result();
+        r1.setScore(200);
+        r1.setTournament(tournament1);
+        r1.setModality(modalityIndividual);
 
-        // Act
-        UserStatisticsDTO result = statsService.calculateUserStats(99);
+        Result r2 = new Result();
+        r2.setScore(180);
+        r2.setTournament(tournament1);
+        r2.setModality(modalityIndividual);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(0, result.getTotalTournaments());
-        assertEquals(0, result.getTotalStrikes());
-        assertEquals(0.0, result.getAvgScore());
-        assertEquals(0, result.getBestGame());
-        assertEquals(0, result.getTournamentsWon());
-        assertNull(result.getPersonId());
-        assertNull(result.getFullName());
-        assertNull(result.getClub());
-        assertNull(result.getAge());
-        assertNull(result.getPhotoUrl());
+        Result r3 = new Result();
+        r3.setScore(220);
+        r3.setTournament(tournament2);
+        r3.setModality(modalityTeam);
+
+        when(resultRepository.findByPersonId(1)).thenReturn(List.of(r1, r2, r3));
+
+        UserDashboardStatsDTO stats = statsService.getUserDashboardStats(1);
+
+        assertNotNull(stats);
+        assertEquals(200.0, stats.getAvgScoreGeneral(), 0.01);
+        assertEquals(220, stats.getBestLine());
+        assertEquals(3, stats.getTotalLines());
+        assertEquals(2, stats.getTotalTournaments());
+        assertEquals(2, stats.getAvgPerTournament().size());
+        assertEquals(2, stats.getAvgPerModality().size());
+        assertEquals(6, stats.getScoreDistribution().size()); // Rango completo 0–129 ... 251–300
+
+        // Validar orden y valores del mejor torneo
+        assertNotNull(stats.getBestTournamentAvg());
+        assertEquals("Torneo 2", stats.getBestTournamentAvg().getTournamentName());
     }
 
     @Test
-    void calculateUserStats_WhenUserExistsWithoutBirthDate_ShouldReturnStatsWithoutAge() {
-        // Arrange
-        testPerson.setBirthDate(null);
-        when(resultRepository.findStatsByUserId(1)).thenReturn(testProjection);
-        when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
+    void getUserDashboardStats_WhenAllResultsLowScores_ShouldReturnCorrectDistribution() {
+        Result r1 = new Result();
+        r1.setScore(100);
+        r1.setTournament(tournament1);
+        r1.setModality(modalityIndividual);
 
-        // Act
-        UserStatisticsDTO result = statsService.calculateUserStats(1);
+        Result r2 = new Result();
+        r2.setScore(140);
+        r2.setTournament(tournament1);
+        r2.setModality(modalityIndividual);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(testProjection.getTotalTournaments(), result.getTotalTournaments());
-        assertNull(result.getAge());
-    }
+        Result r3 = new Result();
+        r3.setScore(160);
+        r3.setTournament(tournament1);
+        r3.setModality(modalityIndividual);
 
-    @Test
-    void calculateUserStats_WhenUserExistsWithoutClub_ShouldReturnStatsWithoutClub() {
-        // Arrange
-        testPerson.setClubPersons(Collections.emptyList());
-        when(resultRepository.findStatsByUserId(1)).thenReturn(testProjection);
-        when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
+        when(resultRepository.findByPersonId(5)).thenReturn(List.of(r1, r2, r3));
 
-        // Act
-        UserStatisticsDTO result = statsService.calculateUserStats(1);
+        UserDashboardStatsDTO stats = statsService.getUserDashboardStats(5);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(testProjection.getTotalTournaments(), result.getTotalTournaments());
-        assertNull(result.getClub());
-    }
+        assertEquals(133.33, stats.getAvgScoreGeneral(), 0.5);
+        assertEquals(160, stats.getBestLine());
+        assertEquals(3, stats.getTotalLines());
+        assertEquals(1, stats.getTotalTournaments());
 
-    @Test
-    void calculateUserStats_WhenUserHasInactiveClub_ShouldReturnStatsWithoutClub() {
-        // Arrange
-        testClubPerson.setStatus(false);
-        when(resultRepository.findStatsByUserId(1)).thenReturn(testProjection);
-        when(personRepository.findById(1)).thenReturn(Optional.of(testPerson));
-
-        // Act
-        UserStatisticsDTO result = statsService.calculateUserStats(1);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(testProjection.getTotalTournaments(), result.getTotalTournaments());
-        assertNull(result.getClub());
-    }
-
-    @Test
-    void getTopTournaments_WhenTournamentsExist_ShouldReturnList() {
-        // Arrange
-        List<TopTournamentDTO> expectedTournaments = Arrays.asList(
-            TopTournamentDTO.builder()
-                .tournamentId(1)
-                .name("Tournament 1")
-                .startDate(LocalDate.now())
-                .bestScore(200)
-                .build(),
-            TopTournamentDTO.builder()
-                .tournamentId(2)
-                .name("Tournament 2")
-                .startDate(LocalDate.now())
-                .bestScore(180)
-                .build()
-        );
-        when(resultRepository.findTopTournamentsByUser(1)).thenReturn(expectedTournaments);
-
-        // Act
-        List<TopTournamentDTO> result = statsService.getTopTournaments(1);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(expectedTournaments.get(0).getName(), result.get(0).getName());
-        assertEquals(expectedTournaments.get(0).getBestScore(), result.get(0).getBestScore());
-    }
-
-    @Test
-    void getTopTournaments_WhenNoTournaments_ShouldReturnEmptyList() {
-        // Arrange
-        when(resultRepository.findTopTournamentsByUser(1)).thenReturn(Collections.emptyList());
-
-        // Act
-        List<TopTournamentDTO> result = statsService.getTopTournaments(1);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        // Validar distribución de puntajes (debe tener conteo en los rangos bajos)
+        var ranges = stats.getScoreDistribution();
+        long lowCount = ranges.stream()
+                .filter(r -> r.getLabel().equals("0–129"))
+                .findFirst().get().getCount();
+        assertEquals(1L, lowCount);
     }
 }
