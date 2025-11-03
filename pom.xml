@@ -20,6 +20,18 @@
         <java.version>17</java.version>
         <sonar.organization>davidcoque</sonar.organization>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.exclusions>
+            **/config/**,
+            **/config/jwt/**,
+            **/dto/**,
+            **/entity/**,
+            **/enums/**,
+            **/exception/**,
+            **/repository/**,
+            **/projection/**,
+            **/util/**,
+            **/*Application.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <repositories>
@@ -161,6 +173,7 @@
 
     <build>
         <plugins>
+            <!-- Plugin de Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -173,18 +186,21 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- Plugin de análisis SonarQube -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>5.2.0.4988</version>
             </plugin>
+
+            <!-- Plugin de cobertura Jacoco -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.13</version>
-
                 <configuration>
-                    <!-- Excluir clases que no deben contar en cobertura -->
+                    <!-- Exclusiones globales -->
                     <excludes>
                         <exclude>**/config/**</exclude>
                         <exclude>**/config/jwt/**</exclude>
@@ -193,12 +209,14 @@
                         <exclude>**/enums/**</exclude>
                         <exclude>**/exception/**</exclude>
                         <exclude>**/repository/**</exclude>
+                        <exclude>**/projection/**</exclude>
                         <exclude>**/util/**</exclude>
+                        <exclude>**/*Application*</exclude>
                     </excludes>
                 </configuration>
 
                 <executions>
-                    <!-- Prepara el agente de JaCoCo antes de los tests -->
+                    <!-- Inyecta el agente antes de ejecutar los tests -->
                     <execution>
                         <id>prepare-agent</id>
                         <goals>
@@ -206,7 +224,7 @@
                         </goals>
                     </execution>
 
-                    <!-- Genera el reporte después de los tests -->
+                    <!-- Genera los reportes de cobertura -->
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
@@ -219,12 +237,24 @@
                                 <format>HTML</format>
                                 <format>XML</format>
                             </formats>
+
+                            <!-- Importante: repetir exclusiones aquí -->
+                            <excludes>
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/config/jwt/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/entity/**</exclude>
+                                <exclude>**/enums/**</exclude>
+                                <exclude>**/exception/**</exclude>
+                                <exclude>**/repository/**</exclude>
+                                <exclude>**/projection/**</exclude>
+                                <exclude>**/util/**</exclude>
+                                <exclude>**/*Application*</exclude>
+                            </excludes>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
-
         </plugins>
     </build>
 </project>
