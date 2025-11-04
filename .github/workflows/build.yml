@@ -6,9 +6,13 @@ on:
       - dev
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - dev
+    types: [opened, synchronize, reopened, closed]
 
 jobs:
+  # 🧱 CI: Compila, testea y analiza calidad en la rama dev
   build-and-analyze:
     name: Build, Test and Analyze (CI)
     runs-on: ubuntu-latest
@@ -69,11 +73,12 @@ jobs:
           name: bowlingpoints-jar
           path: target/*.jar
 
+  # 🚀 CD: Despliegue en la rama main
   docker-deploy:
     name: Build and Deploy Docker (CD)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     needs: [build-and-analyze]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 
     steps:
       - name: Checkout repository
