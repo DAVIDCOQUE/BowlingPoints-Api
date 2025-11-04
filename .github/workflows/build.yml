@@ -9,7 +9,6 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  # 🧱 CI: Compila, testea y analiza calidad en la rama dev
   build-and-analyze:
     name: Build, Test and Analyze (CI)
     runs-on: ubuntu-latest
@@ -17,19 +16,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@8dfc4874178ecf8e9f1e8c6e5d73af4aab6ea67a # v4.2.1
+        uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'zulu'
           cache: maven
 
       - name: Cache SonarQube packages
-        uses: actions/cache@6849a6489940f3a97298f54a0398b476faa495a9 # v4.1.2
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
@@ -65,12 +64,11 @@ jobs:
           scanMetadataReportFile: target/sonar/report-task.txt
 
       - name: 📦 Upload JAR artifact
-        uses: actions/upload-artifact@1e5338d23a3f993bbf7d9d5bb379534f9f1525c7 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: bowlingpoints-jar
           path: target/*.jar
 
-  # 🚀 CD: Despliegue en la rama main
   docker-deploy:
     name: Build and Deploy Docker (CD)
     runs-on: ubuntu-latest
@@ -79,16 +77,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@8dfc4874178ecf8e9f1e8c6e5d73af4aab6ea67a
+        uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'zulu'
 
       - name: Download JAR artifact
-        uses: actions/download-artifact@50c7a5799a4cf7d4f645e74e1e1bc1a3c81264de # v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: bowlingpoints-jar
           path: target/
@@ -122,19 +120,15 @@ jobs:
           script: |
             echo "🚀 Desplegando en AWS EC2..."
 
-            # 🧹 Detener y eliminar contenedores viejos
             docker stop bowlingpoints || true
             docker rm bowlingpoints || true
             docker stop bowlingpoints-app || true
             docker rm bowlingpoints-app || true
 
-            # 🧹 Eliminar todas las imágenes del backend (sin tocar postgres)
             docker images | grep bowlingpoints | awk '{print $3}' | xargs docker rmi -f || true
 
-            # 🔄 Descargar la nueva imagen
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
 
-            # 🚀 Iniciar el nuevo contenedor limpio
             docker run -d --name bowlingpoints -p ${{ secrets.APP_PORTS }} \
               -e DB_URL="${{ secrets.DB_URL }}" \
               -e DB_USER="${{ secrets.DB_USER }}" \
