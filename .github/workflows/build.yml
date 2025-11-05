@@ -135,5 +135,6 @@ jobs:
               -e DB_URL="${{ secrets.DB_URL }}" \
               -e DB_USER="${{ secrets.DB_USER }}" \
               -e DB_PASS="${{ secrets.DB_PASSWORD }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               --restart always \
               ${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest
