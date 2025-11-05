@@ -31,31 +31,35 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
-        // 1. Manejo de Usuario No Encontrado
-        User user;
-        try {
-            user = userRepository.findByNickname(request.getUserName())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.getUserName()));
-        } catch (UsernameNotFoundException e) {
-            // **Punto de Control 1: Loguear antes de relanzar**
-            log.warn("Login fallido para el usuario '{}': {}", request.getUserName(), e.getMessage());
-            throw e; // Relanzar para que el Controller lo maneje
+        // **NOTA DE SEGURIDAD:** No lanzar inmediatamente si no se encuentra.
+        // Esto previene que el tiempo de respuesta revele si el usuario existe.
+        User user = userRepository.findByNickname(request.getUserName()).orElse(null);
+
+        // 1. Caso de usuario no encontrado (o nulo)
+        if (user == null) {
+            // **IMPORTANTE:** Loguear internamente para auditoría.
+            log.warn("Intento de login fallido: Usuario no encontrado '{}'", request.getUserName());
+
+            // Simular el proceso de hashing con una contraseña dummy
+            // para que el tiempo de respuesta sea similar al caso de fallo de contraseña.
+            passwordEncoder.matches("dummy_password", "$2a$10$abcdefghijklmnopqrstuu");
+
+            // Lanzar una excepción genérica que será capturada y uniformada.
+            throw new BadCredentialsException("Invalid username or password");
         }
 
-        // 2. Manejo de Contraseña Inválida
+        // 2. Caso de contraseña inválida
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            // **Punto de Control 2: Loguear antes de lanzar**
             String message = "Credenciales inválidas para el usuario: " + request.getUserName();
             log.warn(message);
-            throw new BadCredentialsException("Invalid password"); // No se debe incluir el nombre de usuario en el mensaje de excepción final por seguridad
+            // Lanzar la misma excepción.
+            throw new BadCredentialsException("Invalid username or password");
         }
 
-        // 3. Generación y Respuesta Exitosa
+        // 3. Éxito
         String token = jwtService.getToken(user);
         log.info("Inicio de sesión exitoso para el usuario: {}", request.getUserName());
 
-        return AuthResponse.builder()
-                .token(token)
-                .build();
+        return AuthResponse.builder().token(token).build();
     }
 }
