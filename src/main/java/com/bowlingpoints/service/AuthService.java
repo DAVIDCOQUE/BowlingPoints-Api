@@ -35,7 +35,9 @@ public class AuthService {
         // **NOTA DE SEGURIDAD:** No lanzar inmediatamente si no se encuentra.
         // Esto previene que el tiempo de respuesta revele si el usuario existe.
         User user = userRepository.findByNickname(request.getUserName()).orElse(null);
-
+        if (user != null) {
+            log.info("Usuario encontrado->{}",user.getNickname());
+        }
         // 1. Caso de usuario no encontrado (o nulo)
         if (user == null) {
             // **IMPORTANTE:** Loguear internamente para auditoría.

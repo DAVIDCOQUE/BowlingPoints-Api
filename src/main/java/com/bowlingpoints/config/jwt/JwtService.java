@@ -2,9 +2,12 @@ package com.bowlingpoints.config.jwt;
 
 import com.bowlingpoints.entity.User;
 import com.bowlingpoints.entity.UserRole;
+import com.bowlingpoints.service.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,9 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     private final JwtConfig jwtConfig;
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
+
 
     public String getToken(User user) {
         return getToken(new HashMap<>(), user);
@@ -26,7 +32,7 @@ public class JwtService {
 
     private String getToken(Map<String, Object> extraClaims, User user) {
         long expirationMs = jwtConfig.getExpiration();
-
+        log.info("Se crea un nuevo token JWT para el inicio de sesion");
         // Roles
         List<String> roles = user.getUserRoles().stream()
                 .filter(UserRole::isGranted)
