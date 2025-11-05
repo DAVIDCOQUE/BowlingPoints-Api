@@ -37,15 +37,19 @@ public class JwtService {
     private String getToken(Map<String, Object> extraClaims, User user) {
         long expirationMs = jwtConfig.getExpiration();
         log.info("Se crea un nuevo token JWT para el inicio de sesion");
+
         // Roles
         List<String> roles = user.getUserRoles().stream()
                 .filter(UserRole::isGranted)
                 .map(userRole -> userRole.getRole().getName())
                 .collect(Collectors.toList());
-
+        log.info("Aqui estan los roles->{}",roles);
 
         extraClaims.put("roles", roles);
         extraClaims.put("correo", user.getPerson().getEmail());
+
+        log.info("Aqui estan los claims->{}",extraClaims);
+
 
         return Jwts.builder()
                 .setClaims(extraClaims)
