@@ -51,18 +51,31 @@ public class JwtService {
         log.info("Aqui estan los claims->{}",extraClaims);
 
 
-        return Jwts.builder()
+        String jwts = Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(user.getNickname())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
+
+        log.info("Aqui va el JWT->{}",jwts);
+
+        return jwts;
     }
 
     private Key getKey() {
+
+
         byte[] keyBytes = Decoders.BASE64.decode(jwtConfig.getSecret());
-        return Keys.hmacShaKeyFor(keyBytes);
+
+        log.info("Aqui esta la firma de la llave->{}",keyBytes);
+
+        Key key = Keys.hmacShaKeyFor(keyBytes);
+
+        log.info("Aqui esta la llave firmada->{}",key);
+
+        return key;
     }
 
 
