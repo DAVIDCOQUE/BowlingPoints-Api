@@ -31,6 +31,7 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
+        log.info("Iniciando proceso de inicio de sesion");
         // **NOTA DE SEGURIDAD:** No lanzar inmediatamente si no se encuentra.
         // Esto previene que el tiempo de respuesta revele si el usuario existe.
         User user = userRepository.findByNickname(request.getUserName()).orElse(null);
