@@ -25,9 +25,13 @@ public class JwtService {
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
 
-
     public String getToken(User user) {
-        return getToken(new HashMap<>(), user);
+
+        String token = getToken(new HashMap<>(), user);
+
+        log.info("Se devuelve la informacion con el token->{}",token);
+
+        return token;
     }
 
     private String getToken(Map<String, Object> extraClaims, User user) {
