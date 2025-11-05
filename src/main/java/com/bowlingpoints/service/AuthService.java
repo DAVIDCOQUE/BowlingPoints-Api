@@ -39,11 +39,6 @@ public class AuthService {
         if (user == null) {
             // **IMPORTANTE:** Loguear internamente para auditoría.
             log.warn("Intento de login fallido: Usuario no encontrado '{}'", request.getUserName());
-
-            // Simular el proceso de hashing con una contraseña dummy
-            // para que el tiempo de respuesta sea similar al caso de fallo de contraseña.
-            passwordEncoder.matches("dummy_password", "$2a$10$abcdefghijklmnopqrstuu");
-
             // Lanzar una excepción genérica que será capturada y uniformada.
             throw new BadCredentialsException("Invalid username or password");
         }
