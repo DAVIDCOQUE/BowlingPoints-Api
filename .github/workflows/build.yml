@@ -12,7 +12,7 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 jobs:
-  # 🧱 CI: Compila, testea y analiza calidad en la rama dev
+  # CI: Compila, testea y analiza calidad en la rama dev
   build-and-analyze:
     name: Build, Test and Analyze (CI)
     runs-on: ubuntu-latest
@@ -37,21 +37,21 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: 🧱 Build, test and generate JaCoCo report
+      - name: Build, test and generate JaCoCo report
         env:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          echo "🏗️ Ejecutando build y tests..."
+          echo "Ejecutando build y tests..."
           mvn clean verify jacoco:report -B
 
-      - name: 🔍 SonarQube analysis (with JaCoCo coverage)
+      - name: SonarQube analysis (with JaCoCo coverage)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
-          echo "🚀 Iniciando análisis SonarQube..."
+          echo "Iniciando análisis SonarQube..."
           mvn sonar:sonar \
             -Dsonar.projectKey=DAVIDCOQUE_BowlingPoints-Api \
             -Dsonar.host.url=$SONAR_HOST_URL \
@@ -59,20 +59,20 @@ jobs:
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.java.binaries=target/classes
 
-      - name: ✅ Check SonarQube Quality Gate
+      - name: Check SonarQube Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@95b1cc6c02a15c8ecc00c07b1c2a75ed61a14055
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           scanMetadataReportFile: target/sonar/report-task.txt
 
-      - name: 📦 Upload JAR artifact
+      - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: bowlingpoints-jar
           path: target/*.jar
 
-  # 🚀 CD: Despliegue en la rama main
+  # CD: Despliegue en la rama main
   docker-deploy:
     name: Build and Deploy Docker (CD)
     runs-on: ubuntu-latest
@@ -103,14 +103,14 @@ jobs:
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
-          echo "🐳 Construyendo imagen Docker..."
+          echo "Construyendo imagen Docker..."
           docker build -t $DOCKERHUB_USERNAME/bowlingpoints:latest .
 
       - name: Push Docker image
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
-          echo "📦 Subiendo imagen a Docker Hub..."
+          echo " Subiendo imagen a Docker Hub..."
           docker push $DOCKERHUB_USERNAME/bowlingpoints:latest
 
       - name: Deploy to AWS EC2
@@ -120,7 +120,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            echo "🚀 Desplegando en AWS EC2..."
+            echo "Desplegando en AWS EC2..."
 
             docker stop bowlingpoints || true
             docker rm bowlingpoints || true
