@@ -50,7 +50,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:4200"));// Cambiar en producción
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:4200",
+                "http://bowlingpoints-frontend.s3-website.us-east-2.amazonaws.com"
+        ));// Cambiar en producción
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
 

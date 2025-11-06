@@ -90,7 +90,7 @@ class AuthServiceTest {
         when(userRepository.findByNickname(testLoginRequest.getUserName())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UsernameNotFoundException.class, () -> authService.login(testLoginRequest));
+        assertThrows(BadCredentialsException.class, () -> authService.login(testLoginRequest));
         verify(userRepository).findByNickname(testLoginRequest.getUserName());
         verify(jwtService, never()).getToken(any());
     }

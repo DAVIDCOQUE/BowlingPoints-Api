@@ -2,9 +2,12 @@ package com.bowlingpoints.config.jwt;
 
 import com.bowlingpoints.entity.User;
 import com.bowlingpoints.entity.UserRole;
+import com.bowlingpoints.service.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -19,36 +22,60 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     private final JwtConfig jwtConfig;
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
 
     public String getToken(User user) {
-        return getToken(new HashMap<>(), user);
+
+        String token = getToken(new HashMap<>(), user);
+
+        log.info("Se devuelve la informacion con el token->{}",token);
+
+        return token;
     }
 
     private String getToken(Map<String, Object> extraClaims, User user) {
         long expirationMs = jwtConfig.getExpiration();
+        log.info("Se crea un nuevo token JWT para el inicio de sesion");
 
         // Roles
         List<String> roles = user.getUserRoles().stream()
                 .filter(UserRole::isGranted)
                 .map(userRole -> userRole.getRole().getName())
                 .collect(Collectors.toList());
-
+        log.info("Aqui estan los roles->{}",roles);
 
         extraClaims.put("roles", roles);
         extraClaims.put("correo", user.getPerson().getEmail());
 
-        return Jwts.builder()
+        log.info("Aqui estan los claims->{}",extraClaims);
+
+
+        String jwts = Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(user.getNickname())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
+
+        log.info("Aqui va el JWT->{}",jwts);
+
+        return jwts;
     }
 
     private Key getKey() {
+
+
         byte[] keyBytes = Decoders.BASE64.decode(jwtConfig.getSecret());
-        return Keys.hmacShaKeyFor(keyBytes);
+
+        log.info("Aqui esta la firma de la llave->{}",keyBytes);
+
+        Key key = Keys.hmacShaKeyFor(keyBytes);
+
+        log.info("Aqui esta la llave firmada->{}",key);
+
+        return key;
     }
 
 
