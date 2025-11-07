@@ -1,0 +1,55 @@
+name: CD - Main Branch (Deploy to AWS)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+
+    # Se añade un entorno para seguir buenas prácticas de CD
+    # environment: production
+
+    steps:
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@3ca8a7c5359ac6ad91aa47f1946ece1c3b025004
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ec2-user
+          key: ${{ secrets.AWS_SSH_KEY }}
+          # El script de despliegue detiene, elimina contenedores/imágenes viejas,
+          # hace pull de la nueva imagen (la 'latest' subida en el merge de dev) y la ejecuta.
+          script: |
+            echo "Desplegando en AWS EC2..."
+
+            # Variables de entorno para el script SSH
+            DOCKERHUB_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/bowlingpoints:latest"
+            APP_PORTS="${{ secrets.APP_PORTS }}"
+            DB_URL="${{ secrets.DB_URL }}"
+            DB_USER="${{ secrets.DB_USER }}"
+            DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            JWT_SECRET="${{ secrets.JWT_SECRET }}"
+
+            # Limpieza de contenedores anteriores (con los nombres usados)
+            docker stop bowlingpoints || true
+            docker rm bowlingpoints || true
+            docker stop bowlingpoints-app || true # Limpieza adicional si se usó otro nombre
+            docker rm bowlingpoints-app || true
+
+            # Limpieza de la imagen anterior (opcionalmente)
+            # docker images | grep bowlingpoints | awk '{print $3}' | xargs docker rmi -f || true
+
+            # Pull de la nueva imagen desde Docker Hub (debe ser la última subida)
+            docker pull $DOCKERHUB_IMAGE
+
+            # Ejecutar el nuevo contenedor
+            docker run -d --name bowlingpoints -p $APP_PORTS \
+              -e DB_URL="$DB_URL" \
+              -e DB_USER="$DB_USER" \
+              -e DB_PASS="$DB_PASSWORD" \
+              -e JWT_SECRET="$JWT_SECRET" \
+              --restart always \
+              $DOCKERHUB_IMAGE
