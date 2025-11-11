@@ -18,7 +18,6 @@ public class DashboardService {
 
     private final TournamentRepository tournamentRepository;
     private final ResultRepository resultRepository;
-    private final ClubRepository clubRepository;
     private final AmbitRepository ambitRepository;
 
     /**
@@ -47,8 +46,8 @@ public class DashboardService {
         //  Ámbitos que tengan al menos un torneo asociado
         List<AmbitDTO> ambits = ambitRepository.findDistinctWithTournaments();
 
-        //  Top 10 jugadores por promedio de puntaje
-        List<DashboardPlayerDTO> topPlayers = resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10));
+        //  Top 5 jugadores por promedio de puntaje
+        List<DashboardPlayerDTO> topPlayers = resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 5));
 
         //  Construcción del objeto principal del Dashboard
         return DashboardDTO.builder()
@@ -81,24 +80,28 @@ public class DashboardService {
                 .categoryIds(
                         tournament.getCategories() != null
                                 ? tournament.getCategories().stream()
+                                .filter(tc -> tc != null && tc.getCategory() != null)
                                 .map(tc -> tc.getCategory().getCategoryId())
                                 .toList()
-                                : null
+                                : List.of()
                 )
 
                 //  Nombres de categorías
                 .categoryNames(
                         tournament.getCategories() != null
                                 ? tournament.getCategories().stream()
+                                .filter(tc -> tc != null && tc.getCategory() != null)
                                 .map(tc -> tc.getCategory().getName())
                                 .toList()
-                                : null
+                                : List.of()
                 )
+
 
                 //  Objetos completos de categorías
                 .categories(
                         tournament.getCategories() != null
                                 ? tournament.getCategories().stream()
+                                .filter(tc -> tc != null && tc.getCategory() != null)
                                 .map(tc -> CategoryDTO.builder()
                                         .categoryId(tc.getCategory().getCategoryId())
                                         .name(tc.getCategory().getName())
@@ -106,31 +109,36 @@ public class DashboardService {
                                         .status(tc.getCategory().getStatus())
                                         .build())
                                 .toList()
-                                : null
+                                : List.of()
                 )
+
 
                 //  IDs de modalidades
                 .modalityIds(
                         tournament.getModalities() != null
                                 ? tournament.getModalities().stream()
+                                .filter(tm -> tm != null && tm.getModality() != null)
                                 .map(tm -> tm.getModality().getModalityId())
                                 .toList()
-                                : null
+                                : List.of()
                 )
 
                 //  Nombres de modalidades
                 .modalityNames(
                         tournament.getModalities() != null
                                 ? tournament.getModalities().stream()
+                                .filter(tm -> tm != null && tm.getModality() != null)
                                 .map(tm -> tm.getModality().getName())
                                 .toList()
-                                : null
+                                : List.of()
                 )
+
 
                 //  Objetos completos de modalidades
                 .modalities(
                         tournament.getModalities() != null
                                 ? tournament.getModalities().stream()
+                                .filter(tm -> tm != null && tm.getModality() != null)
                                 .map(tm -> ModalityDTO.builder()
                                         .modalityId(tm.getModality().getModalityId())
                                         .name(tm.getModality().getName())
@@ -138,8 +146,9 @@ public class DashboardService {
                                         .status(tm.getModality().getStatus())
                                         .build())
                                 .toList()
-                                : null
+                                : List.of()
                 )
+
 
                 .build();
     }

@@ -22,4 +22,12 @@ public class UserStatsController {
         var data = statsService.getUserDashboardStats(userId);
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Estadísticas para dashboard cargadas", data));
     }
+
+    // Público (uso en vista de jugador)
+    @GetMapping("/public-summary")
+    public ResponseEntity<ResponseGenericDTO<UserStatisticsDTO>> getPublicPlayerSummary(
+            @RequestParam Integer userId) {
+        var data = statsService.getUserPublicStats(userId);
+        return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Resumen público del jugador cargado", data));
+    }
 }

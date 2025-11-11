@@ -4,6 +4,7 @@ import com.bowlingpoints.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,17 +29,31 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                 // ⚠️ CSRF protection intentionally disabled:
+                //  CSRF protection intentionally disabled:
                 // This backend uses stateless JWT authentication (no session cookies),
                 // so CSRF tokens are not required or applicable.
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        //  Auth & públicos generales
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/dashboard").permitAll()
+
+                        //  Rutas públicas (frontend sin login)
+                        .requestMatchers(HttpMethod.GET, "/ambits/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/tournaments/*").permitAll()
+                        .requestMatchers("/results/by-modality").permitAll()
+                        .requestMatchers("/results/tournament-table").permitAll()
+                        .requestMatchers("/results/all-player-ranking").permitAll()
+                        .requestMatchers("/results/by-ambit").permitAll()
+                        .requestMatchers("/api/user-stats/public-summary").permitAll()
+
+                        //  Protegidas (requieren JWT válido)
                         .requestMatchers("/jugadores/upload").authenticated()
-                        .requestMatchers("/api/dashboard").permitAll()
-                        .requestMatchers("/results/**").permitAll()
-                        .anyRequest().authenticated())
+
+                        //  Todo lo demás
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
