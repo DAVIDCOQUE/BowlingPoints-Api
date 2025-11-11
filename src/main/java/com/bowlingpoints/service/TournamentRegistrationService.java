@@ -27,8 +27,9 @@ public class TournamentRegistrationService {
     // ================================
     public TournamentRegistrationDTO create(TournamentRegistrationDTO dto) {
         // Validar duplicado
-        if (registrationRepository.existsByTournament_TournamentIdAndPerson_PersonId(dto.getTournamentId(), dto.getPersonId())) {
-            throw new RuntimeException("El jugador ya está registrado en este torneo.");
+        if (registrationRepository.existsByTournament_TournamentIdAndModality_ModalityIdAndPerson_PersonId(
+                dto.getTournamentId(), dto.getModalityId(), dto.getPersonId())) {
+            throw new RuntimeException("El jugador ya está registrado en esta modalidad del torneo.");
         }
 
         Tournament tournament = tournamentRepository.findById(dto.getTournamentId())

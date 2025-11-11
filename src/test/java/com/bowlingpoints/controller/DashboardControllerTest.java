@@ -44,7 +44,7 @@ class DashboardControllerTest {
         when(dashboardService.getDashboardData()).thenReturn(dashboardDTO);
 
         // Act & Assert
-        mockMvc.perform(get("/api/dashboard")
+        mockMvc.perform(get("/dashboard")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)))

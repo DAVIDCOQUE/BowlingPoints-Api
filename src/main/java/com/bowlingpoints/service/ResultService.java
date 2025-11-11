@@ -104,31 +104,44 @@ public class ResultService {
     }
 
     private Result mapDtoToEntity(ResultDTO dto, Result result) {
-        if (dto.getPersonId() != null && dto.getTeamId() != null) {
-            throw new IllegalArgumentException("No se puede asignar persona y equipo al mismo tiempo.");
+        //  Validaciones nuevas
+        if (dto.getPersonId() == null && dto.getTeamId() == null) {
+            throw new IllegalArgumentException("Debe asignar al menos una persona o un equipo.");
         }
 
+        if (dto.getPersonId() == null && dto.getTeamId() != null) {
+            throw new IllegalArgumentException("Debe asignar una persona cuando se selecciona un equipo.");
+        }
+
+        //  Persona
         if (dto.getPersonId() != null) {
             result.setPerson(personRepository.findById(dto.getPersonId())
                     .orElseThrow(() -> new RuntimeException("Persona no encontrada")));
-            result.setTeam(null);
-        }
-
-        if (dto.getTeamId() != null) {
-            result.setTeam(teamRepository.findById(dto.getTeamId())
-                    .orElseThrow(() -> new RuntimeException("Equipo no encontrado")));
+        } else {
             result.setPerson(null);
         }
 
+        //  Equipo
+        if (dto.getTeamId() != null) {
+            result.setTeam(teamRepository.findById(dto.getTeamId())
+                    .orElseThrow(() -> new RuntimeException("Equipo no encontrado")));
+        } else {
+            result.setTeam(null);
+        }
+
+        //  Torneo
         result.setTournament(tournamentRepository.findById(dto.getTournamentId())
                 .orElseThrow(() -> new RuntimeException("Torneo no encontrado")));
 
+        //  Categoría
         result.setCategory(categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada")));
 
+        //  Modalidad
         result.setModality(modalityRepository.findById(dto.getModalityId())
                 .orElseThrow(() -> new RuntimeException("Modalidad no encontrada")));
 
+        //  Rama
         if (dto.getBranchId() != null) {
             result.setBranch(
                     BranchRepository.findByBranchIdAndStatusTrue(dto.getBranchId())
@@ -136,9 +149,8 @@ public class ResultService {
             );
         }
 
-        // Ronda como número (sin relación)
+        //  Datos propios
         result.setRoundNumber(dto.getRoundNumber());
-
         result.setLaneNumber(dto.getLaneNumber());
         result.setLineNumber(dto.getLineNumber());
         result.setScore(dto.getScore());
@@ -442,7 +454,6 @@ public class ResultService {
                 .resultsByModality(resultsByModality)
                 .build();
     }
-
 
 
 }

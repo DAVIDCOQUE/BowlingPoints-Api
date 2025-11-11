@@ -86,6 +86,7 @@ public class TournamentService {
             Tournament entity = toEntity(dto);
             Tournament saved = tournamentRepository.save(entity);
 
+            // Guardar categorías
             if (dto.getCategoryIds() != null) {
                 for (Integer catId : dto.getCategoryIds()) {
                     Category category = categoryRepository.findById(catId)
@@ -93,11 +94,12 @@ public class TournamentService {
                                     "CATEGORY_NOT_FOUND",
                                     "Categoría no encontrada con ID: " + catId
                             ));
-                    TournamentCategory tc = TournamentCategory.builder()
-                            .tournament(saved)
-                            .category(category)
-                            .build();
-                    tournamentCategoryRepository.save(tc);
+                    tournamentCategoryRepository.save(
+                            TournamentCategory.builder()
+                                    .tournament(saved)
+                                    .category(category)
+                                    .build()
+                    );
                 }
             }
 
@@ -109,16 +111,32 @@ public class TournamentService {
                                     "MODALITY_NOT_FOUND",
                                     "Modalidad no encontrada con ID: " + modId
                             ));
-                    TournamentModality tm = TournamentModality.builder()
-                            .tournament(saved)
-                            .modality(modality)
-                            .build();
-                    tournamentModalityRepository.save(tm);
+                    tournamentModalityRepository.save(
+                            TournamentModality.builder()
+                                    .tournament(saved)
+                                    .modality(modality)
+                                    .build()
+                    );
                 }
             }
 
-            // Guardar ramas
-            savedBranches(dto.getBranches(), saved);
+            // Guardar ramas (misma lógica que update)
+            if (dto.getBranchIds() != null) {
+                for (Integer branchId : dto.getBranchIds()) {
+                    Branch branch = branchRepository.findById(branchId)
+                            .orElseThrow(() -> new NotFoundException(
+                                    "BRANCH_NOT_FOUND",
+                                    "Rama no encontrada con ID: " + branchId
+                            ));
+                    tournamentBranchRepository.save(
+                            TournamentBranch.builder()
+                                    .tournament(saved)
+                                    .branch(branch)
+                                    .build()
+                    );
+                    log.info("Se ha relacionado la rama ->{} con el torneo ->{}", branchId, saved.getTournamentId());
+                }
+            }
 
             log.info("Torneo creado exitosamente con ID: {}", saved.getTournamentId());
             return toDTO(saved);
@@ -133,6 +151,7 @@ public class TournamentService {
             throw new BusinessException("PROCESSING_ERROR", "Error inesperado al crear el torneo");
         }
     }
+
 
     // Actualizar torneo
     public boolean update(Integer id, TournamentDTO dto) {
@@ -376,22 +395,4 @@ public class TournamentService {
         }
     }
 
-    private void savedBranches(List<BranchDTO> listBranchDTO, Tournament tournament) {
-        if (listBranchDTO != null) {
-            for (BranchDTO branchDTO : listBranchDTO) {
-                Branch branch = branchRepository.findById(branchDTO.getBranchId())
-                        .orElseThrow(() -> new NotFoundException(
-                                "BRANCH_NOT_FOUND",
-                                "Rama no encontrada con ID: " + branchDTO.getBranchId()
-                        ));
-                tournamentBranchRepository.save(
-                        TournamentBranch.builder()
-                                .tournament(tournament)
-                                .branch(branch)
-                                .build()
-                );
-                log.info("Se ha relacionado la rama ->{} con el torneo ->{}", branchDTO.getBranchId(), tournament.getTournamentId());
-            }
-        }
-    }
 }

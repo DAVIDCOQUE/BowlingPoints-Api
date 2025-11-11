@@ -1,12 +1,16 @@
 package com.bowlingpoints.service;
 
 import com.bowlingpoints.dto.UserDashboardStatsDTO;
+import com.bowlingpoints.dto.UserStatisticsDTO;
 import com.bowlingpoints.entity.Result;
+import com.bowlingpoints.repository.PersonRepository;
 import com.bowlingpoints.repository.ResultRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -15,6 +19,7 @@ import java.util.stream.Collectors;
 public class StatsService {
 
     private final ResultRepository resultRepository;
+    private final PersonRepository personRepository;
 
     @Transactional
     public UserDashboardStatsDTO getUserDashboardStats(Integer userId) {
@@ -152,4 +157,44 @@ public class StatsService {
                         .build())
                 .toList();
     }
+
+    public UserStatisticsDTO getUserPublicStats(Integer userId) {
+        var person = personRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        var stats = getUserDashboardStats(userId); // ♻️ Reutilizamos lógica existente
+
+        //  Nombre completo
+        String fullName = person.getFullName() + " " + person.getFullSurname();
+
+        //  Club actual (toma el primero si hay varios)
+        String clubName = (person.getClubPersons() != null && !person.getClubPersons().isEmpty())
+                ? person.getClubPersons().get(0).getClub().getName()
+                : null;
+
+        //  Edad
+        String age = person.getBirthDate() != null
+                ? String.valueOf(Period.between(person.getBirthDate(), LocalDate.now()).getYears())
+                : null;
+
+        //  Foto
+        String photoUrl = person.getPhotoUrl();
+
+        //  Construcción del DTO final
+        return UserStatisticsDTO.builder()
+                .personId(userId)
+                .fullName(fullName)
+                .club(clubName)
+                .age(age)
+                .photoUrl(photoUrl)
+                .avgScore(stats.getAvgScoreGeneral())
+                .bestGame(stats.getBestLine())
+                .totalTournaments(stats.getTotalTournaments())
+                // Opcionales (para implementar después)
+                .totalStrikes(0)
+                .tournamentsWon(0)
+                .build();
+    }
+
+
 }

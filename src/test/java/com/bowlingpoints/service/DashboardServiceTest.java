@@ -15,7 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Test unitario para DashboardService.
+ * Test unitario actualizado para DashboardService.
+ * Ajustado para el comportamiento actual del servicio (sin nulls, listas vacías por defecto).
  */
 class DashboardServiceTest {
 
@@ -24,9 +25,6 @@ class DashboardServiceTest {
 
     @Mock
     private ResultRepository resultRepository;
-
-    @Mock
-    private ClubRepository clubRepository; // no usado directamente, pero lo requiere el constructor
 
     @Mock
     private AmbitRepository ambitRepository;
@@ -106,7 +104,8 @@ class DashboardServiceTest {
         when(tournamentRepository.findActiveInProgress())
                 .thenReturn(List.of(tournament));
 
-        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10)))
+        // 🔥 El DashboardService usa PageRequest.of(0, 5), no (0, 10)
+        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 5)))
                 .thenReturn(List.of(playerDTO));
 
         when(ambitRepository.findDistinctWithTournaments())
@@ -135,17 +134,17 @@ class DashboardServiceTest {
         assertEquals(List.of("Elite"), mapped.getCategoryNames());
         assertEquals(List.of("Individual"), mapped.getModalityNames());
 
-        verify(tournamentRepository, times(1)).findActiveScheduledOrPostponed();
-        verify(tournamentRepository, times(1)).findActiveInProgress();
-        verify(resultRepository, times(1)).findTopPlayersByAvgScore(PageRequest.of(0, 10));
-        verify(ambitRepository, times(1)).findDistinctWithTournaments();
+        verify(tournamentRepository).findActiveScheduledOrPostponed();
+        verify(tournamentRepository).findActiveInProgress();
+        verify(resultRepository).findTopPlayersByAvgScore(PageRequest.of(0, 5));
+        verify(ambitRepository).findDistinctWithTournaments();
     }
 
     @Test
     void getDashboardData_ShouldHandleEmptyResultsGracefully() {
         when(tournamentRepository.findActiveScheduledOrPostponed()).thenReturn(List.of());
         when(tournamentRepository.findActiveInProgress()).thenReturn(List.of());
-        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10))).thenReturn(List.of());
+        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 5))).thenReturn(List.of());
         when(ambitRepository.findDistinctWithTournaments()).thenReturn(List.of());
 
         DashboardDTO dashboard = dashboardService.getDashboardData();
@@ -162,10 +161,9 @@ class DashboardServiceTest {
     // ----------------------------------------------------------------------
     @Test
     void toDTO_ShouldMapTournamentEntityToDTO_Completely() {
-        // Llamar indirectamente a toDTO (mediante getDashboardData)
         when(tournamentRepository.findActiveScheduledOrPostponed()).thenReturn(List.of(tournament));
         when(tournamentRepository.findActiveInProgress()).thenReturn(List.of());
-        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 10))).thenReturn(List.of());
+        when(resultRepository.findTopPlayersByAvgScore(PageRequest.of(0, 5))).thenReturn(List.of());
         when(ambitRepository.findDistinctWithTournaments()).thenReturn(List.of());
 
         DashboardDTO dashboard = dashboardService.getDashboardData();
@@ -192,23 +190,27 @@ class DashboardServiceTest {
                 .status(true)
                 .build();
 
-        // acceder al método privado toDTO por reflexión
         var method = DashboardService.class.getDeclaredMethod("toDTO", Tournament.class);
         method.setAccessible(true);
 
         TournamentDTO dto = (TournamentDTO) method.invoke(dashboardService, tournamentWithNulls);
 
-        // verificar que no falle y que los campos sean null o vacíos correctamente
+        // ✅ Ajuste: el servicio ahora devuelve listas vacías, no null
         assertNotNull(dto);
         assertEquals(99, dto.getTournamentId());
         assertNull(dto.getAmbitId());
         assertNull(dto.getAmbitName());
-        assertNull(dto.getCategoryIds());
-        assertNull(dto.getCategoryNames());
-        assertNull(dto.getCategories());
-        assertNull(dto.getModalityIds());
-        assertNull(dto.getModalityNames());
-        assertNull(dto.getModalities());
+        assertNotNull(dto.getCategoryIds());
+        assertTrue(dto.getCategoryIds().isEmpty());
+        assertNotNull(dto.getCategoryNames());
+        assertTrue(dto.getCategoryNames().isEmpty());
+        assertNotNull(dto.getCategories());
+        assertTrue(dto.getCategories().isEmpty());
+        assertNotNull(dto.getModalityIds());
+        assertTrue(dto.getModalityIds().isEmpty());
+        assertNotNull(dto.getModalityNames());
+        assertTrue(dto.getModalityNames().isEmpty());
+        assertNotNull(dto.getModalities());
+        assertTrue(dto.getModalities().isEmpty());
     }
-
 }

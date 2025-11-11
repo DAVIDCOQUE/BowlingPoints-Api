@@ -31,8 +31,8 @@ class TeamControllerTest {
     // 🔹 GET /teams
     @Test
     void getAll_ShouldReturnListOfTeams() throws Exception {
-        TeamDTO t1 = new TeamDTO(1, "Team A", "111111111", true, List.of(1, 2));
-        TeamDTO t2 = new TeamDTO(2, "Team B", "222222222", true, List.of(3, 4));
+        TeamDTO t1 = new TeamDTO(1, "Team A", "111111111", true, List.of(1, 2), 1, 1, 1);
+        TeamDTO t2 = new TeamDTO(2, "Team B", "222222222", true, List.of(3, 4), 2, 2, 2);
 
         when(teamService.getAll()).thenReturn(List.of(t1, t2));
 
@@ -49,7 +49,7 @@ class TeamControllerTest {
     // 🔹 GET /teams/{id}
     @Test
     void getById_ShouldReturnTeam_WhenExists() throws Exception {
-        TeamDTO team = new TeamDTO(1, "Team X", "999999999", true, List.of(10, 11));
+        TeamDTO team = new TeamDTO(1, "Team X", "999999999", true, List.of(10, 11), 1, 1, 1);
         when(teamService.getById(1)).thenReturn(team);
 
         mockMvc.perform(get("/teams/1").accept(MediaType.APPLICATION_JSON))
@@ -70,14 +70,24 @@ class TeamControllerTest {
     // 🔹 POST /teams
     @Test
     void create_ShouldReturnCreatedTeam() throws Exception {
-        TeamDTO input = new TeamDTO(null, "Team New", "123456789", true, List.of(5, 6));
-        TeamDTO created = new TeamDTO(5, "Team New", "123456789", true, List.of(5, 6));
+        TeamDTO input = new TeamDTO(null, "Team New", "123456789", true, List.of(5, 6), 1, 2, 3);
+        TeamDTO created = new TeamDTO(5, "Team New", "123456789", true, List.of(5, 6), 1, 2, 3);
 
         when(teamService.create(any(TeamDTO.class))).thenReturn(created);
 
         mockMvc.perform(post("/teams")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nameTeam\":\"Team New\",\"phone\":\"123456789\",\"status\":true,\"personIds\":[5,6]}"))
+                        .content("""
+                            {
+                              "nameTeam":"Team New",
+                              "phone":"123456789",
+                              "status":true,
+                              "playerIds":[5,6],
+                              "categoryId":1,
+                              "modalityId":2,
+                              "tournamentId":3
+                            }
+                        """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipo creado correctamente"))
@@ -91,7 +101,13 @@ class TeamControllerTest {
 
         mockMvc.perform(put("/teams/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nameTeam\":\"Updated Team\",\"phone\":\"987654321\",\"status\":true}"))
+                        .content("""
+                            {
+                              "nameTeam":"Updated Team",
+                              "phone":"987654321",
+                              "status":true
+                            }
+                        """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Equipo actualizado"));
