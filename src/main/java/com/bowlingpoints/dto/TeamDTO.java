@@ -8,11 +8,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class TeamDTO {
     private Integer teamId;
     private String nameTeam;
     private String phone;
     private Boolean status;
-    private List<Integer> personIds; // para los miembros
+
+    private List<Integer> playerIds;
+
+    private Integer categoryId;
+    private Integer modalityId;
+    private Integer tournamentId;
 }

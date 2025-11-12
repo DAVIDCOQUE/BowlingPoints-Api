@@ -10,12 +10,9 @@ import java.util.Optional;
 @Repository
 public interface BranchRepository extends JpaRepository<Branch, Integer> {
 
-    // Listar todas las ramas activas
     List<Branch> findAllByStatusTrue();
 
-    // Buscar una rama específica por ID si está activa
     Optional<Branch> findByBranchIdAndStatusTrue(Integer branchId);
 
-    // Buscar una rama por nombre
-    Optional<Branch> findByName(String name);
+    Optional<Branch> findByNameIgnoreCase(String name);
 }

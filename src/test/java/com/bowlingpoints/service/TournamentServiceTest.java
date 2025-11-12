@@ -122,7 +122,7 @@ class TournamentServiceTest {
                 .endDate(LocalDate.now().plusDays(5))
                 .categoryIds(List.of(1))
                 .modalityIds(List.of(2))
-                .branches(List.of(BranchDTO.builder().branchId(3).build()))
+                .branchIds(List.of(3))
                 .build();
 
         Tournament saved = Tournament.builder()
@@ -300,45 +300,6 @@ class TournamentServiceTest {
         assertTrue(dto.getCategories().isEmpty());
         assertTrue(dto.getModalities().isEmpty());
         assertTrue(dto.getBranches().isEmpty());
-    }
-
-    // ===================== SAVED BRANCHES =====================
-
-    @Test
-    void savedBranches_ShouldSaveBranchesSuccessfully() throws Exception {
-        BranchDTO branchDTO = BranchDTO.builder().branchId(1).name("Rama A").build();
-        Branch branch = Branch.builder().branchId(1).name("Rama A").build();
-        List<BranchDTO> branchDTOList = List.of(branchDTO);
-
-        when(branchRepository.findById(1)).thenReturn(Optional.of(branch));
-        when(tournamentBranchRepository.save(any(TournamentBranch.class))).thenReturn(null);
-
-        var method = TournamentService.class.getDeclaredMethod("savedBranches", List.class, Tournament.class);
-        method.setAccessible(true);
-        method.invoke(tournamentService, branchDTOList, tournament);
-
-        verify(branchRepository).findById(1);
-        verify(tournamentBranchRepository).save(any(TournamentBranch.class));
-    }
-
-    @Test
-    void savedBranches_ShouldThrowNotFound_WhenBranchMissing() throws Exception {
-        BranchDTO branchDTO = BranchDTO.builder().branchId(999).name("No existe").build();
-        List<BranchDTO> branchDTOList = List.of(branchDTO);
-
-        when(branchRepository.findById(999)).thenReturn(Optional.empty());
-
-        var method = TournamentService.class.getDeclaredMethod("savedBranches", List.class, Tournament.class);
-        method.setAccessible(true);
-
-        Exception exception = assertThrows(Exception.class, () ->
-                method.invoke(tournamentService, branchDTOList, tournament)
-        );
-
-        // Desempaquetar InvocationTargetException y validar la causa
-        Throwable cause = exception.getCause();
-        assertTrue(cause instanceof NotFoundException);
-        assertEquals("BRANCH_NOT_FOUND", ((NotFoundException) cause).getCode());
     }
 
     // ===================== GET ALL - CASOS ADICIONALES =====================
@@ -591,7 +552,7 @@ class TournamentServiceTest {
                 .name("Torneo Test")
                 .startDate(LocalDate.now().plusDays(2))
                 .endDate(LocalDate.now().plusDays(5))
-                .branches(List.of(BranchDTO.builder().branchId(999).build()))
+                .branchIds(List.of(999))
                 .build();
 
         when(tournamentRepository.save(any(Tournament.class))).thenReturn(tournament);

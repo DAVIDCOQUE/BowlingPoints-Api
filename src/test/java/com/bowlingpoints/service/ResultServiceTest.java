@@ -441,24 +441,45 @@ class ResultServiceTest {
     }
 
     @Test
-    void mapDtoToEntity_ShouldThrow_WhenPersonAndTeamProvided() throws Exception {
+    void mapDtoToEntity_ShouldMapCorrectly_WhenPersonAndTeamProvided() throws Exception {
         ResultDTO dto = ResultDTO.builder()
                 .personId(1)
                 .teamId(1)
                 .tournamentId(1)
                 .categoryId(1)
                 .modalityId(1)
+                .branchId(1)
+                .roundNumber(1)
+                .laneNumber(2)
+                .lineNumber(3)
+                .score(200)
                 .build();
+
+        Person person = new Person();
+        person.setPersonId(1);
+
+        Team team = new Team();
+        team.setTeamId(1);
+
+        when(personRepository.findById(1)).thenReturn(Optional.of(person));
+        when(teamRepository.findById(1)).thenReturn(Optional.of(team));
+        when(tournamentRepository.findById(1)).thenReturn(Optional.of(new Tournament()));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(new Category()));
+        when(modalityRepository.findById(1)).thenReturn(Optional.of(new Modality()));
+        when(branchRepository.findByBranchIdAndStatusTrue(1)).thenReturn(Optional.of(new Branch()));
 
         var method = Arrays.stream(ResultService.class.getDeclaredMethods())
                 .filter(m -> m.getName().equals("mapDtoToEntity"))
                 .findFirst().orElseThrow();
         method.setAccessible(true);
 
-        Exception ex = assertThrows(InvocationTargetException.class,
-                () -> method.invoke(resultService, dto, new Result()));
-        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+        Result mapped = (Result) method.invoke(resultService, dto, new Result());
+
+        assertNotNull(mapped);
+        assertEquals(1, mapped.getPerson().getPersonId());
+        assertEquals(1, mapped.getTeam().getTeamId());
     }
+
 
     @Test
     void mapDtoToEntity_ShouldThrow_WhenTournamentNotFound() throws Exception {
@@ -513,13 +534,15 @@ class ResultServiceTest {
     @Test
     void mapDtoToEntity_ShouldThrow_WhenTeamNotFound() throws Exception {
         ResultDTO dto = ResultDTO.builder()
+                .personId(1) // Agregar esto para que pase la validación previa
                 .teamId(1)
                 .tournamentId(1)
                 .categoryId(1)
                 .modalityId(1)
                 .build();
 
-        when(teamRepository.findById(1)).thenReturn(Optional.empty());
+        when(personRepository.findById(1)).thenReturn(Optional.of(new Person()));
+        when(teamRepository.findById(1)).thenReturn(Optional.empty()); // <- aquí está la prueba
 
         var method = Arrays.stream(ResultService.class.getDeclaredMethods())
                 .filter(m -> m.getName().equals("mapDtoToEntity"))
@@ -529,8 +552,9 @@ class ResultServiceTest {
         Exception ex = assertThrows(InvocationTargetException.class,
                 () -> method.invoke(resultService, dto, new Result()));
         assertTrue(ex.getCause() instanceof RuntimeException);
-        assertTrue(ex.getCause().getMessage().contains("Equipo no encontrado"));
+        assertEquals("Equipo no encontrado", ex.getCause().getMessage());
     }
+
 
     @Test
     void mapDtoToEntity_ShouldThrow_WhenCategoryNotFound() throws Exception {

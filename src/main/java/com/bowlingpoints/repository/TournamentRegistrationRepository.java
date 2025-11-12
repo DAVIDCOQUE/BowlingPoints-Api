@@ -23,4 +23,8 @@ public interface TournamentRegistrationRepository extends JpaRepository<Tourname
 
     // Obtener todas las inscripciones por torneo
     List<TournamentRegistration> findByTournament_TournamentId(Integer tournamentId);
+
+    // Verificar si ya existe una inscripción de la misma persona en la misma modalidad y torneo
+    boolean existsByTournament_TournamentIdAndModality_ModalityIdAndPerson_PersonId(Integer tournamentId, Integer modalityId, Integer personId);
+
 }
