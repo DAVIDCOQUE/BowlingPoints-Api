@@ -203,8 +203,19 @@ public class DatabaseSeeder {
                             .team(team).person(p).createdAt(LocalDateTime.now()).build());
                 }
 
-                tournamentTeamRepository.save(TournamentTeam.builder()
-                        .team(team).tournament(torneo).status(true).build());
+                if (tournamentTeamRepository
+                        .findByTournament_TournamentIdAndTeam_TeamId(
+                                torneo.getTournamentId(),
+                                team.getTeamId()
+                        ).isEmpty()) {
+
+                    tournamentTeamRepository.save(TournamentTeam.builder()
+                            .team(team)
+                            .tournament(torneo)
+                            .status(true)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                }
             }
 
             // 9️⃣ Inscripciones individuales + por equipo (modelo híbrido)
