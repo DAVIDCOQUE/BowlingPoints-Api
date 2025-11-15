@@ -1,5 +1,6 @@
 package com.bowlingpoints.controller;
 
+import com.bowlingpoints.dto.TournamentDTO;
 import com.bowlingpoints.dto.UserTournamentDTO;
 import com.bowlingpoints.service.UserTournamentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
@@ -42,15 +44,20 @@ class UserTournamentControllerTest {
 
     @Test
     void shouldReturnPlayedTournamentsSuccessfully() throws Exception {
-        // Arrange
-        Integer userId = 1;
-        when(userTournamentService.getTournamentsPlayedByUser(userId)).thenReturn(tournaments);
+        Integer personId = 1;
 
-        // Act & Assert
-        mockMvc.perform(get("/user-tournaments/{userId}/played", userId)
+        // Mismo tipo que tu controlador retorna
+        Map<String, List<TournamentDTO>> grouped = Map.of(
+                "Jugados", List.of(new TournamentDTO())
+        );
+
+        when(userTournamentService.getTournamentsByPlayerGrouped(personId))
+                .thenReturn(grouped);
+
+        mockMvc.perform(get("/user-tournaments/player/{personId}/grouped", personId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.message", is("Torneos jugados obtenidos correctamente")));
+                .andExpect(jsonPath("$.message", is("Torneos agrupados correctamente")));
     }
 }
