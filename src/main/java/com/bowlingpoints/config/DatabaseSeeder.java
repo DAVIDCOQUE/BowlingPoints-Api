@@ -5,6 +5,7 @@ import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import com.bowlingpoints.service.TournamentRegistrationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,10 @@ import java.util.stream.Collectors;
 @Configuration
 @RequiredArgsConstructor
 public class DatabaseSeeder {
+
+
+    @Value("${app.seeding.enabled:false}")
+    private boolean seedingEnabled;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -47,6 +52,8 @@ public class DatabaseSeeder {
             ResultRepository resultRepository
     ) {
         return args -> {
+            if (seedingEnabled) {
+
 
             System.out.println("🔧 [Seeder] Iniciando carga de datos con modelo híbrido...");
 
@@ -308,7 +315,9 @@ public class DatabaseSeeder {
             }
 
             System.out.println("✅ Seeder híbrido completado con inscripciones individuales y por equipo.");
-        };
+            } else {
+            System.out.println("[Seeder] ⚪ Carga de datos deshabilitada (app.seeding.enabled=false).");
+        }};
     }
 
     // ========== Helpers ==========
