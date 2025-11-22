@@ -1,8 +1,9 @@
 package com.bowlingpoints.service;
 
+import com.bowlingpoints.dto.PersonImportResponse; // <--- Importa tu nuevo DTO
 import com.bowlingpoints.entity.Person;
 import com.bowlingpoints.repository.PersonRepository;
-import lombok.extern.slf4j.Slf4j; // Para logging
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,36 +23,41 @@ public class PersonImportService {
 
     @Autowired
     private PersonRepository personRepository;
-    
-    // Usamos "d/M/yyyy" (con una sola letra) para que acepte tanto "01/05/1990" como "1/5/1990"
+
+    // Formato flexible d/M/yyyy para aceptar 1/5/1990 y 01/05/1990
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
+
     @Transactional
-    public String importPersonFile(MultipartFile file) throws Exception {
+    public PersonImportResponse importPersonFile(MultipartFile file) throws Exception {
         List<Person> personsToSave = new ArrayList<>();
+        List<String> errorDetails = new ArrayList<>(); // <--- Ahora es una lista, no un StringBuilder
+
         int lineCount = 0;
         int successCount = 0;
         int errorCount = 0;
-        StringBuilder errors = new StringBuilder();
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
-            // Saltamos la cabecera si existe
             boolean isHeader = true;
 
             while ((line = br.readLine()) != null) {
                 lineCount++;
+
+                // Omitir líneas vacías
+                if (line.trim().isEmpty()) continue;
+
                 if (isHeader) {
                     isHeader = false;
                     continue;
                 }
 
-                // Asumiendo separador punto y coma (;). Cambiar a "," si es CSV estándar.
+                // CAMBIO IMPORTANTE: split(",") porque tu archivo ejemplo era CSV
                 String[] data = line.split(";");
 
                 // Validación básica de longitud
                 if (data.length < 4) {
                     errorCount++;
-                    errors.append("Línea ").append(lineCount).append(": Datos incompletos. \n");
+                    errorDetails.add("Línea " + lineCount + ": Datos incompletos o formato incorrecto.");
                     continue;
                 }
 
@@ -59,6 +65,7 @@ public class PersonImportService {
                 String names = data[1].trim();
                 String surnames = data[2].trim();
                 String email = data[3].trim();
+                // Validamos índices para evitar ArrayIndexOutOfBoundsException
                 String gender = data.length > 4 ? data[4].trim() : null;
                 String dateStr = data.length > 5 ? data[5].trim() : null;
                 String phone = data.length > 6 ? data[6].trim() : null;
@@ -66,17 +73,16 @@ public class PersonImportService {
                 // Validaciones de Negocio (Unicidad)
                 if (personRepository.existsByDocument(document)) {
                     errorCount++;
-                    errors.append("Línea ").append(lineCount).append(": Documento ").append(document).append(" ya existe. \n");
+                    errorDetails.add("Línea " + lineCount + ": Documento " + document + " ya existe.");
                     continue;
                 }
                 if (personRepository.existsByEmail(email)) {
                     errorCount++;
-                    errors.append("Línea ").append(lineCount).append(": Email ").append(email).append(" ya existe. \n");
+                    errorDetails.add("Línea " + lineCount + ": Email " + email + " ya existe.");
                     continue;
                 }
 
                 try {
-                    // Construcción del objeto usando el Builder de Lombok
                     Person person = Person.builder()
                             .document(document)
                             .fullName(names)
@@ -85,14 +91,14 @@ public class PersonImportService {
                             .gender(gender)
                             .birthDate(dateStr != null && !dateStr.isEmpty() ? LocalDate.parse(dateStr, DATE_FORMATTER) : null)
                             .phone(phone)
-                            .status(true) // Default activo
-                            .createdBy(1) // ID del admin o usuario sistema por defecto
+                            .status(true)
+                            .createdBy(1)
                             .build();
 
                     personsToSave.add(person);
                     successCount++;
 
-                    // Guardado por lotes (Batch) para no saturar memoria
+                    // Batch save
                     if (personsToSave.size() >= 500) {
                         personRepository.saveAll(personsToSave);
                         personsToSave.clear();
@@ -100,7 +106,7 @@ public class PersonImportService {
 
                 } catch (Exception e) {
                     errorCount++;
-                    errors.append("Línea ").append(lineCount).append(": Error al procesar datos -> ").append(e.getMessage()).append("\n");
+                    errorDetails.add("Línea " + lineCount + ": Error de formato -> " + e.getMessage());
                 }
             }
 
@@ -113,7 +119,12 @@ public class PersonImportService {
             throw new RuntimeException("Error crítico leyendo el archivo: " + e.getMessage());
         }
 
-        return String.format("Proceso finalizado. Exitosos: %d. Fallidos: %d. \nDetalles de errores:\n%s",
-                successCount, errorCount, errors.toString());
+        // Retornamos el objeto JSON
+        return PersonImportResponse.builder()
+                .successCount(successCount)
+                .errorCount(errorCount)
+                .totalProcessed(successCount + errorCount)
+                .errors(errorDetails)
+                .build();
     }
 }
