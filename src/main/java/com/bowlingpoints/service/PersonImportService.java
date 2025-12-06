@@ -42,11 +42,12 @@ public class PersonImportService {
     @Autowired
     private UserRoleRepository userRoleRepository;
 
+    @Value("${password.default}")
+    private String passwordDefault;
+
     // Formato flexible d/M/yyyy para aceptar 1/5/1990 y 01/05/1990
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
 
-
-    private String defaultPlainPassword = "BowlingPoints2025";
 
     @Transactional
     public PersonImportResponse importPersonFile(MultipartFile file) throws Exception {
@@ -65,6 +66,7 @@ public class PersonImportService {
                 .orElseThrow(() -> new IllegalStateException("No se encontró el rol 'jugador' en la base de datos"));
 
         // 2. Calcular el hash SHA-256 de la contraseña por defecto una sola vez
+        String defaultPlainPassword = passwordDefault;
         String defaultPasswordHash = hashSha256(defaultPlainPassword);
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
