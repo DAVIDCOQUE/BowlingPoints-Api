@@ -25,6 +25,10 @@ public class DatabaseSeeder {
     @Value("${app.seeding.enabled:false}")
     private boolean seedingEnabled;
 
+    @Value("${password.default}")
+    private String passwordDefault;
+    
+
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @Bean
@@ -337,7 +341,7 @@ public class DatabaseSeeder {
                     .gender(gender).email(email).phone("3100000000")
                     .document(doc).status(true).createdAt(LocalDateTime.now()).build());
             User u = ur.save(User.builder()
-                    .nickname(nickname).password(encoder.encode("admin"))
+                    .nickname(nickname).password(encoder.encode(passwordDefault))
                     .status(true).attemptsLogin(0).person(p)
                     .createdAt(LocalDateTime.now()).build());
             Role r = rr.findByName(role).orElseThrow();
