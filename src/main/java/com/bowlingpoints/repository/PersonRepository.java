@@ -11,5 +11,8 @@ public interface PersonRepository extends JpaRepository<Person, Integer> {
 
     // Buscar una persona por su nombre completo y apellido completo
     Optional<Person> findByFullNameAndFullSurname(String fullName, String fullSurname);
+
+    boolean existsByDocument(String document);
+    boolean existsByEmail(String email);
 }
 

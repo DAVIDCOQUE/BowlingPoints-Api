@@ -245,16 +245,19 @@ public class ResultService {
 
             } else {
                 // Por equipo
-                PlayerResultTableDTO dto = teamMap.get(teamId);
+                PlayerResultTableDTO dto = playerMap.get(personId);
                 if (dto == null) {
                     dto = PlayerResultTableDTO.builder()
+                            .personId(personId)
+                            .playerName(playerName)
                             .teamId(teamId)
                             .teamName(teamName)
+                            .clubName(clubName)
                             .scores(new ArrayList<>())
                             .total(0)
                             .promedio(0.0)
                             .build();
-                    teamMap.put(teamId, dto);
+                    playerMap.put(personId, dto);
                 }
 
                 dto.getScores().add(score);

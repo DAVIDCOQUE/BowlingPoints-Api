@@ -22,58 +22,69 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationProvider authProvider;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final AuthenticationProvider authProvider;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                //  CSRF protection intentionally disabled:
-                // This backend uses stateless JWT authentication (no session cookies),
-                // so CSRF tokens are not required or applicable.
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        //  Auth & públicos generales
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/dashboard").permitAll()
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                return http
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                // 1. PERMISOS PARA SWAGGER (UI y JSON)
+                                                // Agregamos todas las variantes posibles para que cargue los estilos y
+                                                // el HTML
+                                                .requestMatchers(
+                                                                "/doc/**", // <--- IMPORTANTE: Para tu URL personalizada
+                                                                           // /doc/swagger-ui/...
+                                                                "/v3/api-docs/**", // <--- El JSON que lee Swagger
+                                                                "/swagger-ui/**", // <--- Los recursos visuales (css,
+                                                                                  // js)
+                                                                "/swagger-ui.html")
+                                                .permitAll()
+                                                // 2. PERMISO PARA TU NUEVO ENDPOINT DE IMPORTACIÓN
+                                                // Lo dejamos abierto momentáneamente para que puedas probar sin generar
+                                                // tokens
 
-                        //  Rutas públicas (frontend sin login)
-                        .requestMatchers(HttpMethod.GET, "/ambits/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/tournaments/*").permitAll()
-                        .requestMatchers("/results/by-modality").permitAll()
-                        .requestMatchers("/results/tournament-table").permitAll()
-                        .requestMatchers("/results/all-player-ranking").permitAll()
-                        .requestMatchers("/results/by-ambit").permitAll()
-                        .requestMatchers("/api/user-stats/public-summary").permitAll()
+                                                // Auth & públicos generales (TUS REGLAS ACTUALES)
+                                                .requestMatchers("/auth/**").permitAll()
+                                                .requestMatchers("/uploads/**").permitAll()
+                                                .requestMatchers("/dashboard").permitAll()
 
-                        //  Protegidas (requieren JWT válido)
-                        .requestMatchers("/jugadores/upload").authenticated()
+                                                // Rutas públicas (frontend sin login)
+                                                .requestMatchers(HttpMethod.GET, "/ambits/*").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/tournaments/*").permitAll()
+                                                .requestMatchers("/results/by-modality").permitAll()
+                                                .requestMatchers("/results/tournament-table").permitAll()
+                                                .requestMatchers("/results/all-player-ranking").permitAll()
+                                                .requestMatchers("/results/by-ambit").permitAll()
+                                                .requestMatchers("/api/user-stats/public-summary").permitAll()
 
-                        //  Todo lo demás
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(sess -> sess
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+                                                // Protegidas
+                                                .requestMatchers("/jugadores/upload").authenticated()
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:4200",
-                "http://bowlingpoints-frontend.s3-website.us-east-2.amazonaws.com"
-        ));// Cambiar en producción
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+                                                // Todo lo demás
+                                                .anyRequest().authenticated())
+                                .sessionManagement(sess -> sess
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authenticationProvider(authProvider)
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .build();
+        }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowCredentials(true);
+                configuration.setAllowedOrigins(List.of(
+                                "http://localhost:4200",
+                                "http://bowlingpoints-frontend.s3-website.us-east-2.amazonaws.com"));// Cambiar en
+                                                                                                     // producción
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(List.of("*"));
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 }

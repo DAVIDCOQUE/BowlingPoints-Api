@@ -5,6 +5,7 @@ import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import com.bowlingpoints.service.TournamentRegistrationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,14 @@ import java.util.stream.Collectors;
 @Configuration
 @RequiredArgsConstructor
 public class DatabaseSeeder {
+
+
+    @Value("${app.seeding.enabled:false}")
+    private boolean seedingEnabled;
+
+    @Value("${password.default}")
+    private String passwordDefault;
+    
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -47,6 +56,8 @@ public class DatabaseSeeder {
             ResultRepository resultRepository
     ) {
         return args -> {
+            if (seedingEnabled) {
+
 
             System.out.println("🔧 [Seeder] Iniciando carga de datos con modelo híbrido...");
 
@@ -203,8 +214,19 @@ public class DatabaseSeeder {
                             .team(team).person(p).createdAt(LocalDateTime.now()).build());
                 }
 
-                tournamentTeamRepository.save(TournamentTeam.builder()
-                        .team(team).tournament(torneo).status(true).build());
+                if (tournamentTeamRepository
+                        .findByTournament_TournamentIdAndTeam_TeamId(
+                                torneo.getTournamentId(),
+                                team.getTeamId()
+                        ).isEmpty()) {
+
+                    tournamentTeamRepository.save(TournamentTeam.builder()
+                            .team(team)
+                            .tournament(torneo)
+                            .status(true)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                }
             }
 
             // 9️⃣ Inscripciones individuales + por equipo (modelo híbrido)
@@ -297,7 +319,9 @@ public class DatabaseSeeder {
             }
 
             System.out.println("✅ Seeder híbrido completado con inscripciones individuales y por equipo.");
-        };
+            } else {
+            System.out.println("[Seeder] ⚪ Carga de datos deshabilitada (app.seeding.enabled=false).");
+        }};
     }
 
     // ========== Helpers ==========
@@ -317,7 +341,7 @@ public class DatabaseSeeder {
                     .gender(gender).email(email).phone("3100000000")
                     .document(doc).status(true).createdAt(LocalDateTime.now()).build());
             User u = ur.save(User.builder()
-                    .nickname(nickname).password(encoder.encode("admin"))
+                    .nickname(nickname).password(encoder.encode(passwordDefault))
                     .status(true).attemptsLogin(0).person(p)
                     .createdAt(LocalDateTime.now()).build());
             Role r = rr.findByName(role).orElseThrow();

@@ -6,14 +6,18 @@ import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserTournamentService {
     private final ResultRepository resultRepository;
-    private final TournamentRepository tournamentRepository;
+    private final TournamentRegistrationRepository tournamentRegistrationRepository;
+    private final TournamentService tournamentService;
 
     // Lista los torneos jugados por el usuario (solo los que tienen resultados)
     public List<UserTournamentDTO> getTournamentsPlayedByUser(Integer userId) {
@@ -49,7 +53,7 @@ public class UserTournamentService {
         var stats = resultRepository.findStatsByUserId(userId);
 
         if (stats == null) {
-            return new UserStatisticsDTO(); // ✅ evita NullPointerException
+            return new UserStatisticsDTO(); //  evita NullPointerException
         }
 
         return UserStatisticsDTO.builder()
@@ -60,4 +64,26 @@ public class UserTournamentService {
                 .tournamentsWon(stats.getTournamentsWon())
                 .build();
     }
+
+    public Map<String, List<TournamentDTO>> getTournamentsByPlayerGrouped(Integer personId) {
+        List<Tournament> tournaments = tournamentRegistrationRepository.findTournamentsByPersonId(personId);
+
+        Map<String, List<TournamentDTO>> grouped = new HashMap<>();
+        grouped.put("finished", new ArrayList<>());
+        grouped.put("active", new ArrayList<>());
+
+        for (Tournament t : tournaments) {
+            TournamentDTO dto = tournamentService.toDTO(t); //
+
+            if ("Finalizado".equalsIgnoreCase(t.getStage())) {
+                grouped.get("finished").add(dto);
+            } else {
+                grouped.get("active").add(dto);
+            }
+        }
+
+        return grouped;
+    }
+
+
 }

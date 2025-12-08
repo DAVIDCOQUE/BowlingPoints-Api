@@ -3,6 +3,7 @@ package com.bowlingpoints.repository;
 import com.bowlingpoints.entity.Tournament;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,9 +15,6 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
 
     // Obtener todos los torneos activos no eliminados ordenados por fecha de inicio descendente
     Optional<Tournament> findByName(String name);
-
-    // Obtener todos los torneos activos no eliminados
-    List<Tournament> findAllByStatusTrueAndDeletedAtIsNull();
 
     // Obtener torneos por ID de ámbito y que no estén eliminados
     List<Tournament> findByAmbit_AmbitIdAndDeletedAtIsNull(Integer ambitId);

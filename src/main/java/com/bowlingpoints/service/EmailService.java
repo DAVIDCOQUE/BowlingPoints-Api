@@ -17,10 +17,10 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setFrom("maq.htas.gr1pm@gmail.com"); // debe ser el configurado en application.properties
+        helper.setFrom("maq.htas.gr1pm@gmail.com");
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(htmlBody, true); // 👈 true = interpreta como HTML
+        helper.setText(htmlBody, true);
 
         mailSender.send(message);
     }

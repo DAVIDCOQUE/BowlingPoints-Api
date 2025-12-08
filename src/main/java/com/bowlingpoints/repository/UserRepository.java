@@ -22,4 +22,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     // Obtener usuario no eliminado por ID
     @Query("SELECT u FROM User u WHERE u.userId = :id AND u.deletedAt IS NULL")
     Optional<User> findNotDeletedById(Integer id);
+
+    @Query("SELECT u FROM User u WHERE u.person.email = :email AND u.deletedAt IS NULL")
+    Optional<User> findByPersonEmail(String email);
 }
