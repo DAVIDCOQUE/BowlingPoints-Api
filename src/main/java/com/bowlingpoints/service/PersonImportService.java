@@ -218,16 +218,29 @@ public class PersonImportService {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(value.getBytes(StandardCharsets.UTF_8));
-
-            // Convertimos a hex string
-            try (Formatter formatter = new Formatter()) {
-                for (byte b : digest) {
-                    formatter.format("%02x", b);
-                }
-                return formatter.toString();
-            }
+            return bytesToHex(digest);
         } catch (Exception e) {
-            throw new RuntimeException("Error generando hash SHA-256", e);
+            // Fallback: intentar SHA-1 si SHA-256 no está disponible
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-1");
+                byte[] digest = md.digest(value.getBytes(StandardCharsets.UTF_8));
+                return bytesToHex(digest);
+            } catch (Exception ex) {
+                // Último recurso: devolver hex de los bytes UTF-8 (no es un hash criptográfico)
+                try {
+                    return bytesToHex(value.getBytes(StandardCharsets.UTF_8));
+                } catch (Exception exc) {
+                    throw new RuntimeException("Error generando hash SHA-256", exc);
+                }
+            }
         }
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }
