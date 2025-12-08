@@ -42,10 +42,6 @@ public class SecurityConfig {
                                                                                   // js)
                                                                 "/swagger-ui.html")
                                                 .permitAll()
-                                                // Files import endpoint: allow POST from frontend without token
-                                                .requestMatchers(HttpMethod.POST, "/files/persons").permitAll()
-                                                // Allow CORS preflight for files endpoints
-                                                .requestMatchers(HttpMethod.OPTIONS, "/files/**").permitAll()
                                                 // 2. PERMISO PARA TU NUEVO ENDPOINT DE IMPORTACIÓN
                                                 // Lo dejamos abierto momentáneamente para que puedas probar sin generar
                                                 // tokens
