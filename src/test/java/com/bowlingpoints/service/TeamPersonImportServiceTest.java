@@ -93,7 +93,6 @@ class TeamPersonImportServiceTest {
         // First line after header has empty document -> error
         // Second line: person not found -> error
         when(personRepository.findByDocument("999")).thenReturn(Optional.empty());
-        when(teamRepository.findByNameTeam("UnknownTeam")).thenReturn(Optional.empty());
 
         var result = teamPersonImportService.importCsv(file, 1, true);
 
