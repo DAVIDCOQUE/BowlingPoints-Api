@@ -58,7 +58,7 @@ public class TeamPersonImportService {
             Person person = personOpt.get();
             Team team = teamOpt.get();
 
-            boolean exists = teamPersonRepository.existsByPerson_IdAndTeam_Id(person.getPersonId(), team.getTeamId());
+            boolean exists = teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(person.getPersonId(), team.getTeamId());
             if (exists) {
                 skipped++;
                 continue;
