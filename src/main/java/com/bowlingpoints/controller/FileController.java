@@ -1,9 +1,10 @@
 package com.bowlingpoints.controller;
 
-import com.bowlingpoints.dto.PersonImportResponse; // <--- Importante: Importar tu DTO
+import com.bowlingpoints.dto.PersonImportResponse; 
 import com.bowlingpoints.service.PersonImportService;
 import com.bowlingpoints.service.ResultImportService;
 import com.bowlingpoints.service.TeamPersonImportService;
+import com.bowlingpoints.service.TournamentRegistrationImportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

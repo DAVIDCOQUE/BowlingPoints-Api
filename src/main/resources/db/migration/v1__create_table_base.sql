@@ -15,8 +15,8 @@ CREATE TABLE roles (
 -- Tabla: person
 CREATE TABLE person (
     person_id SERIAL PRIMARY KEY,
-    document TEXT;
-    photo_url TEXT;
+    document TEXT,
+    photo_url TEXT,
     first_name TEXT NOT NULL,
     second_name TEXT,
     lastname TEXT NOT NULL,
@@ -89,9 +89,9 @@ CREATE TABLE club_person (
     joined_at DATE DEFAULT CURRENT_DATE,
     status BOOLEAN DEFAULT TRUE,
     created_by INT,
-    created_at TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
     CONSTRAINT FK_CLUB_CLUB_PERSON FOREIGN KEY (club_id) REFERENCES clubs(club_id),
     CONSTRAINT FK_PERSON_CLUB_PERSON FOREIGN KEY (person_id) REFERENCES person(person_id)

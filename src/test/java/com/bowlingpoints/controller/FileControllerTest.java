@@ -4,6 +4,8 @@ import com.bowlingpoints.dto.PersonImportResponse;
 import com.bowlingpoints.service.PersonImportService;
 import com.bowlingpoints.config.jwt.JwtService;
 import com.bowlingpoints.service.TeamPersonImportService;
+import com.bowlingpoints.service.ResultImportService;
+import com.bowlingpoints.service.TournamentRegistrationImportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -36,8 +38,14 @@ class FileControllerTest {
     @MockBean
     private TeamPersonImportService teamPersonimportService;
 
-        @MockBean
-        private JwtService jwtService;
+    @MockBean
+    private ResultImportService resultImportService;
+
+    @MockBean
+    private TournamentRegistrationImportService tournamentRegistrationImportService;
+
+    @MockBean
+    private JwtService jwtService;
 
     @Test
     void importPersons_Success() throws Exception {
