@@ -50,8 +50,8 @@ class TeamPersonImportServiceTest {
         when(personRepository.findByDocument("456")).thenReturn(Optional.of(p2));
         when(teamRepository.findByNameTeam("Team A")).thenReturn(Optional.of(t1));
         when(teamRepository.findByNameTeam("Team B")).thenReturn(Optional.of(t2));
-        when(teamPersonRepository.existsByPerson_IdAndTeam_Id(eq(1), eq(11))).thenReturn(false);
-        when(teamPersonRepository.existsByPerson_IdAndTeam_Id(eq(2), eq(12))).thenReturn(false);
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(eq(1), eq(11))).thenReturn(false);
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(eq(2), eq(12))).thenReturn(false);
 
         var result = teamPersonImportService.importCsv(file, 99, true);
 
@@ -73,7 +73,7 @@ class TeamPersonImportServiceTest {
 
         when(personRepository.findByDocument("123")).thenReturn(Optional.of(p));
         when(teamRepository.findByNameTeam("Team A")).thenReturn(Optional.of(t));
-        when(teamPersonRepository.existsByPerson_IdAndTeam_Id(eq(1), eq(11))).thenReturn(true);
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(eq(1), eq(11))).thenReturn(true);
 
         var result = teamPersonImportService.importCsv(file, 5, true);
 
