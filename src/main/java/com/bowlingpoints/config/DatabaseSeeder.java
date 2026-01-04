@@ -326,7 +326,9 @@ public class DatabaseSeeder {
 
     // ========== Helpers ==========
     private void createRoleIfMissing(String name, RoleRepository repo) {
-        repo.findByName(name).orElseGet(() -> repo.save(Role.builder().name(name).build()));
+        if (repo.findByName(name).isEmpty()) {
+            repo.save(Role.builder().name(name).build());
+        }
     }
 
     private User createUserIfNotExists(
