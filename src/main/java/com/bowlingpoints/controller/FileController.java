@@ -1,8 +1,10 @@
 package com.bowlingpoints.controller;
 
-import com.bowlingpoints.dto.PersonImportResponse; // <--- Importante: Importar tu DTO
+import com.bowlingpoints.dto.PersonImportResponse; 
 import com.bowlingpoints.service.PersonImportService;
+import com.bowlingpoints.service.ResultImportService;
 import com.bowlingpoints.service.TeamPersonImportService;
+import com.bowlingpoints.service.TournamentRegistrationImportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,10 @@ public class FileController {
     private final PersonImportService personImportService;
 
     private final TeamPersonImportService teamPersonimportService;
+
+    private final ResultImportService resultImportService;
+
+    private final TournamentRegistrationImportService tournamentRegistrationImportService;
 
     @PostMapping("/persons")
     public ResponseEntity<?> importPersons(@RequestParam("file") MultipartFile file) {
@@ -42,6 +48,40 @@ public class FileController {
         }
         try {
             var result = teamPersonimportService.importCsv(file, userId, skipHeader);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error en la importación: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/results")
+    public ResponseEntity<?> importResults(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "true") boolean skipHeader,
+            @RequestParam Integer userId
+    ) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Por favor seleccione un archivo válido.");
+        }
+        try {
+            var result = resultImportService.importCsv(file, userId, skipHeader);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error en la importación: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/tournament-registrations")
+    public ResponseEntity<?> importTournamentRegistrations(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "true") boolean skipHeader,
+            @RequestParam Integer userId
+    ) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Por favor seleccione un archivo válido.");
+        }
+        try {
+            var result = tournamentRegistrationImportService.importCsv(file, userId, skipHeader);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error en la importación: " + e.getMessage());

@@ -366,4 +366,16 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                   AND r.deletedAt IS NULL
             """)
     List<Result> findByPersonId(@Param("userId") Integer userId);
+
+    //------------------------------------------------------------------------
+    // 17. DETECTAR DUPLICADOS EN IMPORTACIÓN MASIVA
+    //------------------------------------------------------------------------
+    /**
+     * Verifica si ya existe un resultado para la combinación:
+     * persona + torneo + número de ronda + número de línea
+     * Usado para evitar duplicados en la importación masiva.
+     */
+    boolean existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
+            Integer personId, Integer tournamentId, Integer roundNumber, Integer lineNumber
+    );
 }
