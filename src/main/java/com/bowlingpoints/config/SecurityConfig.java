@@ -46,6 +46,9 @@ public class SecurityConfig {
                                                 // Lo dejamos abierto momentáneamente para que puedas probar sin generar
                                                 // tokens
 
+                                                // Permiso para endpoints de AI
+                                                .requestMatchers("/api/ai/**").permitAll()
+
                                                 // Auth & públicos generales (TUS REGLAS ACTUALES)
                                                 .requestMatchers("/auth/**").permitAll()
                                                 .requestMatchers("/uploads/**").permitAll()
