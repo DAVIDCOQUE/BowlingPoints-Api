@@ -26,6 +26,7 @@ public class TournamentRegistrationImportService {
     private final ModalityRepository modalityRepository;
     private final BranchRepository branchRepository;
     private final TeamRepository teamRepository;
+    private final TeamPersonRepository teamPersonRepository;
 
     @Transactional
     public ImportResult importCsv(MultipartFile file, Integer userId, boolean skipHeader) {
@@ -67,6 +68,17 @@ public class TournamentRegistrationImportService {
             Modality modality = findModalityByName(safeTrim(row.modalityName()));
             Branch branch = findBranchByName(safeTrim(row.branchName()));
             Team team = findTeamByName(safeTrim(row.teamName()));
+
+            // Validar que la persona pertenezca al equipo (si se especificó un equipo)
+            if (team != null) {
+                boolean personBelongsToTeam = teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(
+                        person.getPersonId(), team.getTeamId());
+                if (!personBelongsToTeam) {
+                    errors.add("Línea " + row.lineNumber() + ": la persona con documento=" + doc +
+                            " no pertenece al equipo '" + safeTrim(row.teamName()) + "'");
+                    continue;
+                }
+            }
 
             // Validar si ya existe registro (persona + torneo + modalidad)
             Integer modalityId = modality != null ? modality.getModalityId() : null;

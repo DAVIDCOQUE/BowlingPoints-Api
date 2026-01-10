@@ -41,6 +41,9 @@ class TournamentRegistrationImportServiceTest {
     @Mock
     private TeamRepository teamRepository;
 
+    @Mock
+    private TeamPersonRepository teamPersonRepository;
+
     @InjectMocks
     private TournamentRegistrationImportService service;
 
@@ -213,6 +216,7 @@ class TournamentRegistrationImportServiceTest {
         when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(anyInt(), anyInt())).thenReturn(true);
         when(registrationRepository.existsByTournament_TournamentIdAndModality_ModalityIdAndPerson_PersonId(
                 anyInt(), anyInt(), anyInt())).thenReturn(false);
 
@@ -363,6 +367,7 @@ class TournamentRegistrationImportServiceTest {
         when(modalityRepository.findByNameAndDeletedAtIsNull(anyString())).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase(anyString())).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam(anyString())).thenReturn(Optional.of(testTeam));
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(anyInt(), anyInt())).thenReturn(true);
         when(registrationRepository.existsByTournament_TournamentIdAndModality_ModalityIdAndPerson_PersonId(
                 anyInt(), any(), anyInt())).thenReturn(false);
 

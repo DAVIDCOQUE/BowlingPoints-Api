@@ -24,6 +24,7 @@ class TournamentRegistrationServiceTest {
     @Mock private ModalityRepository modalityRepository;
     @Mock private BranchRepository branchRepository;
     @Mock private TeamRepository teamRepository;
+    @Mock private TeamPersonRepository teamPersonRepository;
 
     @InjectMocks
     private TournamentRegistrationService service;
@@ -83,6 +84,7 @@ class TournamentRegistrationServiceTest {
         when(modalityRepository.findById(3)).thenReturn(Optional.of(modality));
         when(branchRepository.findById(2)).thenReturn(Optional.of(branch));
         when(teamRepository.findById(4)).thenReturn(Optional.of(team));
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(10, 4)).thenReturn(true);
         when(registrationRepository.save(any(TournamentRegistration.class))).thenReturn(registration);
 
         TournamentRegistrationDTO result = service.create(dto);
@@ -122,6 +124,7 @@ class TournamentRegistrationServiceTest {
         when(modalityRepository.findById(3)).thenReturn(Optional.of(modality));
         when(branchRepository.findById(2)).thenReturn(Optional.of(branch));
         when(teamRepository.findById(4)).thenReturn(Optional.of(team));
+        when(teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(10, 4)).thenReturn(true);
         when(registrationRepository.save(any())).thenReturn(registration);
 
         TournamentRegistrationDTO result = service.update(100, dto);

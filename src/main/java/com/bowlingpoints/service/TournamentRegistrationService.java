@@ -21,6 +21,7 @@ public class TournamentRegistrationService {
     private final ModalityRepository modalityRepository;
     private final BranchRepository branchRepository;
     private final TeamRepository teamRepository;
+    private final TeamPersonRepository teamPersonRepository;
 
     // ================================
     //  CREAR INSCRIPCIÓN
@@ -42,6 +43,15 @@ public class TournamentRegistrationService {
         Modality modality = getOptionalModality(dto.getModalityId());
         Branch branch = getOptionalBranch(dto.getBranchId());
         Team team = getOptionalTeam(dto.getTeamId());
+
+        // Validar que la persona pertenezca al equipo (si se especificó un equipo)
+        if (team != null) {
+            boolean personBelongsToTeam = teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(
+                    person.getPersonId(), team.getTeamId());
+            if (!personBelongsToTeam) {
+                throw new RuntimeException("La persona no pertenece al equipo '" + team.getNameTeam() + "'");
+            }
+        }
 
         TournamentRegistration registration = TournamentRegistration.builder()
                 .tournament(tournament)
@@ -72,7 +82,14 @@ public class TournamentRegistrationService {
         reg.setBranch(getOptionalBranch(dto.getBranchId()));
 
         if (dto.getTeamId() != null) {
-            reg.setTeam(getOptionalTeam(dto.getTeamId()));
+            Team team = getOptionalTeam(dto.getTeamId());
+            // Validar que la persona pertenezca al equipo
+            boolean personBelongsToTeam = teamPersonRepository.existsByPerson_PersonIdAndTeam_TeamId(
+                    reg.getPerson().getPersonId(), team.getTeamId());
+            if (!personBelongsToTeam) {
+                throw new RuntimeException("La persona no pertenece al equipo '" + team.getNameTeam() + "'");
+            }
+            reg.setTeam(team);
         } else {
             reg.setTeam(null);
         }
