@@ -15,7 +15,7 @@ public class AiAnalysisService {
 
     private final ResultService resultService;
     private final PromptBuilder promptBuilder;
-    private final LmStudioClient lmStudioClient;
+    private final AiClientFactory aiClientFactory;
 
     /**
      * Análisis GLOBAL: todos los torneos.
@@ -75,7 +75,7 @@ public class AiAnalysisService {
         String prompt = promptBuilder.buildGlobal(stats, branchId, categoryId, modalityId);
 
         // 6) Llamar IA
-        return lmStudioClient.ask(prompt);
+        return aiClientFactory.getClient().ask(prompt);
     }
 
     private String safe(String s) {

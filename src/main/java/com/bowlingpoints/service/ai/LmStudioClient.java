@@ -7,13 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class LmStudioClient {
+public class LmStudioClient implements AiClient {
 
     private static final String LM_STUDIO_URL =
             "http://localhost:1234/v1/chat/completions";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Override
     @SuppressWarnings("unchecked")
     public String ask(String prompt) {
 
