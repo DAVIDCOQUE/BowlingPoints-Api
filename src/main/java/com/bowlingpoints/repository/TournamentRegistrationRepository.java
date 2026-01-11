@@ -12,6 +12,9 @@ import java.util.List;
 @Repository
 public interface TournamentRegistrationRepository extends JpaRepository<TournamentRegistration, Integer> {
 
+    boolean existsByTeam_TeamId(Integer teamId);
+
+
     // Verificar si ya existe una inscripción de la misma persona en el torneo
     boolean existsByTournament_TournamentIdAndPerson_PersonId(Integer tournamentId, Integer personId);
 

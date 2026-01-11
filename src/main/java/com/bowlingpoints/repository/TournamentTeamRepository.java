@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface TournamentTeamRepository extends JpaRepository<TournamentTeam, Integer> {
 
+    boolean existsByTeam_TeamId(Integer teamId);
+
     Optional<TournamentTeam> findByTournament_TournamentIdAndTeam_TeamId(Integer tournamentId, Integer teamId);
 
     List<TournamentTeam> findAllByTournament_TournamentIdAndStatusTrue(Integer tournamentId);
