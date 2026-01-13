@@ -43,6 +43,9 @@ class TeamServiceTest {
     @Mock
     private TournamentRegistrationRepository tournamentRegistrationRepository;
 
+    @Mock
+    private BranchRepository branchRepository;
+
     @InjectMocks
     private TeamService teamService;
 
@@ -174,18 +177,15 @@ class TeamServiceTest {
 
     @Test
     void create_WhenPersonNotFound_ShouldThrowException() {
-        // Arrange
-        when(teamRepository.save(any(Team.class)))
-                .thenReturn(testTeam);
-        when(personRepository.findById(99))
-                .thenReturn(Optional.empty());
+        when(teamRepository.save(any(Team.class))).thenReturn(testTeam);
+        when(personRepository.findById(99)).thenReturn(Optional.empty());
 
         TeamDTO newTeamDTO = TeamDTO.builder()
                 .nameTeam("New Team")
                 .phone("0987654321")
+                .playerIds(List.of(99, 100))
                 .build();
 
-        // Act & Assert
         assertThrows(RuntimeException.class, () -> teamService.create(newTeamDTO));
     }
 
@@ -233,6 +233,8 @@ class TeamServiceTest {
     @Test
     void delete_WhenTeamExists_ShouldReturnTrue() {
         when(teamRepository.existsById(1)).thenReturn(true);
+        when(tournamentTeamRepository.findAll()).thenReturn(Collections.emptyList());
+        when(tournamentRegistrationRepository.findAll()).thenReturn(Collections.emptyList());
 
         boolean result = teamService.delete(1);
 
