@@ -18,27 +18,25 @@ public class PromptBuilder {
         StringBuilder sb = new StringBuilder();
 
         sb.append("""
-                Eres un analista deportivo profesional especializado en bowling.
+                FORMATO DE RESPUESTA OBLIGATORIO (NO IGNORAR):
                 
-                Objetivo:
-                Analizar el rendimiento GLOBAL de jugadores considerando
-                todos los torneos registrados en el sistema.
+                - Máximo 12 líneas en TOTAL
+                - Cada punto debe tener máximo 2 líneas
+                - Usa frases cortas y concretas
+                - No repitas datos numéricos innecesarios
+                - Prioriza conclusiones, no descripciones largas
                 
-                Reglas estrictas:
-                - Idioma: Español
-                - Estilo: Deportivo profesional
-                - No inventar datos
-                - Usar únicamente la información entregada
-                - Máx. 6 líneas por punto
-                - Recomendaciones prácticas y realistas
+                Estructura EXACTA de la respuesta:
                 
-                Formato de respuesta:
-                - Usa listas cortas
-                - Evita párrafos largos
+                1. Rendimiento Global (2 líneas)
+                2. Jugadores Destacados (máx. 3 nombres)
+                3. Alto Potencial Competitivo (máx. 3 nombres)
+                4. Riesgos de Regularidad (máx. 3 nombres)
+                5. Recomendación Final (1–2 líneas)
                 
-                Contexto del análisis:
+                Si no puedes resumir, prioriza CLARIDAD sobre detalle.
                 """);
-
+        
         if (branchId != null) {
             sb.append("- Filtro aplicado: Rama\n");
         }
