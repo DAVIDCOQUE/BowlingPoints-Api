@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Controlador REST para gestión de resultados, rankings y resúmenes de torneos.
- */
 @RestController
 @RequestMapping("/results")
 @RequiredArgsConstructor
@@ -20,10 +17,6 @@ public class ResultController {
 
     private final ResultService resultService;
     private final TournamentService tournamentService;
-
-    // --------------------------------------------------
-    // CRUD de Resultados
-    // --------------------------------------------------
 
     @GetMapping
     public ResponseEntity<ResponseGenericDTO<List<ResultDTO>>> getAll() {
@@ -61,11 +54,6 @@ public class ResultController {
                 : ResponseEntity.status(404).body(new ResponseGenericDTO<>(false, "Resultado no encontrado", null));
     }
 
-    // --------------------------------------------------
-    // Estadísticas y Agrupaciones
-    // --------------------------------------------------
-
-    // Resultados filtrados por torneo, rama y ronda
     @GetMapping("/filter")
     public ResponseEntity<List<ResultDTO>> getFilteredResults(
             @RequestParam Integer tournamentId,
@@ -75,10 +63,6 @@ public class ResultController {
         List<ResultDTO> results = resultService.getResultsByTournamentFiltered(tournamentId, branchId, roundNumber);
         return ResponseEntity.ok(results);
     }
-
-    // --------------------------------------------------
-    // Tabla de resultados del torneo por modalidad y ronda
-    // --------------------------------------------------
 
     @GetMapping("/tournament-table")
     public ResponseEntity<TournamentResultsResponseDTO> getTournamentResultsTable(
@@ -104,10 +88,6 @@ public class ResultController {
         List<DashboardPlayerDTO> ranking = resultService.getAllPlayersByAvgScore();
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Ranking cargado correctamente", ranking));
     }
-
-    // --------------------------------------------------
-    // Torneos (uso secundario desde resultados)
-    // --------------------------------------------------
 
     @GetMapping("/by-ambit")
     public ResponseEntity<ResponseGenericDTO<List<TournamentDTO>>> getTournamentsByAmbit(

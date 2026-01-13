@@ -1,9 +1,3 @@
--- ===========================================
--- BOWLING POINTS - DATOS INICIALES (SEED)
--- Version: 2.0
--- Datos base para catalogos del sistema
--- ===========================================
-
 -- Insertar Roles base
 INSERT INTO roles (name, created_at, updated_at) VALUES
     ('ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),

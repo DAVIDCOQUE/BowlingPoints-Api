@@ -1,9 +1,3 @@
--- ===========================================
--- BOWLING POINTS - CREACION DE TABLAS
--- Version: 1.0
--- Compatible con entidades JPA
--- ===========================================
-
 -- Tabla: roles
 CREATE TABLE roles (
     role_id SERIAL PRIMARY KEY,
@@ -324,7 +318,6 @@ CREATE TABLE bowling_center (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Indices para mejorar rendimiento
 CREATE INDEX idx_person_email ON person(email);
 CREATE INDEX idx_person_document ON person(document);
 CREATE INDEX idx_users_nickname ON users(nickname);

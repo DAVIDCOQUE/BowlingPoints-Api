@@ -22,8 +22,6 @@ public class ClubController {
     private final ClubService clubService;
     private final ClubPersonService clubPersonService;
 
-    // ======================= CLUBES =======================
-
     @GetMapping
     @Operation(summary = "Obtener todos los clubes no eliminados (activos e inactivos)")
     public ResponseEntity<ResponseGenericDTO<List<ClubDTO>>> getAllClubs() {
@@ -74,8 +72,6 @@ public class ClubController {
         }
         return ResponseEntity.ok(new ResponseGenericDTO<>(true, "Club eliminado correctamente", null));
     }
-
-    // ======================= MIEMBROS =======================
 
     @PostMapping("/members")
     @Operation(summary = "Agregar miembro a un club")

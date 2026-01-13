@@ -37,28 +37,23 @@ public class StatsService {
                     .build();
         }
 
-        // 1. Promedio general
         double avgScoreGeneral = results.stream()
                 .mapToInt(Result::getScore)
                 .average()
                 .orElse(0.0);
 
-        // 2. Mejor línea
         int bestLine = results.stream()
                 .mapToInt(Result::getScore)
                 .max()
                 .orElse(0);
 
-        // 3. Total líneas jugadas
         int totalLines = results.size();
 
-        // 4. Total torneos
         long totalTournaments = results.stream()
                 .map(r -> r.getTournament().getTournamentId())
                 .distinct()
                 .count();
 
-        // 5. Promedio por torneo
         Map<Integer, List<Result>> groupedByTournament = results.stream()
                 .collect(Collectors.groupingBy(r -> r.getTournament().getTournamentId()));
 
@@ -85,12 +80,10 @@ public class StatsService {
                 .sorted(Comparator.comparing(UserDashboardStatsDTO.TournamentAvgDTO::getStartDate).reversed())
                 .toList();
 
-        // 6. Mejor torneo por promedio
         UserDashboardStatsDTO.TournamentAvgDTO bestTournamentAvg = avgPerTournament.stream()
                 .max(Comparator.comparing(UserDashboardStatsDTO.TournamentAvgDTO::getAverage))
                 .orElse(null);
 
-        // 7. Promedio por modalidad
         Map<String, List<Result>> groupedByModality = results.stream()
                 .filter(r -> r.getModality() != null)
                 .collect(Collectors.groupingBy(r -> r.getModality().getName()));
@@ -112,7 +105,6 @@ public class StatsService {
                 })
                 .toList();
 
-        // 8. Distribución de puntajes
         List<UserDashboardStatsDTO.ScoreRangeDTO> scoreDistribution = buildScoreRanges(results);
 
         return UserDashboardStatsDTO.builder()
@@ -162,25 +154,20 @@ public class StatsService {
         var person = personRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
-        var stats = getUserDashboardStats(userId); // ♻️ Reutilizamos lógica existente
+        var stats = getUserDashboardStats(userId);
 
-        //  Nombre completo
         String fullName = person.getFullName() + " " + person.getFullSurname();
 
-        //  Club actual (toma el primero si hay varios)
         String clubName = (person.getClubPersons() != null && !person.getClubPersons().isEmpty())
                 ? person.getClubPersons().get(0).getClub().getName()
                 : null;
 
-        //  Edad
         String age = person.getBirthDate() != null
                 ? String.valueOf(Period.between(person.getBirthDate(), LocalDate.now()).getYears())
                 : null;
 
-        //  Foto
         String photoUrl = person.getPhotoUrl();
 
-        //  Construcción del DTO final
         return UserStatisticsDTO.builder()
                 .personId(userId)
                 .fullName(fullName)

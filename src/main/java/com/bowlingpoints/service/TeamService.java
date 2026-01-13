@@ -23,9 +23,6 @@ public class TeamService {
     private final TournamentRegistrationRepository tournamentRegistrationRepository;
     private final BranchRepository branchRepository;
 
-    // =====================================================
-    // GET ALL
-    // =====================================================
     public List<TeamDTO> getAll() {
         return teamRepository.findAll().stream()
                 .map(team -> TeamDTO.builder()
@@ -228,9 +225,6 @@ public class TeamService {
                 .build();
     }
 
-    // =====================================================
-    // UPDATE TEAM (Actualiza relaciones también)
-    // =====================================================
     @Transactional
     public boolean update(Integer id, TeamDTO dto) {
         Optional<Team> existingOpt = teamRepository.findById(id);
@@ -238,13 +232,11 @@ public class TeamService {
 
         Team team = existingOpt.get();
 
-        // ✅ Actualizar datos del equipo
         team.setNameTeam(dto.getNameTeam());
         team.setPhone(dto.getPhone());
         team.setStatus(dto.getStatus());
         teamRepository.save(team);
 
-        // 🔄 Actualizar miembros
         teamPersonRepository.deleteAllByTeam_TeamId(id);
 
         List<Integer> playerIds = Optional.ofNullable(dto.getPlayerIds()).orElse(Collections.emptyList());
@@ -261,7 +253,6 @@ public class TeamService {
 
         teamPersonRepository.saveAll(members);
 
-        // 🔄 Actualizar vínculo equipo/torneo
         if (dto.getTournamentId() != null) {
             // Eliminar vínculo anterior si existía
             tournamentTeamRepository.findByTournament_TournamentIdAndTeam_TeamId(dto.getTournamentId(), id)
@@ -279,7 +270,6 @@ public class TeamService {
                     );
         }
 
-        // 🔄 Actualizar inscripciones individuales
         if (dto.getTournamentId() != null && dto.getCategoryId() != null && dto.getModalityId() != null) {
             Tournament tournament = Tournament.builder().tournamentId(dto.getTournamentId()).build();
             Category category = Category.builder().categoryId(dto.getCategoryId()).build();
