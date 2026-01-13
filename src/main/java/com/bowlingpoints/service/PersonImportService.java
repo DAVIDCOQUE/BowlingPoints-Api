@@ -79,8 +79,9 @@ public class PersonImportService {
                 lineCount++;
 
                 // Omitir líneas vacías
-                if (line.trim().isEmpty())
+                if (line.trim().isEmpty()) {
                     continue;
+                }
 
                 if (isHeader) {
                     isHeader = false;
@@ -123,7 +124,7 @@ public class PersonImportService {
                             .fullName(names)
                             .fullSurname(surnames)
                             .email(email)
-                            .gender(gender)
+                            .gender(normalizeGender(gender))
                             .birthDate(dateStr != null && !dateStr.isEmpty() ? LocalDate.parse(dateStr, DATE_FORMATTER)
                                     : null)
                             .phone(phone)
@@ -248,4 +249,20 @@ public class PersonImportService {
         }
         return sb.toString();
     }
+
+    private String normalizeGender(String gender) {
+        if (gender == null || gender.trim().isEmpty()) {
+            throw new IllegalArgumentException("Género vacío o nulo");
+        }
+
+        return switch (gender.trim().toUpperCase()) {
+            case "M", "MAS", "MASCULINO" ->
+                "Masculino";
+            case "F", "FEM", "FEMENINO" ->
+                "Femenino";
+            default ->
+                throw new IllegalArgumentException("Género inválido: " + gender);
+        };
+    }
+
 }
