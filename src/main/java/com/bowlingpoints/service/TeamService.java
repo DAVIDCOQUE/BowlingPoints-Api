@@ -23,9 +23,6 @@ public class TeamService {
     private final TournamentRegistrationRepository tournamentRegistrationRepository;
     private final BranchRepository branchRepository;
 
-    // =====================================================
-    // GET ALL
-    // =====================================================
     public List<TeamDTO> getAll() {
         return teamRepository.findAll().stream()
                 .map(team -> TeamDTO.builder()
@@ -65,13 +62,9 @@ public class TeamService {
                 .orElse(null);
     }
 
-    // =====================================================
-    // CREATE TEAM
-    // =====================================================
     @Transactional
     public TeamDTO create(TeamDTO dto) {
 
-        // ✅ Validaciones básicas
         if (dto.getNameTeam() == null || dto.getNameTeam().isBlank()) {
             throw new RuntimeException("El nombre del equipo es obligatorio.");
         }
@@ -80,12 +73,10 @@ public class TeamService {
             throw new RuntimeException("Debe seleccionar al menos 2 jugadores para crear un equipo.");
         }
 
-        // 🚫 Evitar equipos duplicados por nombre
         if (teamRepository.findByNameTeam(dto.getNameTeam()).isPresent()) {
             throw new RuntimeException("Ya existe un equipo con el nombre: " + dto.getNameTeam());
         }
 
-        // 1️⃣ Crear equipo
         Team team = Team.builder()
                 .nameTeam(dto.getNameTeam())
                 .phone(dto.getPhone())
@@ -94,7 +85,6 @@ public class TeamService {
 
         teamRepository.save(team);
 
-        // 2️ Asociar jugadores al equipo
         List<Integer> playerIds = Optional.ofNullable(dto.getPlayerIds()).orElse(Collections.emptyList());
 
         List<TeamPerson> members = playerIds.stream()
@@ -109,7 +99,6 @@ public class TeamService {
 
         teamPersonRepository.saveAll(members);
 
-        // 3️⃣ Asociar equipo al torneo
         if (dto.getTournamentId() != null) {
             TournamentTeam tt = TournamentTeam.builder()
                     .team(team)
@@ -119,7 +108,6 @@ public class TeamService {
             tournamentTeamRepository.save(tt);
         }
 
-        // 4️⃣ Registrar jugadores individualmente con rama automática
         if (dto.getTournamentId() != null && dto.getCategoryId() != null && dto.getModalityId() != null) {
             Tournament tournament = Tournament.builder().tournamentId(dto.getTournamentId()).build();
             Category category = Category.builder().categoryId(dto.getCategoryId()).build();
@@ -133,7 +121,6 @@ public class TeamService {
                 Branch branch = branchRepository.findByNameIgnoreCase(person.getGender())
                         .orElseThrow(() -> new RuntimeException("Rama no encontrada para género " + person.getGender()));
 
-                // ⚡ Evitar duplicados de inscripción
                 if (!tournamentRegistrationRepository.existsByTournament_TournamentIdAndModality_ModalityIdAndPerson_PersonId(
                         dto.getTournamentId(), dto.getModalityId(), pid)) {
                     TournamentRegistration reg = TournamentRegistration.builder()
@@ -151,7 +138,6 @@ public class TeamService {
             }
         }
 
-        // ✅ Retornar DTO completo
         return TeamDTO.builder()
                 .teamId(team.getTeamId())
                 .nameTeam(team.getNameTeam())
@@ -164,9 +150,6 @@ public class TeamService {
                 .build();
     }
 
-    // =====================================================
-    // UPDATE TEAM (Actualiza relaciones también)
-    // =====================================================
     @Transactional
     public boolean update(Integer id, TeamDTO dto) {
         Optional<Team> existingOpt = teamRepository.findById(id);
@@ -174,13 +157,11 @@ public class TeamService {
 
         Team team = existingOpt.get();
 
-        // ✅ Actualizar datos del equipo
         team.setNameTeam(dto.getNameTeam());
         team.setPhone(dto.getPhone());
         team.setStatus(dto.getStatus());
         teamRepository.save(team);
 
-        // 🔄 Actualizar miembros
         teamPersonRepository.deleteAllByTeam_TeamId(id);
 
         List<Integer> playerIds = Optional.ofNullable(dto.getPlayerIds()).orElse(Collections.emptyList());
@@ -197,7 +178,6 @@ public class TeamService {
 
         teamPersonRepository.saveAll(members);
 
-        // 🔄 Actualizar vínculo equipo/torneo
         if (dto.getTournamentId() != null) {
             // Eliminar vínculo anterior si existía
             tournamentTeamRepository.findByTournament_TournamentIdAndTeam_TeamId(dto.getTournamentId(), id)
@@ -214,7 +194,6 @@ public class TeamService {
                     );
         }
 
-        // 🔄 Actualizar inscripciones individuales
         if (dto.getTournamentId() != null && dto.getCategoryId() != null && dto.getModalityId() != null) {
             Tournament tournament = Tournament.builder().tournamentId(dto.getTournamentId()).build();
             Category category = Category.builder().categoryId(dto.getCategoryId()).build();
@@ -248,9 +227,6 @@ public class TeamService {
         return true;
     }
 
-    // =====================================================
-    // DELETE TEAM
-    // =====================================================
     @Transactional
     public boolean delete(Integer id) {
         if (!teamRepository.existsById(id)) return false;

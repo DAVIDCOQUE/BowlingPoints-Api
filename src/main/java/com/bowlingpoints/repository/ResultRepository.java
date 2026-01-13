@@ -13,21 +13,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Repositorio para consultas complejas y personalizadas de la entidad Result.
- * Incluye rankings, resúmenes, estadísticas y datos para tablas comparativas.
- */
 public interface ResultRepository extends JpaRepository<Result, Integer> {
 
-    // -------------------------------------------------------------------------
-    // 1. RANKING DE JUGADORES POR PROMEDIO
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve los jugadores con mejor promedio de score.
-     * Si usas Pageable, puedes limitar a top 10, top 50, etc.
-     * Ejemplo: findTopPlayersByAvgScore(PageRequest.of(0, 10))
-     */
     @Query("""
                 SELECT new com.bowlingpoints.dto.DashboardPlayerDTO(
                     r.person.personId,
@@ -46,9 +33,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<DashboardPlayerDTO> findTopPlayersByAvgScore(Pageable pageable);
 
-    /**
-     * Devuelve todos los jugadores ordenados por promedio de score (¡ojo si hay miles!).
-     */
     @Query("""
                 SELECT new com.bowlingpoints.dto.DashboardPlayerDTO(
                     r.person.personId,
@@ -67,10 +51,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<DashboardPlayerDTO> findAllPlayersByAvgScore();
 
-    // -------------------------------------------------------------------------
-    // 2. CONTAR JUGADORES POR RAMA EN UN TORNEO
-    // -------------------------------------------------------------------------
-
     @Query("""
                 SELECT new com.bowlingpoints.dto.TournamentBranchPlayerCountDTO(
                     r.branch.branchId,
@@ -85,15 +65,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<TournamentBranchPlayerCountDTO> countPlayersByBranch(@Param("tournamentId") Integer tournamentId);
 
-    // -------------------------------------------------------------------------
-    // 3. TORNEOS JUGADOS POR UN USUARIO
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve todos los torneos jugados por una persona (userId).
-     * Útil para la sección de "Mis Torneos".
-     * Devuelve datos crudos, puedes armar DTO con esta info.
-     */
     @Query("""
                 SELECT
                     t.tournamentId,
@@ -114,14 +85,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Object[]> findTournamentsByPersonId(@Param("userId") Integer userId);
 
-    // -------------------------------------------------------------------------
-    // 4. DETALLE DE RESULTADOS DE UN USUARIO EN UN TORNEO
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve la lista de Result para un usuario y torneo concreto.
-     * Útil para el detalle/desglose de un torneo jugado.
-     */
     @Query("""
                 SELECT r FROM Result r
                 WHERE r.person.personId = :userId AND r.tournament.tournamentId = :tournamentId
@@ -129,18 +92,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Result> findResultsByPersonAndTournament(@Param("userId") Integer userId, @Param("tournamentId") Integer tournamentId);
 
-    // -------------------------------------------------------------------------
-    // 5. ESTADÍSTICAS GLOBALES DEL USUARIO (proyección, no DTO)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve estadísticas globales para un usuario:
-     * - Total torneos
-     * - Total chuzas/strikes
-     * - Promedio
-     * - Mejor partida
-     * - Torneos ganados (ejemplo: puntaje perfecto)
-     */
     @Query("""
                 SELECT
                     COUNT(DISTINCT r.tournament.tournamentId) as totalTournaments,
@@ -153,14 +104,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     UserStatsProjection findStatsByUserId(@Param("userId") Integer userId);
 
-    // -------------------------------------------------------------------------
-    // 6. TOP TORNEOS JUGADOS (Mejor puntaje obtenido en cada torneo por el usuario)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve el top 3 de torneos jugados por un usuario, según mejor puntaje alcanzado.
-     * Útil para resumen/estadísticas.
-     */
     @Query("""
                 SELECT new com.bowlingpoints.dto.TopTournamentDTO(
                     t.tournamentId,
@@ -177,14 +120,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<TopTournamentDTO> findTopTournamentsByUser(@Param("userId") Integer userId);
 
-    // -------------------------------------------------------------------------
-    // 7. RESÚMENES POR JUGADOR/MODALIDAD EN TORNEO (para tablas comparativas)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve resúmenes agregados por jugador y modalidad en un torneo.
-     * Útil para tablas estadísticas de un torneo.
-     */
     @Query("""
                 SELECT 
                     p.personId,
@@ -204,14 +139,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Object[]> findPlayerModalitySummariesByTournament(@Param("tournamentId") Integer tournamentId);
 
-
-    // -------------------------------------------------------------------------
-    // 8. DETALLE PARA TABLA DE RESULTADOS DE UN TORNEO Y MODALIDAD
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve datos crudos para armar tabla: persona, club, ronda, score.
-     */
     @Query("""
                 SELECT 
                     COALESCE(p.personId, 0),                                
@@ -243,10 +170,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("modalityId") Integer modalityId
     );
 
-
-    // -------------------------------------------------------------------------
-    // 9. OBTENER RONDAS DISTINTAS EN UN TORNEO
-    // -------------------------------------------------------------------------
     @Query("""
                 SELECT DISTINCT r.roundNumber
                 FROM Result r
@@ -258,8 +181,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("modalityId") Integer modalityId
     );
 
-    // Versión sin modalidad
-
     @Query("""
                 SELECT DISTINCT r.roundNumber
                 FROM Result r
@@ -268,10 +189,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                 ORDER BY r.roundNumber
             """)
     List<Integer> findDistinctRoundsByTournament(@Param("tournamentId") Integer tournamentId);
-
-    // -------------------------------------------------------------------------
-    // 11. OBTENER PROMEDIO GENERAL EN UN TORNEO Y MODALIDAD
-    // -------------------------------------------------------------------------
 
     @Query("""
                 SELECT AVG(r.score)
@@ -287,10 +204,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("roundNumber") Integer roundNumber
     );
 
-    // -------------------------------------------------------------------------
-    // 12. OBTENER LA MEJOR PARTIDA EN UN TORNEO Y MODALIDAD
-    // -------------------------------------------------------------------------
-
     @Query("""
                 SELECT 'L' || r.lineNumber, AVG(r.score)
                 FROM Result r
@@ -305,10 +218,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("modalityId") Integer modalityId,
             @Param("roundNumber") Integer roundNumber
     );
-
-    // -------------------------------------------------------------------------
-    // 13. OBTENER LA MEJOR PARTIDA EN UN TORNEO Y MODALIDAD
-    // -------------------------------------------------------------------------
 
     @Query("""
                 SELECT r.score, CONCAT(p.fullName, ' ', p.fullSurname), r.lineNumber
@@ -326,9 +235,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("roundNumber") Integer roundNumber
     );
 
-    // -------------------------------------------------------------------------
-// 15. OBTENER TOTALES POR JUGADOR, MODALIDAD Y RAMA EN UN TORNEO
-    // -------------------------------------------------------------------------
     @Query("""
                 SELECT 
                     r.person.personId,
@@ -355,10 +261,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             @Param("branchId") Integer branchId
     );
 
-
-    //------------------------------------------------------------------------
-    // 16. OBTENER TODOS LOS RESULTADOS DE UN USUARIO
-    //------------------------------------------------------------------------
     @Query("""
                 SELECT r
                 FROM Result r
@@ -367,14 +269,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
             """)
     List<Result> findByPersonId(@Param("userId") Integer userId);
 
-    //------------------------------------------------------------------------
-    // 17. DETECTAR DUPLICADOS EN IMPORTACIÓN MASIVA
-    //------------------------------------------------------------------------
-    /**
-     * Verifica si ya existe un resultado para la combinación:
-     * persona + torneo + número de ronda + número de línea
-     * Usado para evitar duplicados en la importación masiva.
-     */
     boolean existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
             Integer personId, Integer tournamentId, Integer roundNumber, Integer lineNumber
     );
