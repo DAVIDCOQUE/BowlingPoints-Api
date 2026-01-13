@@ -10,5 +10,5 @@ public interface TeamPersonRepository extends JpaRepository<TeamPerson, Integer>
     void deleteAllByTeam_TeamId(Integer teamId);
 
     //  Agrega este método:
-    boolean existsByTeamAndPerson(Team team, Person person);
+    boolean existsByPerson_PersonIdAndTeam_TeamId(Integer personId, Integer teamId);
 }

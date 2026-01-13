@@ -229,13 +229,12 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                     t.nameTeam                                              
                 FROM Result r
                 LEFT JOIN r.person p
-                LEFT JOIN p.clubPersons cp
+                LEFT JOIN p.clubPersons cp ON cp.status = true AND cp.deletedAt IS NULL
+                LEFT JOIN cp.club c
                 LEFT JOIN r.team t
                 WHERE r.tournament.tournamentId = :tournamentId
                   AND r.modality.modalityId = :modalityId
                   AND r.deletedAt IS NULL
-                  AND (cp.status = true OR cp IS NULL)
-                  AND (cp.deletedAt IS NULL OR cp IS NULL)
                 ORDER BY COALESCE(p.personId, t.teamId), r.roundNumber
             """)
     List<Object[]> findRawPlayerResultsForTable(
@@ -330,24 +329,27 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
 // 15. OBTENER TOTALES POR JUGADOR, MODALIDAD Y RAMA EN UN TORNEO
     // -------------------------------------------------------------------------
     @Query("""
-                SELECT 
-                    r.person.personId,
-                    CONCAT(p.fullName, ' ', p.fullSurname),
-                    cp.club.name,
-                    r.modality.name,
-                    SUM(r.score),
-                    COUNT(r.lineNumber)
-                FROM Result r
-                JOIN r.person p
-                LEFT JOIN p.clubPersons cp
-                WHERE r.tournament.tournamentId = :tournamentId
-                  AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
-                  AND (:branchId IS NULL OR r.branch.branchId = :branchId)
-                  AND r.deletedAt IS NULL
-                  AND (cp.status = true OR cp IS NULL)
-                  AND (cp.deletedAt IS NULL OR cp IS NULL)
-                GROUP BY r.person.personId, p.fullName, p.fullSurname, cp.club.name, r.modality.name
-                ORDER BY p.fullName
+            SELECT 
+                r.person.personId,
+                CONCAT(p.fullName, ' ', p.fullSurname),
+                COALESCE(MAX(c.name), 'Sin club'),
+                r.modality.name,
+                SUM(r.score),
+                COUNT(r.lineNumber)
+            FROM Result r
+            JOIN r.person p
+            LEFT JOIN p.clubPersons cp ON cp.status = true AND cp.deletedAt IS NULL
+            LEFT JOIN cp.club c
+            WHERE r.tournament.tournamentId = :tournamentId
+              AND (:roundNumber IS NULL OR r.roundNumber = :roundNumber)
+              AND (:branchId IS NULL OR r.branch.branchId = :branchId)
+              AND r.deletedAt IS NULL
+            GROUP BY
+                r.person.personId,
+                p.fullName,
+                p.fullSurname,
+                r.modality.name
+            ORDER BY p.fullName
             """)
     List<Object[]> findPlayerTotalsByModalityAndBranch(
             @Param("tournamentId") Integer tournamentId,
@@ -366,4 +368,17 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                   AND r.deletedAt IS NULL
             """)
     List<Result> findByPersonId(@Param("userId") Integer userId);
+
+    //------------------------------------------------------------------------
+    // 17. DETECTAR DUPLICADOS EN IMPORTACIÓN MASIVA
+    //------------------------------------------------------------------------
+
+    /**
+     * Verifica si ya existe un resultado para la combinación:
+     * persona + torneo + número de ronda + número de línea
+     * Usado para evitar duplicados en la importación masiva.
+     */
+    boolean existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
+            Integer personId, Integer tournamentId, Integer roundNumber, Integer lineNumber
+    );
 }
