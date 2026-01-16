@@ -1,0 +1,34 @@
+DROP INDEX IF EXISTS idx_password_reset_user;
+DROP INDEX IF EXISTS idx_password_reset_token;
+DROP INDEX IF EXISTS idx_registration_person;
+DROP INDEX IF EXISTS idx_registration_tournament;
+DROP INDEX IF EXISTS idx_result_person;
+DROP INDEX IF EXISTS idx_result_tournament;
+DROP INDEX IF EXISTS idx_users_nickname;
+DROP INDEX IF EXISTS idx_person_document;
+DROP INDEX IF EXISTS idx_person_email;
+
+DROP TABLE IF EXISTS password_reset_tokens CASCADE;
+DROP TABLE IF EXISTS result CASCADE;
+DROP TABLE IF EXISTS tournament_registration CASCADE;
+DROP TABLE IF EXISTS tournament_team CASCADE;
+DROP TABLE IF EXISTS tournament_branch CASCADE;
+DROP TABLE IF EXISTS tournament_category CASCADE;
+DROP TABLE IF EXISTS tournament_modality CASCADE;
+DROP TABLE IF EXISTS tournament CASCADE;
+DROP TABLE IF EXISTS team_person CASCADE;
+DROP TABLE IF EXISTS person_category CASCADE;
+DROP TABLE IF EXISTS club_person CASCADE;
+DROP TABLE IF EXISTS user_role CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS team CASCADE;
+DROP TABLE IF EXISTS branch CASCADE;
+DROP TABLE IF EXISTS modality CASCADE;
+DROP TABLE IF EXISTS category CASCADE;
+DROP TABLE IF EXISTS ambit CASCADE;
+DROP TABLE IF EXISTS clubs CASCADE;
+DROP TABLE IF EXISTS person CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS bowling_center CASCADE;
+
+DROP TABLE IF EXISTS flyway_schema_history CASCADE;
