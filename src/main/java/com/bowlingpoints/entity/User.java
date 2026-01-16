@@ -10,10 +10,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Entidad que representa a los usuarios del sistema.
- * Implementa UserDetails para la integración con Spring Security.
- */
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = {"nickname"})})
 @Getter
@@ -58,16 +54,10 @@ public class User implements UserDetails {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    /**
-     * Relación uno a uno con la entidad Person.
-     */
     @OneToOne
     @JoinColumn(name = "person_id", referencedColumnName = "person_id", unique = true, nullable = false)
     private Person person;
 
-    /**
-     * Relación uno a muchos con los roles asignados al usuario.
-     */
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserRole> userRoles = new ArrayList<>();
 
@@ -81,10 +71,6 @@ public class User implements UserDetails {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    // ===============================
-    // Métodos requeridos por UserDetails
-    // ===============================
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -103,17 +89,17 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Puedes personalizarlo si quieres manejar expiración
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Puedes personalizarlo con un campo adicional
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Puedes personalizarlo con expiración de contraseña
+        return true;
     }
 
     @Override
@@ -121,9 +107,6 @@ public class User implements UserDetails {
         return status;
     }
 
-    /**
-     * Asigna un único rol al usuario (elimina roles previos).
-     */
     public void setSingleRole(Role role) {
         this.userRoles.clear();
         UserRole userRole = UserRole.builder()
@@ -134,9 +117,6 @@ public class User implements UserDetails {
         this.userRoles.add(userRole);
     }
 
-    /**
-     * Agrega un rol adicional al usuario sin eliminar los existentes.
-     */
     public void addRole(Role role) {
         this.userRoles.add(
                 UserRole.builder()

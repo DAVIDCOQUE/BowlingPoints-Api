@@ -60,11 +60,9 @@ public class PersonImportService {
         int successCount = 0;
         int errorCount = 0;
 
-        // 1. Buscar el rol "jugador" una sola vez
         Role playerRole = roleRepository.findByName("JUGADOR")
                 .orElseThrow(() -> new IllegalStateException("No se encontró el rol 'jugador' en la base de datos"));
 
-        // 2. Calcular el hash SHA-256 de la contraseña por defecto una sola vez
         // Si la propiedad inyectada no está presente (tests sin contexto Spring),
         // usamos un valor por defecto seguro.
         String defaultPlainPassword = (passwordDefault != null && !passwordDefault.isEmpty())

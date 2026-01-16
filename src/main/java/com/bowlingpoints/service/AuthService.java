@@ -38,7 +38,6 @@ public class AuthService {
         if (user != null) {
             log.info("Usuario encontrado->{}",user.getNickname());
         }
-        // 1. Caso de usuario no encontrado (o nulo)
         if (user == null) {
             // **IMPORTANTE:** Loguear internamente para auditoría.
             log.warn("Intento de login fallido: Usuario no encontrado '{}'", request.getUserName());

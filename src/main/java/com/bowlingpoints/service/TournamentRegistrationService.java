@@ -23,9 +23,6 @@ public class TournamentRegistrationService {
     private final TeamRepository teamRepository;
     private final TeamPersonRepository teamPersonRepository;
 
-    // ================================
-    //  CREAR INSCRIPCIÓN
-    // ================================
     public TournamentRegistrationDTO create(TournamentRegistrationDTO dto) {
         // Validar duplicado
         if (registrationRepository.existsByTournament_TournamentIdAndModality_ModalityIdAndPerson_PersonId(
@@ -70,9 +67,6 @@ public class TournamentRegistrationService {
         return toDTO(saved);
     }
 
-    // ================================
-    //  ACTUALIZAR INSCRIPCIÓN
-    // ================================
     public TournamentRegistrationDTO update(Integer id, TournamentRegistrationDTO dto) {
         TournamentRegistration reg = registrationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Inscripción no encontrada"));
@@ -102,9 +96,6 @@ public class TournamentRegistrationService {
         return toDTO(saved);
     }
 
-    // ================================
-    // ELIMINAR (SOFT DELETE)
-    // ================================
     public boolean delete(Integer id) {
         Optional<TournamentRegistration> opt = registrationRepository.findById(id);
         if (opt.isEmpty()) return false;
@@ -117,10 +108,6 @@ public class TournamentRegistrationService {
         registrationRepository.save(reg);
         return true;
     }
-
-    // ================================
-    //  CONSULTAS
-    // ================================
 
     public List<TournamentRegistrationDTO> getAll() {
         return registrationRepository.findByStatusTrue().stream()
@@ -147,9 +134,6 @@ public class TournamentRegistrationService {
         return toDTO(entity);
     }
 
-    // ================================
-    //  MAPPER
-    // ================================
     private TournamentRegistrationDTO toDTO(TournamentRegistration entity) {
         return TournamentRegistrationDTO.builder()
                 .registrationId(entity.getRegistrationId())
@@ -169,10 +153,6 @@ public class TournamentRegistrationService {
                 .registrationDate(entity.getRegistrationDate())
                 .build();
     }
-
-    // ================================
-    // HELPERS (Validación de entidades opcionales)
-    // ================================
 
     private Category getOptionalCategory(Integer id) {
         return id != null ? categoryRepository.findById(id)

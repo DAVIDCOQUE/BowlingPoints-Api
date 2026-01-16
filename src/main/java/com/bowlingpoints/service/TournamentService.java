@@ -249,8 +249,6 @@ public class TournamentService {
                 .toList();
     }
 
-    // ===============  Mapping Helpers ===============
-
     public  TournamentDTO toDTO(Tournament entity) {
         //  Mapeo de categorías
         List<CategoryDTO> categoryDTOS = entity.getCategories() != null

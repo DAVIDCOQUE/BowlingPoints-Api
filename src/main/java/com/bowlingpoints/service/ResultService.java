@@ -21,10 +21,6 @@ public class ResultService {
     private final ModalityRepository modalityRepository;
     private final BranchRepository BranchRepository;
 
-    // =========================
-    // CRUD BÁSICO
-    // =========================
-
     public List<ResultDTO> getAll() {
         return resultRepository.findAll()
                 .stream()
@@ -69,10 +65,6 @@ public class ResultService {
         resultRepository.deleteById(id);
         return true;
     }
-
-    // =========================
-    // MAPEOS DTO <-> ENTITY
-    // =========================
 
     private ResultDTO mapEntityToDto(Result r) {
         return ResultDTO.builder()
@@ -158,12 +150,6 @@ public class ResultService {
         return result;
     }
 
-    // =========================
-    // FUNCIONES AVANZADAS
-    // =========================
-
-    // Resúmenes por jugador/modalidad en torneo (para dashboard)
-
     public Map<String, List<PlayerResultSummaryDTO>> getTournamentResultsByGender(Integer tournamentId) {
         List<Object[]> rows = resultRepository.findPlayerModalitySummariesByTournament(tournamentId);
 
@@ -205,8 +191,6 @@ public class ResultService {
 
         return result;
     }
-
-    // Resúmenes por jugador/modalidad en torneo (para tablas comparativas)
 
     public List<PlayerResultTableDTO> getPlayerResultsForTable(Integer tournamentId, Integer modalityId, Integer roundNumber) {
         List<Object[]> raw = resultRepository.findRawPlayerResultsForTable(tournamentId, modalityId);
@@ -289,11 +273,8 @@ public class ResultService {
         return resultRepository.findAllPlayersByAvgScore();
     }
 
-    // Detalle completo para tabla de resultados de un torneo y modalidad
-
     public TournamentResultsResponseDTO getTournamentResultsTable(Integer tournamentId, Integer modalityId, Integer roundNumber) {
 
-        // 1- Jugadores y sus puntajes
         List<PlayerResultTableDTO> results = getPlayerResultsForTable(tournamentId, modalityId, roundNumber);
 
         // 2 - Modalidades jugadas
@@ -366,7 +347,6 @@ public class ResultService {
     }
 
     public TournamentResultsResponseDTO getResultsByModality(Integer tournamentId, Integer roundNumber, Integer branchId) {
-        // 1. Resumen del torneo
         TournamentResultsResponseDTO.TournamentSummary tournamentSummary = tournamentRepository.findById(tournamentId)
                 .map(t -> TournamentResultsResponseDTO.TournamentSummary.builder()
                         .tournamentId(t.getTournamentId())
@@ -379,7 +359,6 @@ public class ResultService {
                         .build())
                 .orElse(null);
 
-        // 2. Modalidades
         List<ModalityDTO> modalities = tournamentRepository.findById(tournamentId)
                 .map(Tournament::getModalities)
                 .orElse(List.of())
@@ -393,13 +372,10 @@ public class ResultService {
                         .build())
                 .collect(Collectors.toList());
 
-        // 3. Rondas jugadas
         List<Integer> rounds = resultRepository.findDistinctRoundsByTournament(tournamentId);
 
-        // 4. Datos crudos desde la query (con filtro por branch)
         List<Object[]> rawData = resultRepository.findPlayerTotalsByModalityAndBranch(tournamentId, roundNumber, branchId);
 
-        // 5. Procesamiento por jugador
         Map<Integer, PlayerByModalityDTO.PlayerByModalityDTOBuilder> playerMap = new LinkedHashMap<>();
 
         for (Object[] row : rawData) {
@@ -437,7 +413,6 @@ public class ResultService {
                     .modalityScores(modalityScores);
         }
 
-        // 6. Cálculo de promedios
         List<PlayerByModalityDTO> resultsByModality = playerMap.values().stream()
                 .map(builder -> {
                     PlayerByModalityDTO dto = builder.build();
@@ -449,7 +424,6 @@ public class ResultService {
                 })
                 .collect(Collectors.toList());
 
-        // 7. Armar respuesta
         return TournamentResultsResponseDTO.builder()
                 .tournament(tournamentSummary)
                 .modalities(modalities)
