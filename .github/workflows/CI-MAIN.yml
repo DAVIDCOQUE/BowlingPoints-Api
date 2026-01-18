@@ -51,5 +51,9 @@ jobs:
               -e DB_USER="$DB_USER" \
               -e DB_PASS="$DB_PASSWORD" \
               -e JWT_SECRET="$JWT_SECRET" \
+              -e PASSWORD_DEFAULT="${{ secrets.PASSWORD_DEFAULT }}" \
+              -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+              -e EMAIL_USER="${{ secrets.EMAIL_USER }}" \
+              -e EMAIL_PASS="${{ secrets.EMAIL_PASS }}" \
               --restart always \
               $DOCKERHUB_IMAGE
