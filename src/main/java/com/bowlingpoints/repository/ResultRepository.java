@@ -74,13 +74,13 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                     m.name,        
                     c.name,      
                     COUNT(r.resultId),
-                    t.imageUrl
+                    t.image_url
                 FROM Result r
                 JOIN r.tournament t
                 JOIN r.modality m
                 JOIN r.category c
                 WHERE r.person.personId = :userId
-                GROUP BY t.tournamentId, t.name, t.startDate, t.location, m.name, c.name, t.imageUrl
+                GROUP BY t.tournamentId, t.name, t.startDate, t.location, m.name, c.name, t.image_url
                 ORDER BY t.startDate DESC
             """)
     List<Object[]> findTournamentsByPersonId(@Param("userId") Integer userId);
@@ -108,14 +108,14 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
                 SELECT new com.bowlingpoints.dto.TopTournamentDTO(
                     t.tournamentId,
                     t.name,
-                    t.imageUrl,
+                    t.image_url,
                     t.startDate,
                     MAX(r.score)
                 )
                 FROM Result r
                 JOIN r.tournament t
                 WHERE r.person.personId = :userId
-                GROUP BY t.tournamentId, t.name, t.imageUrl, t.startDate
+                GROUP BY t.tournamentId, t.name, t.image_url, t.startDate
                 ORDER BY MAX(r.score) DESC
             """)
     List<TopTournamentDTO> findTopTournamentsByUser(@Param("userId") Integer userId);
