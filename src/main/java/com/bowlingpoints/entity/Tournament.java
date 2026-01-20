@@ -30,7 +30,7 @@ public class Tournament {
     @Column(name = "organizer")
     private String organizer;
 
-    @Column(name = "imageUrl")
+    @Column(name = "image_url")
     private String imageUrl;
 
     @Column(name = "start_date")
