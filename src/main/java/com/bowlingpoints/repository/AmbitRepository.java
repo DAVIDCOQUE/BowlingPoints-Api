@@ -34,7 +34,7 @@ public interface AmbitRepository extends JpaRepository<Ambit, Integer> {
     @Query("""
                 SELECT DISTINCT new com.bowlingpoints.dto.AmbitDTO(
                     a.ambitId,
-                    a.image_Url,
+                    a.imageUrl,
                     a.name,
                     a.description,
                     a.status
