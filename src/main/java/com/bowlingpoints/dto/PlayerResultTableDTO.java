@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 
 public class PlayerResultTableDTO {
+    private Integer position;
     private Integer personId;
     private String playerName;
     private String clubName;
