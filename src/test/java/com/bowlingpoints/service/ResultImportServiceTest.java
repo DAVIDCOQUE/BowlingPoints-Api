@@ -66,6 +66,7 @@ class ResultImportServiceTest {
 
         testModality = new Modality();
         testModality.setModalityId(1);
+        testModality.setName("Dobles"); // Modalidad que requiere equipo
 
         testBranch = new Branch();
         testBranch.setBranchId(1);
@@ -83,14 +84,14 @@ class ResultImportServiceTest {
     void importCsv_WithValidData_CreatesResults() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n" +
-                "789012,Torneo Nacional 2024,Juvenil,Singles,Femenino,Hawks,1,6,1,198\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n" +
+                "789012,Torneo Nacional 2024,Juvenil,Dobles,Femenino,Hawks,1,6,1,198\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument(anyString())).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase(anyString())).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam(anyString())).thenReturn(Optional.of(testTeam));
         when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
@@ -111,8 +112,8 @@ class ResultImportServiceTest {
     void importCsv_WithMultipleTournaments_ReturnsError() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n" +
-                "789012,Torneo Provincial 2024,Juvenil,Singles,Femenino,Hawks,1,6,1,198\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n" +
+                "789012,Torneo Provincial 2024,Juvenil,Dobles,Femenino,Hawks,1,6,1,198\n";
         MockMultipartFile file = createCsvFile(csv);
 
         // Act
@@ -131,7 +132,7 @@ class ResultImportServiceTest {
     void importCsv_WithNonExistentTournament_ReturnsError() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Inexistente,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n";
+                "123456,Torneo Inexistente,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Inexistente")).thenReturn(Optional.empty());
@@ -152,7 +153,7 @@ class ResultImportServiceTest {
     void importCsv_WithMissingRequiredFields_SkipsRows() throws Exception {
         // Arrange - documento vacío
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                ",Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n";
+                ",Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
@@ -173,7 +174,7 @@ class ResultImportServiceTest {
     void importCsv_WithInvalidScore_SkipsRow() throws Exception {
         // Arrange - puntaje 350 (fuera de rango 0-300)
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,350\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,350\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
@@ -194,7 +195,7 @@ class ResultImportServiceTest {
     void importCsv_WithNegativeRoundOrLane_SkipsRow() throws Exception {
         // Arrange - numeroRonda = 0
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,0,5,1,245\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,0,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
@@ -215,7 +216,7 @@ class ResultImportServiceTest {
     void importCsv_WithNonExistentPerson_SkipsRow() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "999999,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n";
+                "999999,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
@@ -237,7 +238,7 @@ class ResultImportServiceTest {
     void importCsv_WithNonExistentCategory_SkipsRow() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Inexistente,Singles,Masculino,Eagles,1,5,1,245\n";
+                "123456,Torneo Nacional 2024,Inexistente,Dobles,Masculino,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
@@ -284,13 +285,13 @@ class ResultImportServiceTest {
     void importCsv_WithNonExistentBranch_SkipsRow() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Inexistente,Eagles,1,5,1,245\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Inexistente,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Inexistente")).thenReturn(Optional.empty());
 
         // Act
@@ -309,13 +310,13 @@ class ResultImportServiceTest {
     void importCsv_WithNonExistentTeam_SkipsRow() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Inexistente,1,5,1,245\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Inexistente,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Inexistente")).thenReturn(Optional.empty());
 
@@ -333,15 +334,19 @@ class ResultImportServiceTest {
 
     @Test
     void importCsv_WithEmptyTeam_CreatesResultWithoutTeam() throws Exception {
-        // Arrange - equipo vacío (campo opcional)
+        // Arrange - equipo vacío (campo opcional para modalidades Individual/Sencillo)
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,,1,5,1,245\n";
+                "123456,Torneo Nacional 2024,Juvenil,Sencillo Masculino,Masculino,,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
+
+        Modality individualModality = new Modality();
+        individualModality.setModalityId(2);
+        individualModality.setName("Sencillo Masculino"); // Modalidad que NO requiere equipo
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Sencillo Masculino")).thenReturn(Optional.of(individualModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
                 anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
@@ -362,13 +367,13 @@ class ResultImportServiceTest {
     void importCsv_WithDuplicateResult_SkipsRow() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
         when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
@@ -391,14 +396,14 @@ class ResultImportServiceTest {
         // Arrange - Generate 1001 rows
         StringBuilder csvBuilder = new StringBuilder("documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n");
         for (int i = 1; i <= 1001; i++) {
-            csvBuilder.append(String.format("DOC%d,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,%d,245\n", i, i));
+            csvBuilder.append(String.format("DOC%d,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,%d,245\n", i, i));
         }
         MockMultipartFile file = createCsvFile(csvBuilder.toString());
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument(anyString())).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
         when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
@@ -420,7 +425,7 @@ class ResultImportServiceTest {
     void importCsv_WithParsingError_AddsError() throws Exception {
         // Arrange - invalid number format in puntaje
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,abc\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,abc\n";
         MockMultipartFile file = createCsvFile(csv);
 
         // Act
@@ -439,7 +444,7 @@ class ResultImportServiceTest {
     void importCsv_WithLessThan10Columns_SkipsRow() throws Exception {
         // Arrange - only 5 columns
         String csv = "documento,nombreTorneo,categoria,modalidad,rama\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino\n";
         MockMultipartFile file = createCsvFile(csv);
 
         // Act
@@ -476,13 +481,13 @@ class ResultImportServiceTest {
     void importCsv_WithSkipHeaderTrue_IgnoresFirstLine() throws Exception {
         // Arrange
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
-                "123456,Torneo Nacional 2024,Juvenil,Singles,Masculino,Eagles,1,5,1,245\n";
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,1,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
         when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
-        when(modalityRepository.findByNameAndDeletedAtIsNull("Singles")).thenReturn(Optional.of(testModality));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
         when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
