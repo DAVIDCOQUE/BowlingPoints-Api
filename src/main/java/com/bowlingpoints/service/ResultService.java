@@ -277,6 +277,12 @@ public class ResultService {
 
         List<PlayerResultTableDTO> results = getPlayerResultsForTable(tournamentId, modalityId, roundNumber);
 
+        // Ordenar por promedio de mayor a menor y asignar posiciones
+        results.sort((a, b) -> Double.compare(b.getPromedio(), a.getPromedio()));
+        for (int i = 0; i < results.size(); i++) {
+            results.get(i).setPosition(i + 1);
+        }
+
         // 2 - Modalidades jugadas
         List<ModalityDTO> modalities = tournamentRepository.findById(tournamentId)
                 .map(Tournament::getModalities)

@@ -123,7 +123,13 @@ public class ResultImportService {
                 }
                 Branch branch = branchOpt.get();
 
-                // Resolver Team (opcional)
+                // Resolver Team (obligatorio según modalidad)
+                // Si la modalidad contiene "Sencillo" o "Individual", el equipo es opcional
+                // De lo contrario, el equipo es obligatorio
+                String modalityNameLower = modality.getName().toLowerCase();
+                boolean isIndividualModality = modalityNameLower.contains("sencillo") ||
+                        modalityNameLower.contains("individual");
+
                 Team team = null;
                 if (!isEmpty(row.equipo())) {
                     var teamOpt = teamRepository.findByNameTeam(row.equipo());
@@ -132,6 +138,10 @@ public class ResultImportService {
                         continue;
                     }
                     team = teamOpt.get();
+                } else if (!isIndividualModality) {
+                    errors.add("Línea " + row.lineNumber() + ": el equipo es obligatorio para la modalidad '" +
+                            modality.getName() + "'");
+                    continue;
                 }
 
                 // Detectar duplicados
