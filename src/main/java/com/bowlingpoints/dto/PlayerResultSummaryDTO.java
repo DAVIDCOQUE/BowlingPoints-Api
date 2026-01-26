@@ -11,6 +11,7 @@ import java.util.List;
 @Builder
 
 public class PlayerResultSummaryDTO {
+    private Integer position;
     private Integer playerId;
     private String playerName;
     private List<PlayerModalitySummaryDTO> modalities;
