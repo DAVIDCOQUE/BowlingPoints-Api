@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class DashboardPlayerDTO {
+    private Integer position;
     private Integer personId;
     private String fullName;
     private Double averageScore;
