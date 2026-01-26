@@ -94,8 +94,8 @@ class ResultImportServiceTest {
         when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase(anyString())).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam(anyString())).thenReturn(Optional.of(testTeam));
-        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
-                anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
 
         // Act
         var result = service.importCsv(file, 1, true);
@@ -348,8 +348,8 @@ class ResultImportServiceTest {
         when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
         when(modalityRepository.findByNameAndDeletedAtIsNull("Sencillo Masculino")).thenReturn(Optional.of(individualModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
-        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
-                anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
 
         // Act
         var result = service.importCsv(file, 1, true);
@@ -376,8 +376,8 @@ class ResultImportServiceTest {
         when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
-        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
-                anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(true);
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(true);
 
         // Act
         var result = service.importCsv(file, 1, true);
@@ -406,8 +406,8 @@ class ResultImportServiceTest {
         when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
-        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
-                anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
 
         // Act
         var result = service.importCsv(file, 1, true);
@@ -490,8 +490,8 @@ class ResultImportServiceTest {
         when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
         when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
         when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
-        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
-                anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
 
         // Act
         var result = service.importCsv(file, 1, true); // skipHeader = true
