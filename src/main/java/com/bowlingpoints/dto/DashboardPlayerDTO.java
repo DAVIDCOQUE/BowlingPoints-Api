@@ -5,7 +5,6 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class DashboardPlayerDTO {
     private Integer position;
@@ -19,6 +18,18 @@ public class DashboardPlayerDTO {
     // Constructor para JPQL (sin position, se asigna en el servicio)
     public DashboardPlayerDTO(Integer personId, String fullName, Double averageScore,
                               Integer bestGame, Long titlesWon, String photoUrl) {
+        this.personId = personId;
+        this.fullName = fullName;
+        this.averageScore = averageScore;
+        this.bestGame = bestGame;
+        this.titlesWon = titlesWon;
+        this.photoUrl = photoUrl;
+    }
+
+    // Constructor completo (con position)
+    public DashboardPlayerDTO(Integer position, Integer personId, String fullName,
+                              Double averageScore, Integer bestGame, Long titlesWon, String photoUrl) {
+        this.position = position;
         this.personId = personId;
         this.fullName = fullName;
         this.averageScore = averageScore;
