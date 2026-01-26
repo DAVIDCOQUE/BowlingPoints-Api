@@ -184,7 +184,13 @@ public class ResultService {
                 int lineas = modalities.stream().mapToInt(PlayerModalitySummaryDTO::getLineas).sum();
                 double promedio = lineas > 0 ? (double) total / lineas : 0;
 
-                players.add(new PlayerResultSummaryDTO(playerId, playerName, modalities, total, promedio, lineas));
+                players.add(new PlayerResultSummaryDTO(null, playerId, playerName, modalities, total, promedio, lineas));
+            }
+            // Ordenar por promedio de mayor a menor
+            players.sort((a, b) -> Double.compare(b.getPromedioGlobal(), a.getPromedioGlobal()));
+            // Asignar posiciones
+            for (int i = 0; i < players.size(); i++) {
+                players.get(i).setPosition(i + 1);
             }
             result.put(gender, players);
         }
@@ -270,7 +276,12 @@ public class ResultService {
     }
 
     public List<DashboardPlayerDTO> getAllPlayersByAvgScore() {
-        return resultRepository.findAllPlayersByAvgScore();
+        List<DashboardPlayerDTO> players = resultRepository.findAllPlayersByAvgScore();
+        // Asignar posiciones (ya vienen ordenados por promedio DESC desde el query)
+        for (int i = 0; i < players.size(); i++) {
+            players.get(i).setPosition(i + 1);
+        }
+        return players;
     }
 
     public TournamentResultsResponseDTO getTournamentResultsTable(Integer tournamentId, Integer modalityId, Integer roundNumber) {
@@ -428,7 +439,13 @@ public class ResultService {
                     dto.setPromedio(promedio);
                     return dto;
                 })
+                .sorted((a, b) -> Double.compare(b.getPromedio(), a.getPromedio()))
                 .collect(Collectors.toList());
+
+        // Asignar posiciones basadas en el ordenamiento por promedio
+        for (int i = 0; i < resultsByModality.size(); i++) {
+            resultsByModality.get(i).setPosition(i + 1);
+        }
 
         return TournamentResultsResponseDTO.builder()
                 .tournament(tournamentSummary)

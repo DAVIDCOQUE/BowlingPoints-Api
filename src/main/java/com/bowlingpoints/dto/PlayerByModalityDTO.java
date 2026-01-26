@@ -9,6 +9,7 @@ import java.util.Map;
 @Data
 @Builder
 public class PlayerByModalityDTO {
+    private Integer position;
     private Integer personId;
     private String playerName;
     private String clubName;
