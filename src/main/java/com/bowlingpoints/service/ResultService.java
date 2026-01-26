@@ -4,11 +4,13 @@ import com.bowlingpoints.dto.*;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ResultService {
@@ -276,12 +278,21 @@ public class ResultService {
     }
 
     public List<DashboardPlayerDTO> getAllPlayersByAvgScore() {
-        List<DashboardPlayerDTO> players = resultRepository.findAllPlayersByAvgScore();
-        // Asignar posiciones (ya vienen ordenados por promedio DESC desde el query)
-        for (int i = 0; i < players.size(); i++) {
-            players.get(i).setPosition(i + 1);
+        log.info("Iniciando getAllPlayersByAvgScore...");
+        try {
+            List<DashboardPlayerDTO> players = resultRepository.findAllPlayersByAvgScore();
+            log.info("Query ejecutado exitosamente. Jugadores encontrados: {}", players.size());
+
+            // Asignar posiciones (ya vienen ordenados por promedio DESC desde el query)
+            for (int i = 0; i < players.size(); i++) {
+                players.get(i).setPosition(i + 1);
+            }
+            log.info("Posiciones asignadas correctamente");
+            return players;
+        } catch (Exception e) {
+            log.error("Error en getAllPlayersByAvgScore: {}", e.getMessage(), e);
+            throw e;
         }
-        return players;
     }
 
     public TournamentResultsResponseDTO getTournamentResultsTable(Integer tournamentId, Integer modalityId, Integer roundNumber) {
