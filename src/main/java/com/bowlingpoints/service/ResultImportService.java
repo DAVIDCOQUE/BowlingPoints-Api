@@ -144,10 +144,11 @@ public class ResultImportService {
                     continue;
                 }
 
-                // Detectar duplicados
-                boolean exists = resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
+                // Detectar duplicados (incluyendo modalidad para permitir diferentes modalidades)
+                boolean exists = resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
                         person.getPersonId(),
                         tournament.getTournamentId(),
+                        modality.getModalityId(),
                         row.numeroRonda(),
                         row.numeroLinea()
                 );
@@ -155,7 +156,7 @@ public class ResultImportService {
                 if (exists) {
                     skipped++;
                     errors.add("Línea " + row.lineNumber() + ": resultado duplicado (jugador=" + row.documento() +
-                            ", ronda=" + row.numeroRonda() + ", línea=" + row.numeroLinea() + "). Saltado.");
+                            ", modalidad=" + modality.getName() + ", ronda=" + row.numeroRonda() + ", línea=" + row.numeroLinea() + "). Saltado.");
                     continue;
                 }
 
