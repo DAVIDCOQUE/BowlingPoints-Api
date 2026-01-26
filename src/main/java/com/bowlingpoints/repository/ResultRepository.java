@@ -277,10 +277,11 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
 
     /**
      * Verifica si ya existe un resultado para la combinación:
-     * persona + torneo + número de ronda + número de línea
+     * persona + torneo + modalidad + número de ronda + número de línea
      * Usado para evitar duplicados en la importación masiva.
+     * Incluye modalidad para permitir resultados en diferentes modalidades.
      */
-    boolean existsByPerson_PersonIdAndTournament_TournamentIdAndRoundNumberAndLineNumber(
-            Integer personId, Integer tournamentId, Integer roundNumber, Integer lineNumber
+    boolean existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+            Integer personId, Integer tournamentId, Integer modalityId, Integer roundNumber, Integer lineNumber
     );
 }
