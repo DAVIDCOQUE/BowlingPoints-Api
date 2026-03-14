@@ -25,7 +25,7 @@ public class AuthController {
 
     @PostMapping(value="login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request){
-        log.info("Iniciando proceso de inicio de sesion con el usuario->{}",request.getUserName());
+        log.info("Iniciando proceso de inicio de sesion");
         return ResponseEntity.ok(authService.login(request));
     }
 }
