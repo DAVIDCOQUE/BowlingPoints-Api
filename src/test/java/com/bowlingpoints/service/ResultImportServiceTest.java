@@ -192,24 +192,82 @@ class ResultImportServiceTest {
     }
 
     @Test
-    void importCsv_WithNegativeRoundOrLane_SkipsRow() throws Exception {
-        // Arrange - numeroRonda = 0
+    void importCsv_WithZeroRound_IsAcceptedAndImported() throws Exception {
+        // numeroRonda = 0 ya es válido — campos vacíos/ausentes usan 0 por defecto
         String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
                 "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,0,5,1,245\n";
         MockMultipartFile file = createCsvFile(csv);
 
         when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
+        when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
+        when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
+        when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
+        when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
 
         // Act
         var result = service.importCsv(file, 1, true);
 
         // Assert
-        assertEquals(0, result.created());
+        assertEquals(1, result.created());
         assertEquals(0, result.skipped());
-        assertEquals(1, result.errors().size());
-        assertTrue(result.errors().get(0).contains("deben ser > 0"));
+        assertTrue(result.errors().isEmpty());
 
-        verify(resultRepository, never()).saveAll(anyList());
+        verify(resultRepository).saveAll(anyList());
+    }
+
+    @Test
+    void importCsv_WithEmptyNumericFields_DefaultsToZero() throws Exception {
+        // Campos numéricos vacíos → se importa con valor 0
+        String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda,numeroCarril,numeroLinea,puntaje\n" +
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,,,,\n";
+        MockMultipartFile file = createCsvFile(csv);
+
+        when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
+        when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
+        when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
+        when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
+        when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
+
+        // Act
+        var result = service.importCsv(file, 1, true);
+
+        // Assert
+        assertEquals(1, result.created());
+        assertEquals(0, result.skipped());
+        assertTrue(result.errors().isEmpty());
+
+        verify(resultRepository).saveAll(anyList());
+    }
+
+    @Test
+    void importCsv_WithPartialColumns_DefaultsMissingToZero() throws Exception {
+        // Fila con 7 columnas: carril, línea y puntaje ausentes → usan 0
+        String csv = "documento,nombreTorneo,categoria,modalidad,rama,equipo,numeroRonda\n" +
+                "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino,Eagles,2\n";
+        MockMultipartFile file = createCsvFile(csv);
+
+        when(tournamentRepository.findByName("Torneo Nacional 2024")).thenReturn(Optional.of(testTournament));
+        when(personRepository.findByDocument("123456")).thenReturn(Optional.of(testPerson));
+        when(categoryRepository.findByNameAndDeletedAtIsNull("Juvenil")).thenReturn(Optional.of(testCategory));
+        when(modalityRepository.findByNameAndDeletedAtIsNull("Dobles")).thenReturn(Optional.of(testModality));
+        when(branchRepository.findByNameIgnoreCase("Masculino")).thenReturn(Optional.of(testBranch));
+        when(teamRepository.findByNameTeam("Eagles")).thenReturn(Optional.of(testTeam));
+        when(resultRepository.existsByPerson_PersonIdAndTournament_TournamentIdAndModality_ModalityIdAndRoundNumberAndLineNumber(
+                anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(false);
+
+        // Act
+        var result = service.importCsv(file, 1, true);
+
+        // Assert
+        assertEquals(1, result.created());
+        assertEquals(0, result.skipped());
+        assertTrue(result.errors().isEmpty());
     }
 
     @Test
@@ -441,8 +499,8 @@ class ResultImportServiceTest {
     }
 
     @Test
-    void importCsv_WithLessThan10Columns_SkipsRow() throws Exception {
-        // Arrange - only 5 columns
+    void importCsv_WithLessThan6Columns_SkipsRow() throws Exception {
+        // Menos de 6 columnas básicas → fila rechazada
         String csv = "documento,nombreTorneo,categoria,modalidad,rama\n" +
                 "123456,Torneo Nacional 2024,Juvenil,Dobles,Masculino\n";
         MockMultipartFile file = createCsvFile(csv);
@@ -454,7 +512,7 @@ class ResultImportServiceTest {
         assertEquals(0, result.created());
         assertEquals(0, result.skipped());
         assertFalse(result.errors().isEmpty());
-        assertTrue(result.errors().get(0).contains("se esperaban 10 columnas"));
+        assertTrue(result.errors().get(0).contains("se esperaban al menos 6 columnas"));
 
         verify(resultRepository, never()).saveAll(anyList());
     }

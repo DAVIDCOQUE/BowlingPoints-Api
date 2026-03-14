@@ -114,4 +114,27 @@ class FileControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void importPersons_UnsupportedFileType_BadRequest() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "persons.pdf", "application/pdf",
+                "some content".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/files/persons")
+                        .file(file)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void importResults_UnsupportedFileType_BadRequest() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "results.txt", "text/plain",
+                "some content".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/files/results")
+                        .file(file)
+                        .param("userId", "1")
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest());
+    }
 }
