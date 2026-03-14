@@ -36,26 +36,22 @@ public class AuthService {
         // Esto previene que el tiempo de respuesta revele si el usuario existe.
         User user = userRepository.findByNickname(request.getUserName()).orElse(null);
         if (user != null) {
-            log.info("Usuario encontrado->{}",user.getNickname());
+            log.info("Usuario encontrado");
         }
         if (user == null) {
-            // **IMPORTANTE:** Loguear internamente para auditoría.
-            log.warn("Intento de login fallido: Usuario no encontrado '{}'", request.getUserName());
-            // Lanzar una excepción genérica que será capturada y uniformada.
+            log.warn("Intento de login fallido: usuario no encontrado");
             throw new BadCredentialsException("Invalid username or password");
         }
 
         // 2. Caso de contraseña inválida
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            String message = "Credenciales inválidas para el usuario: " + request.getUserName();
-            log.warn(message);
-            // Lanzar la misma excepción.
+            log.warn("Credenciales inválidas para el usuario");
             throw new BadCredentialsException("Invalid username or password");
         }
 
         // 3. Éxito
         String token = jwtService.getToken(user);
-        log.info("Inicio de sesión exitoso para el usuario: {}", request.getUserName());
+        log.info("Inicio de sesión exitoso");
 
         return AuthResponse.builder().token(token).build();
     }

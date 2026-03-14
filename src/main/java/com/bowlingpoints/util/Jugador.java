@@ -18,7 +18,9 @@ public class Jugador {
         this.puntajes.add(puntaje);
     }
 
-    // Getters y setters
+    public String getNombre() { return nombre; }
+    public String getClub() { return club; }
+    public List<Integer> getPuntajes() { return puntajes; }
 
     @Override
     public String toString() {

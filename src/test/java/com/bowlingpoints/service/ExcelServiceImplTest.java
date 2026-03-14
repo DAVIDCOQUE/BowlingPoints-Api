@@ -1,212 +1,147 @@
 package com.bowlingpoints.service;
 
-import com.bowlingpoints.dto.PlayerResultUploadDTO;
-import com.bowlingpoints.entity.*;
-import com.bowlingpoints.repository.*;
+import com.bowlingpoints.repository.ExcelRepository;
+import com.bowlingpoints.util.Jugador;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.quality.Strictness;
-import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.ByteArrayOutputStream;
-import java.util.*;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT) // ✅ evita UnnecessaryStubbingException
 class ExcelServiceImplTest {
-/*
-    @Mock private PersonRepository personRepository;
-    @Mock private ResultRepository resultRepository;
-    @Mock private TournamentRepository tournamentRepository;
-    @Mock private CategoryRepository categoryRepository;
-    @Mock private ModalityRepository modalityRepository;
 
-    @InjectMocks
-    private com.bowlingpoints.service.impl.ExcelServiceImpl excelService;
+    private final ExcelRepository excelRepository = new ExcelRepository();
 
-    private MockMultipartFile mockFile;
-    private Tournament tournament;
-    private Category category;
-    private Person person;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        // 📘 Crear un Excel de prueba en memoria
+    private MockMultipartFile buildExcel(String... playerRows) throws Exception {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Results");
 
-        // Metadata
-        sheet.createRow(0).createCell(0).setCellValue("Torneo Test");
-        sheet.createRow(1).createCell(0).setCellValue("Modality A");
-        sheet.createRow(2).createCell(0).setCellValue("Masculino");
-        sheet.createRow(3).createCell(0).setCellValue("Categoría A");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Nombre");
+        header.createCell(1).setCellValue("Club");
+        header.createCell(2).setCellValue("Ronda 1");
+        header.createCell(3).setCellValue("Ronda 2");
 
-        // Encabezados ficticios
-        sheet.createRow(4); // fila de rondas
-        Row headerRow = sheet.createRow(5);
-        headerRow.createCell(0).setCellValue("Documento");
-        headerRow.createCell(1).setCellValue("Nombre");
-        headerRow.createCell(2).setCellValue("Apellido");
-        headerRow.createCell(3).setCellValue("Club");
-        headerRow.createCell(4).setCellValue("Línea 1");
-
-        // Jugador
-        Row playerRow = sheet.createRow(6);
-        playerRow.createCell(0).setCellValue("123");
-        playerRow.createCell(1).setCellValue("John");
-        playerRow.createCell(2).setCellValue("Doe");
-        playerRow.createCell(3).setCellValue("ABC Club");
-        playerRow.createCell(4).setCellValue(250);
+        int rowIdx = 1;
+        for (String rowData : playerRows) {
+            String[] parts = rowData.split(",");
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(parts[0]);
+            row.createCell(1).setCellValue(parts[1]);
+            for (int i = 2; i < parts.length; i++) {
+                row.createCell(i).setCellValue(Double.parseDouble(parts[i]));
+            }
+        }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         workbook.write(out);
         workbook.close();
 
-        mockFile = new MockMultipartFile(
-                "file",
-                "results.xlsx",
+        return new MockMultipartFile("file", "results.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                out.toByteArray()
-        );
-
-        // Mocks de entidades
-        tournament = Tournament.builder().tournamentId(1).name("Torneo Test").status(true).build();
-        category = Category.builder().categoryId(1).name("Categoría A").build();
-        person = Person.builder()
-                .personId(1)
-                .document("123")
-                .fullName("John")
-                .fullSurname("Doe")
-                .email("john@bowlingpoints.com")
-                .build();
+                out.toByteArray());
     }
 
     @Test
-    void shouldUploadResultsFromExcelSuccessfully() {
-        // Arrange
-        when(tournamentRepository.findByName("Torneo Test")).thenReturn(Optional.of(tournament));
-        when(categoryRepository.findByNameAndDeletedAtIsNull("Categoría A")).thenReturn(Optional.of(category));
-        when(personRepository.findByDocument("123")).thenReturn(Optional.of(person));
-        when(resultRepository.save(any(Result.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void leerJugadores_ConUnJugador_RetornaUnRegistro() throws Exception {
+        MockMultipartFile file = buildExcel("John Doe,Club ABC,250,200");
 
-        // Act
-        List<PlayerResultUploadDTO> result = excelService.uploadResultsFromExcel(mockFile);
+        List<Jugador> result = excelRepository.leerJugadoresDeExcel(file);
 
-        // Assert
-        assertThat(result).isNotEmpty();
-        assertThat(result.get(0).getFullName()).isEqualTo("John Doe");
-        assertThat(result.get(0).getTotalLines()).isGreaterThanOrEqualTo(1);
-
-        verify(tournamentRepository).findByName("Torneo Test");
-        verify(categoryRepository).findByNameAndDeletedAtIsNull("Categoría A");
-        verify(personRepository).findByDocument("123");
-        verify(resultRepository, atLeastOnce()).save(any(Result.class));
-    }
-
-    @Test
-    void shouldHandleNewEntitiesWhenNotFound() {
-        // Arrange: no existen entidades, se deben crear
-        when(tournamentRepository.findByName(any())).thenReturn(Optional.empty());
-        when(categoryRepository.findByNameAndDeletedAtIsNull(any())).thenReturn(Optional.empty());
-        when(tournamentRepository.save(any())).thenReturn(tournament);
-        when(categoryRepository.save(any())).thenReturn(category);
-        when(personRepository.findByDocument(any())).thenReturn(Optional.empty());
-        when(personRepository.save(any())).thenReturn(person);
-        when(resultRepository.save(any(Result.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Act
-        List<PlayerResultUploadDTO> result = excelService.uploadResultsFromExcel(mockFile);
-
-        // Assert
         assertThat(result).hasSize(1);
-        verify(tournamentRepository).save(any(Tournament.class));
-        verify(categoryRepository).save(any(Category.class));
-        verify(personRepository).save(any(Person.class));
-        verify(resultRepository, atLeastOnce()).save(any(Result.class));
+        assertThat(result.get(0).getNombre()).isEqualTo("John Doe");
+        assertThat(result.get(0).getClub()).isEqualTo("Club ABC");
+        assertThat(result.get(0).getPuntajes()).containsExactly(250, 200);
     }
 
     @Test
-    void shouldReturnEmptyListWhenExcelIsInvalid() {
-        // Arrange
-        MockMultipartFile badFile = new MockMultipartFile(
-                "file",
-                "bad.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                new byte[0]
+    void leerJugadores_ConVariosJugadores_RetornaListaCompleta() throws Exception {
+        MockMultipartFile file = buildExcel(
+                "Ana Torres,Club Norte,180,220",
+                "Luis Ríos,Club Sur,210,195"
         );
 
-        // Act
-        List<PlayerResultUploadDTO> result = excelService.uploadResultsFromExcel(badFile);
+        List<Jugador> result = excelRepository.leerJugadoresDeExcel(file);
 
-        // Assert
-        assertThat(result).isEmpty();
-        verifyNoInteractions(resultRepository);
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(Jugador::getNombre)
+                .containsExactly("Ana Torres", "Luis Ríos");
     }
 
     @Test
-    void shouldHandleDifferentCellTypesInGetCellValueAsString() {
-        Workbook wb = new XSSFWorkbook();
-        Sheet sheet = wb.createSheet("test");
-        Row row = sheet.createRow(0);
-
-        // STRING
-        Cell stringCell = row.createCell(0);
-        stringCell.setCellValue("Hello");
-        assertThat(excelService.getCellValueAsString(stringCell)).isEqualTo("Hello");
-
-        // NUMERIC
-        Cell numericCell = row.createCell(1);
-        numericCell.setCellValue(42);
-        assertThat(excelService.getCellValueAsString(numericCell)).isEqualTo("42");
-
-        // NULL
-        assertThat(excelService.getCellValueAsString(null)).isEqualTo("");
-
-        // BOOLEAN (no manejado explícitamente → retorna vacío)
-        Cell booleanCell = row.createCell(2);
-        booleanCell.setCellValue(true);
-        assertThat(excelService.getCellValueAsString(booleanCell)).isEqualTo("");
-    }
-
-
-    @Test
-    void shouldReturnEmptyListWhenHeaderRowIsMissing() throws Exception {
+    void leerJugadores_SinPuntajes_RetornaJugadorConListaVacia() throws Exception {
         Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("NoHeader");
+        Sheet sheet = workbook.createSheet("Results");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Nombre");
+        header.createCell(1).setCellValue("Club");
 
-        // Metadata
-        sheet.createRow(0).createCell(0).setCellValue("Torneo Test");
-        sheet.createRow(1).createCell(0).setCellValue("Modality A");
-        sheet.createRow(2).createCell(0).setCellValue("Masculino");
-        sheet.createRow(3).createCell(0).setCellValue("Categoría A");
+        Row playerRow = sheet.createRow(1);
+        playerRow.createCell(0).setCellValue("Sin Puntajes");
+        playerRow.createCell(1).setCellValue("Club Vacío");
 
-        // Falta la fila 5 -> headerRow == null
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         workbook.write(out);
         workbook.close();
 
-        MockMultipartFile noHeaderFile = new MockMultipartFile(
-                "file", "noheader.xlsx",
+        MockMultipartFile file = new MockMultipartFile("file", "results.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                out.toByteArray()
-        );
+                out.toByteArray());
 
-        List<PlayerResultUploadDTO> result = excelService.uploadResultsFromExcel(noHeaderFile);
+        List<Jugador> result = excelRepository.leerJugadoresDeExcel(file);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPuntajes()).isEmpty();
+    }
+
+    @Test
+    void leerJugadores_ArchivoVacio_LanzaExcepcion() {
+        // POI 5.x lanza EmptyFileException (RuntimeException) para bytes vacíos
+        MockMultipartFile file = new MockMultipartFile("file", "empty.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                new byte[0]);
+
+        assertThatThrownBy(() -> excelRepository.leerJugadoresDeExcel(file))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void leerJugadores_SoloEncabezado_RetornaListaVacia() throws Exception {
+        MockMultipartFile file = buildExcel(); // sin filas de jugadores
+
+        List<Jugador> result = excelRepository.leerJugadoresDeExcel(file);
+
         assertThat(result).isEmpty();
     }
 
- */
+    @Test
+    void leerJugadores_IgnoraCeldasNoCasoNumericas() throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Results");
+        sheet.createRow(0); // encabezado
 
+        Row playerRow = sheet.createRow(1);
+        playerRow.createCell(0).setCellValue("Juan");
+        playerRow.createCell(1).setCellValue("Club X");
+        playerRow.createCell(2).setCellValue("texto"); // tipo STRING → debe ignorarse
+        playerRow.createCell(3).setCellValue(150);      // tipo NUMERIC → debe incluirse
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+
+        MockMultipartFile file = new MockMultipartFile("file", "results.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                out.toByteArray());
+
+        List<Jugador> result = excelRepository.leerJugadoresDeExcel(file);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPuntajes()).containsExactly(150);
+    }
 }
