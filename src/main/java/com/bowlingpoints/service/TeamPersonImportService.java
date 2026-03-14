@@ -7,14 +7,12 @@ import com.bowlingpoints.entity.TeamPerson;
 import com.bowlingpoints.repository.PersonRepository;
 import com.bowlingpoints.repository.TeamPersonRepository;
 import com.bowlingpoints.repository.TeamRepository;
+import com.bowlingpoints.util.FileReaderUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,19 +78,16 @@ public class TeamPersonImportService {
 
     private List<TeamPersonRow> readRows(MultipartFile file, boolean skipHeader, List<String> errors) {
         List<TeamPersonRow> rows = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String line;
+        try {
+            var allRows = FileReaderUtils.readAllRows(file, ",");
             int lineNumber = 0;
 
-            while ((line = br.readLine()) != null) {
+            for (String[] parts : allRows) {
                 lineNumber++;
 
                 if (skipHeader && lineNumber == 1) continue;
-                if (line.trim().isEmpty()) continue;
+                if (parts.length == 0) continue;
 
-                String[] parts = line.split(",", -1);
                 if (parts.length < 2) {
                     errors.add("Línea " + lineNumber + ": se esperaban 2 columnas (documentNumber, teamName).");
                     continue;

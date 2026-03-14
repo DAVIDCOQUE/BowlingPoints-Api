@@ -9,6 +9,7 @@ import com.bowlingpoints.repository.PersonRepository;
 import com.bowlingpoints.repository.RoleRepository;
 import com.bowlingpoints.repository.UserRepository;
 import com.bowlingpoints.repository.UserRoleRepository;
+import com.bowlingpoints.util.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,14 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
 
 @Slf4j
@@ -70,16 +68,15 @@ public class PersonImportService {
                 : "BowlingPoints2025";
         String defaultPasswordHash = hashSha256(defaultPlainPassword);
 
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            String line;
+        try {
+            var allRows = FileReaderUtils.readAllRows(file, ";");
             boolean isHeader = true;
 
-            while ((line = br.readLine()) != null) {
+            for (String[] data : allRows) {
                 lineCount++;
 
-                // Omitir líneas vacías
-                if (line.trim().isEmpty()) {
+                // Omitir filas vacías
+                if (data.length == 0) {
                     continue;
                 }
 
@@ -87,8 +84,6 @@ public class PersonImportService {
                     isHeader = false;
                     continue;
                 }
-
-                String[] data = line.split(";");
 
                 // Validación básica de longitud
                 if (data.length < 4) {
