@@ -25,17 +25,23 @@ public class ImageUploadController {
                 dir.mkdirs();
             }
 
-            // Obtener nombre original y asegurar formato limpio
+            // Extraer solo el nombre de archivo, sin componentes de ruta
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+            String safeFilename = Paths.get(originalFilename).getFileName().toString();
 
-            // Definir ruta
-            Path filePath = Paths.get(uploadDir + originalFilename);
+            // Resolver y validar que la ruta final esté dentro del directorio permitido
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path filePath = uploadPath.resolve(safeFilename).normalize();
+
+            if (!filePath.startsWith(uploadPath)) {
+                return ResponseEntity.badRequest().body("Nombre de archivo inválido.");
+            }
 
             // Guardar archivo
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // Devolver URL pública (basada en configuración de WebConfig)
-            String imageUrl = "http://localhost:9999/uploads/" + originalFilename;
+            String imageUrl = "http://localhost:9999/uploads/" + safeFilename;
             return ResponseEntity.ok(imageUrl);
 
         } catch (IOException e) {

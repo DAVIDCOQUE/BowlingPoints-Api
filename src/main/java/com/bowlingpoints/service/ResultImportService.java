@@ -3,15 +3,13 @@ package com.bowlingpoints.service;
 import com.bowlingpoints.dto.files.ResultImportRow;
 import com.bowlingpoints.entity.*;
 import com.bowlingpoints.repository.*;
+import com.bowlingpoints.util.FileReaderUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,21 +71,9 @@ public class ResultImportService {
                     continue;
                 }
 
-                if (row.puntaje() == null || row.numeroRonda() == null ||
-                        row.numeroCarril() == null || row.numeroLinea() == null) {
-                    errors.add("Línea " + row.lineNumber() + ": campos numéricos obligatorios vacíos " +
-                            "(puntaje, ronda, carril o línea).");
-                    continue;
-                }
-
-                // Validar rangos
+                // Validar rango de puntaje
                 if (row.puntaje() < 0 || row.puntaje() > 300) {
                     errors.add("Línea " + row.lineNumber() + ": puntaje fuera de rango (0-300): " + row.puntaje());
-                    continue;
-                }
-
-                if (row.numeroRonda() <= 0 || row.numeroCarril() <= 0 || row.numeroLinea() <= 0) {
-                    errors.add("Línea " + row.lineNumber() + ": números de ronda, carril o línea deben ser > 0");
                     continue;
                 }
 
@@ -201,33 +187,32 @@ public class ResultImportService {
 
     private List<ResultImportRow> readRows(MultipartFile file, boolean skipHeader, List<String> errors) {
         List<ResultImportRow> rows = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String line;
+        try {
+            var allRows = FileReaderUtils.readAllRows(file, ",");
             int lineNumber = 0;
 
-            while ((line = br.readLine()) != null) {
+            for (String[] parts : allRows) {
                 lineNumber++;
 
                 if (skipHeader && lineNumber == 1) continue;
-                if (line.trim().isEmpty()) continue;
+                if (parts.length == 0) continue;
 
-                String[] parts = line.split(",", -1);
-                if (parts.length < 10) {
-                    errors.add("Línea " + lineNumber + ": se esperaban 10 columnas (documento, nombreTorneo, categoria, " +
-                            "modalidad, rama, equipo, numeroRonda, numeroCarril, numeroLinea, puntaje). Se encontraron " + parts.length);
+                // Línea con menos de 6 columnas básicas es rechazada
+                if (parts.length < 6) {
+                    errors.add("Línea " + lineNumber + ": se esperaban al menos 6 columnas " +
+                            "(documento, nombreTorneo, categoria, modalidad, rama, equipo). Se encontraron " + parts.length);
                     continue;
                 }
 
                 try {
-                    Integer numeroRonda = parseInteger(parts[6].trim(), lineNumber, "numeroRonda", errors);
-                    Integer numeroCarril = parseInteger(parts[7].trim(), lineNumber, "numeroCarril", errors);
-                    Integer numeroLinea = parseInteger(parts[8].trim(), lineNumber, "numeroLinea", errors);
-                    Integer puntaje = parseInteger(parts[9].trim(), lineNumber, "puntaje", errors);
+                    // Campos numéricos: si están vacíos o ausentes, se usa 0
+                    Integer numeroRonda  = parseIntegerOrZero(getCell(parts, 6),  lineNumber, "numeroRonda",  errors);
+                    Integer numeroCarril = parseIntegerOrZero(getCell(parts, 7),  lineNumber, "numeroCarril", errors);
+                    Integer numeroLinea  = parseIntegerOrZero(getCell(parts, 8),  lineNumber, "numeroLinea",  errors);
+                    Integer puntaje      = parseIntegerOrZero(getCell(parts, 9),  lineNumber, "puntaje",      errors);
 
                     if (numeroRonda == null || numeroCarril == null || numeroLinea == null || puntaje == null) {
-                        continue;  // Errores ya registrados en parseInteger
+                        continue; // valor inválido (no vacío, pero no numérico)
                     }
 
                     rows.add(new ResultImportRow(
@@ -249,15 +234,18 @@ public class ResultImportService {
             }
         } catch (Exception e) {
             errors.add("Error leyendo archivo: " + e.getMessage());
-            log.error("Error leyendo archivo CSV: {}", e.getMessage(), e);
+            log.error("Error leyendo archivo: {}", e.getMessage(), e);
         }
         return rows;
     }
 
-    private Integer parseInteger(String value, int lineNumber, String fieldName, List<String> errors) {
+    /**
+     * Retorna 0 si el valor está vacío o ausente.
+     * Retorna null (y registra error) si el valor tiene contenido pero no es numérico.
+     */
+    private Integer parseIntegerOrZero(String value, int lineNumber, String fieldName, List<String> errors) {
         if (value == null || value.isEmpty()) {
-            errors.add("Línea " + lineNumber + ": campo '" + fieldName + "' vacío");
-            return null;
+            return 0;
         }
         try {
             return Integer.parseInt(value);
@@ -265,6 +253,10 @@ public class ResultImportService {
             errors.add("Línea " + lineNumber + ": campo '" + fieldName + "' no es un número válido: '" + value + "'");
             return null;
         }
+    }
+
+    private String getCell(String[] parts, int index) {
+        return index < parts.length ? parts[index].trim() : "";
     }
 
     private boolean isEmpty(String s) {

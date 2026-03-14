@@ -1,10 +1,11 @@
 package com.bowlingpoints.controller;
 
-import com.bowlingpoints.dto.PersonImportResponse; 
+import com.bowlingpoints.dto.PersonImportResponse;
 import com.bowlingpoints.service.PersonImportService;
 import com.bowlingpoints.service.ResultImportService;
 import com.bowlingpoints.service.TeamPersonImportService;
 import com.bowlingpoints.service.TournamentRegistrationImportService;
+import com.bowlingpoints.util.FileReaderUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,10 +29,12 @@ public class FileController {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Por favor seleccione un archivo válido.");
         }
+        if (!FileReaderUtils.isSupportedFileType(file)) {
+            return ResponseEntity.badRequest().body("Formato no soportado. Use archivos .csv, .xlsx o .xls.");
+        }
         try {
             PersonImportResponse result = personImportService.importPersonFile(file);
             return ResponseEntity.ok(result);
-
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error en la importación: " + e.getMessage());
         }
@@ -45,6 +48,9 @@ public class FileController {
     ) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Por favor seleccione un archivo válido.");
+        }
+        if (!FileReaderUtils.isSupportedFileType(file)) {
+            return ResponseEntity.badRequest().body("Formato no soportado. Use archivos .csv, .xlsx o .xls.");
         }
         try {
             var result = teamPersonimportService.importCsv(file, userId, skipHeader);
@@ -63,6 +69,9 @@ public class FileController {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Por favor seleccione un archivo válido.");
         }
+        if (!FileReaderUtils.isSupportedFileType(file)) {
+            return ResponseEntity.badRequest().body("Formato no soportado. Use archivos .csv, .xlsx o .xls.");
+        }
         try {
             var result = resultImportService.importCsv(file, userId, skipHeader);
             return ResponseEntity.ok(result);
@@ -79,6 +88,9 @@ public class FileController {
     ) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Por favor seleccione un archivo válido.");
+        }
+        if (!FileReaderUtils.isSupportedFileType(file)) {
+            return ResponseEntity.badRequest().body("Formato no soportado. Use archivos .csv, .xlsx o .xls.");
         }
         try {
             var result = tournamentRegistrationImportService.importCsv(file, userId, skipHeader);
